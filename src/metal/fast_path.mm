@@ -645,7 +645,7 @@ double vec2_error(Vec2 a, PackedFloat2 b) {
 
 void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
                      const std::optional<TraceHit> &expected, const GpuHit &actual,
-                     const std::string &kind) {
+                     const std::optional<Vec4> &expected_cage_bary, const std::string &kind) {
   if (run.mismatch_samples.size() >= 8U) {
     return;
   }
@@ -674,6 +674,13 @@ void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
   } else {
     sample << "null";
   }
+  sample << ",\"cpu_cage_bary\": ";
+  if (expected_cage_bary) {
+    sample << '[' << expected_cage_bary->x << ',' << expected_cage_bary->y << ','
+           << expected_cage_bary->z << ',' << expected_cage_bary->w << ']';
+  } else {
+    sample << "null";
+  }
   sample << ",\"gpu_source_bary\":[" << actual.source_barycentric.x << ','
          << actual.source_barycentric.y << ',' << actual.source_barycentric.z
          << "],\"gpu_user_instance_id\":" << actual.user_instance_id
@@ -693,7 +700,11 @@ Tetrahedron posed_tet(const CompiledAsset &asset, const std::vector<Vec3> &pose,
 }
 
 bool boundary_sensitive_ray(const CompiledAsset &asset, const std::vector<Vec3> &pose,
-                            const Ray &ray, const TraceHit &expected) {
+                            const Ray &ray, const TraceResult &expected_result) {
+  if (!expected_result.closest) {
+    return false;
+  }
+  const auto &expected = *expected_result.closest;
   const double source_edge = std::min({expected.source_barycentric.x, expected.source_barycentric.y,
                                        expected.source_barycentric.z});
   const auto direction = normalized(ray.direction);
@@ -705,7 +716,8 @@ bool boundary_sensitive_ray(const CompiledAsset &asset, const std::vector<Vec3> 
   const double cage_edge = cage_barycentric ? std::min({cage_barycentric->x, cage_barycentric->y,
                                                         cage_barycentric->z, cage_barycentric->w})
                                             : 1.0;
-  return source_edge <= 1.0e-6 || cage_edge <= 1.0e-5 || normal_alignment <= 1.0e-5;
+  return expected_result.raw_hits > 1U || expected_result.raw_duplicate_candidates != 0U ||
+         source_edge <= 1.0e-6 || cage_edge <= 1.0e-5 || normal_alignment <= 1.0e-5;
 }
 
 MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOptions &options,
@@ -1192,7 +1204,12 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.gpu_eligible_rays = rays.size();
   for (std::size_t index = 0; index < rays.size(); ++index) {
     const auto cpu = trace_fast(asset, poses.front(), rays[index]);
-    if (cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], *cpu.closest)) {
+    std::optional<Vec4> expected_cage_bary;
+    if (cpu.closest && cpu.closest->tet_id < asset.cage.tetrahedra.size()) {
+      expected_cage_bary = to_barycentric(posed_tet(asset, poses.front(), cpu.closest->tet_id),
+                                          cpu.closest->position);
+    }
+    if (cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], cpu)) {
       ++run.boundary_sensitive_rays;
       if (options.boundary_fallback) {
         --run.gpu_eligible_rays;
@@ -1203,7 +1220,8 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     const bool gpu_hit = gpu_hits[index].hit != 0U;
     if (cpu_hit != gpu_hit) {
       ++run.misses;
-      record_mismatch(run, index, rays[index], cpu.closest, gpu_hits[index], "hit_presence");
+      record_mismatch(run, index, rays[index], cpu.closest, gpu_hits[index], expected_cage_bary,
+                      "hit_presence");
       continue;
     }
     if (!cpu_hit) {
@@ -1216,7 +1234,8 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
         actual.source_primitive != expected.source_primitive ||
         actual.material != expected.material) {
       ++run.wrong_ownership;
-      record_mismatch(run, index, rays[index], cpu.closest, actual, "ownership");
+      record_mismatch(run, index, rays[index], cpu.closest, actual, expected_cage_bary,
+                      "ownership");
       continue;
     }
     const double position_error =
@@ -1229,7 +1248,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     run.normal_error_max = std::max(run.normal_error_max, normal_error);
     run.attribute_error_max = std::max(run.attribute_error_max, attribute_error);
     if (position_error > 2.5e-5 || normal_error > 2.5e-5 || attribute_error > 2.5e-5) {
-      record_mismatch(run, index, rays[index], cpu.closest, actual, "value");
+      record_mismatch(run, index, rays[index], cpu.closest, actual, expected_cage_bary, "value");
     }
   }
   run.gpu_attribute_reconstruction = true;
