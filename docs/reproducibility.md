@@ -36,6 +36,7 @@ promoted by that job.
 | Cage animation suitability diagnostic | `results/authoring/2026-07-28-procedural-clip.json` | deterministic procedural clip, not production proof |
 | Cage LOD parent maps | `results/authoring/2026-07-28-lods.json` plus `results/authoring/lod-cage-lod*.cage` | deterministic topology/refinement mapping, no visual transition proof |
 | Generated result summary | `results/reproducibility-summary.json` and `.md` | deterministic manifest inventory and aggregate, not a claim promotion |
+| v1 migration round-trip | `results/formats/2026-07-28-v1-migration.json` | portable identity adapter with byte/checksum equality |
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
@@ -52,3 +53,6 @@ milestones requires the real NVIDIA/Vulkan environment, representative
 animation clips, pinned UE5 and Cycles source trees, a licensed RenderMan
 runtime, or additional production hardening beyond the portable parser gate. A
 green portable build is not substituted for any of those requirements.
+The v1 identity round-trip is a compatibility harness, not historical-version
+translation; a future format version must add an explicit migration table and
+golden fixtures before it is considered supported.

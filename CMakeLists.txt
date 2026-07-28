@@ -59,6 +59,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_cage_animation PRIVATE tetcage_core)
   add_executable(tetcage_cage_lods tools/cage_lods/main.cpp)
   target_link_libraries(tetcage_cage_lods PRIVATE tetcage_core)
+  add_executable(tetcage_asset_migrate tools/asset_migrate/main.cpp)
+  target_link_libraries(tetcage_asset_migrate PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -208,6 +210,14 @@ if(TETCAGE_BUILD_TOOLS)
         --markdown-out "${CMAKE_CURRENT_BINARY_DIR}/reproducibility-summary.md")
     set_tests_properties(tetcage.result_report_smoke PROPERTIES
       PASS_REGULAR_EXPRESSION "")
+    add_test(NAME tetcage.asset_migration_cli
+      COMMAND tetcage_asset_migrate
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet-migrated.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/migration.json")
+    set_tests_properties(tetcage.asset_migration_cli PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "\"byte_identical\":true")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

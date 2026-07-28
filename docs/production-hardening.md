@@ -21,7 +21,7 @@ without hand-editing benchmark claims.
 This is a parser safety gate, not a substitute for coverage-guided fuzzing or
 device-loss testing. The remaining M14 work is explicitly platform-specific:
 allocation/cancellation/device-reset behavior on retained GPU backends,
-cross-device shader conformance, a future format migration beyond v1, and
+cross-device shader conformance, historical format migration beyond v1, and
 release charts must follow the hardware and renderer gates.
 
 The v1 parser now rejects assets over the 256 MiB safety limit, non-finite
@@ -29,10 +29,12 @@ floating-point payloads, impossible stream counts, out-of-range stream indices,
 contradictory primitive provenance, and unsupported format versions before
 exposing an asset to the runtime. The portable test suite exercises each
 rejection path and checks the
-checked-in one-tet fixture against its golden checksum. Version 1 is the
-initial format, so there is no older version to migrate yet; future format
-changes must add an explicit migration table and golden fixtures rather than
-silently accepting a new version.
+checked-in one-tet fixture against its golden checksum. The
+`tetcage_asset_migrate` identity adapter records byte/checksum equality in
+`results/formats/2026-07-28-v1-migration.json`. Version 1 is the initial
+format, so there is no older version to translate yet; future format changes
+must add an explicit migration table and golden fixtures rather than silently
+accepting a new version.
 
 The backend-neutral frame policy also accepts an optional maximum instance
 count. The portable stub preflights visible objects against that limit before

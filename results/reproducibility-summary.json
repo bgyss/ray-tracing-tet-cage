@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 2
   },
-  "file_count": 16,
+  "file_count": 17,
   "files": [
     {
       "documents": 1,
@@ -79,6 +79,14 @@
         "other"
       ],
       "path": "formats/2026-07-28-v1-golden.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "formats/2026-07-28-v1-migration.json",
       "shared_records": 0
     },
     {
