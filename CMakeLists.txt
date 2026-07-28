@@ -200,6 +200,14 @@ if(TETCAGE_BUILD_TOOLS)
         "${CMAKE_CURRENT_SOURCE_DIR}/results")
     set_tests_properties(tetcage.result_manifest_smoke PROPERTIES
       PASS_REGULAR_EXPRESSION "\"checked_manifests\":")
+    add_test(NAME tetcage.result_report_smoke
+      COMMAND python3
+        "${CMAKE_CURRENT_SOURCE_DIR}/scripts/result_report.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/results"
+        --json-out "${CMAKE_CURRENT_BINARY_DIR}/reproducibility-summary.json"
+        --markdown-out "${CMAKE_CURRENT_BINARY_DIR}/reproducibility-summary.md")
+    set_tests_properties(tetcage.result_report_smoke PROPERTIES
+      PASS_REGULAR_EXPRESSION "")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

@@ -14,6 +14,9 @@ The CTest `tetcage.result_manifest_smoke` check also parses every checked-in
 shared result manifest, including each line of the Metal scale sweep, and
 requires the common timing, memory, correctness, evidence, and provenance
 fields. Feasibility and integration reports remain separate schemas by design.
+The `tetcage.result_report_smoke` check exercises the deterministic aggregate
+generator used by `mise run report`, so checked-in summaries can be regenerated
+without hand-editing benchmark claims.
 
 This is a parser safety gate, not a substitute for coverage-guided fuzzing or
 device-loss testing. The remaining M14 work is explicitly platform-specific:

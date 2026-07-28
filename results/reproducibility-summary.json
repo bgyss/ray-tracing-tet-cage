@@ -1,0 +1,341 @@
+{
+  "api_counts": {
+    "metal": 8,
+    "stub": 2
+  },
+  "evidence_class_counts": {
+    "direct": 8,
+    "synthetic": 2
+  },
+  "file_count": 16,
+  "files": [
+    {
+      "documents": 1,
+      "kinds": [
+        "authoring"
+      ],
+      "path": "authoring/2026-07-28-lods.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "authoring"
+      ],
+      "path": "authoring/2026-07-28-procedural-clip.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "benchmarks/2026-07-27-cpu-stub-corrupt.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "benchmarks/2026-07-27-cpu-stub.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "capability"
+      ],
+      "path": "capabilities/2026-07-27-metal.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "capability"
+      ],
+      "path": "capabilities/2026-07-27-vulkan.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "cpu/2026-07-27-two-tet-oracle.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "cpu/2026-07-27-two-tet-pre-fix-counterexample.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "formats/2026-07-28-v1-golden.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-07-28-host-gates.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "metal/2026-07-27-metal-fast-path.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "metal/2026-07-28-metal-boundary-fallback.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "metal/2026-07-28-metal-fast-path.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "metal/2026-07-28-metal-gpu-instances.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "scale_sweep"
+      ],
+      "path": "metal/2026-07-28-metal-scale-sweep.json",
+      "shared_records": 4
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "feasibility"
+      ],
+      "path": "renderman-feasibility.json",
+      "shared_records": 0
+    }
+  ],
+  "generator": "scripts/result_report.py",
+  "results_root": "results",
+  "schema_version": 1,
+  "shared_manifest_count": 10,
+  "shared_manifest_failure_count": 8,
+  "shared_manifests": [
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 2,
+      "misses": 0,
+      "path": "benchmarks/2026-07-27-cpu-stub-corrupt.json",
+      "peak_total_bytes": null,
+      "rays": 512,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-12345",
+      "run_index": null,
+      "scene": "two-tet-corrupt",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "d0158e190fce54ebafc7b14a94f397852f4ec489",
+      "source_dirty": true,
+      "status": "measured",
+      "total_ms": 2.6674785,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "benchmarks/2026-07-27-cpu-stub.json",
+      "peak_total_bytes": null,
+      "rays": 51200,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-12345",
+      "run_index": null,
+      "scene": "two-tet-runtime",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "d0158e190fce54ebafc7b14a94f397852f4ec489",
+      "source_dirty": true,
+      "status": "measured",
+      "total_ms": 20.76398,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 12,
+      "path": "metal/2026-07-27-metal-fast-path.json",
+      "peak_total_bytes": 92092,
+      "rays": 512,
+      "run_id": "metal-fast-0fc1a55a6843ce11",
+      "run_index": null,
+      "scene": "metal-fast-path",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "d0158e190fce54ebafc7b14a94f397852f4ec489",
+      "source_dirty": true,
+      "status": "measured",
+      "total_ms": 771.663292,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-boundary-fallback.json",
+      "peak_total_bytes": 33804,
+      "rays": 128,
+      "run_id": "metal-fast-325c89d5964ef6a7",
+      "run_index": null,
+      "scene": "metal-fast-path",
+      "scene_hash": "325c89d5964ef6a7",
+      "source_commit": "d212c63ab7b7077f25d0c841f5d00f1f3e5b914f",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 113.86175,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 1,
+      "path": "metal/2026-07-28-metal-fast-path.json",
+      "peak_total_bytes": 33804,
+      "rays": 128,
+      "run_id": "metal-fast-325c89d5964ef6a7",
+      "run_index": null,
+      "scene": "metal-fast-path",
+      "scene_hash": "325c89d5964ef6a7",
+      "source_commit": "632c4c80b6f30129e50107e61e7000ef1e3032b5",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 103.391625,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-gpu-instances.json",
+      "peak_total_bytes": 33872,
+      "rays": 128,
+      "run_id": "metal-fast-325c89d5964ef6a7",
+      "run_index": null,
+      "scene": "metal-fast-path",
+      "scene_hash": "325c89d5964ef6a7",
+      "source_commit": "4f376c59c3d617fbb339b9fcf6f7c9c41bf07006",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 106.380583,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-scale-sweep.json",
+      "peak_total_bytes": 67652,
+      "rays": 256,
+      "run_id": "metal-fast-0fc1a55a6843ce11",
+      "run_index": 0,
+      "scene": "metal-fast-path",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "4f376c59c3d617fbb339b9fcf6f7c9c41bf07006",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 93.089833,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-scale-sweep.json",
+      "peak_total_bytes": 70540,
+      "rays": 256,
+      "run_id": "metal-fast-0fc1a55a6843ce11",
+      "run_index": 1,
+      "scene": "metal-fast-path",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "4f376c59c3d617fbb339b9fcf6f7c9c41bf07006",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 98.60475,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-scale-sweep.json",
+      "peak_total_bytes": 82348,
+      "rays": 256,
+      "run_id": "metal-fast-0fc1a55a6843ce11",
+      "run_index": 2,
+      "scene": "metal-fast-path",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "4f376c59c3d617fbb339b9fcf6f7c9c41bf07006",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 92.255625,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 1,
+      "misses": 0,
+      "path": "metal/2026-07-28-metal-scale-sweep.json",
+      "peak_total_bytes": 158508,
+      "rays": 256,
+      "run_id": "metal-fast-0fc1a55a6843ce11",
+      "run_index": 3,
+      "scene": "metal-fast-path",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "4f376c59c3d617fbb339b9fcf6f7c9c41bf07006",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 103.203917,
+      "wrong_ownership": 0
+    }
+  ],
+  "status_counts": {
+    "measured": 10
+  }
+}

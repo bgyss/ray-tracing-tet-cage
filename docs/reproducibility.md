@@ -9,6 +9,7 @@ license gates that cannot be closed on the current host.
 ```sh
 XDG_CACHE_HOME="$PWD/.cache" mise run check
 XDG_CACHE_HOME="$PWD/.cache" mise run nix-check
+XDG_CACHE_HOME="$PWD/.cache" mise run report
 ```
 
 The first command runs formatting, shell checks, a fresh Nix CMake build, and
@@ -16,6 +17,11 @@ the portable/authoring/fuzz/probe CTest suite. The second evaluates the flake
 and builds the Metal-disabled package in a pure Nix derivation. The v1 format
 golden checksum is recorded in
 `results/formats/2026-07-28-v1-golden.json`.
+The report task deterministically regenerates
+`results/reproducibility-summary.json` and
+`results/reproducibility-summary.md`; it summarizes shared manifests while
+retaining capability, authoring, feasibility, and integration artifacts as
+separate evidence classes.
 
 CI invokes the same first command through
 `.github/workflows/portable.yml` on Ubuntu. No hardware-specific result is
@@ -29,6 +35,7 @@ promoted by that job.
 | CPU/stub benchmark and corruption gate | `results/benchmarks/2026-07-27-cpu-stub.json` and `results/benchmarks/2026-07-27-cpu-stub-corrupt.json` | synthetic differential |
 | Cage animation suitability diagnostic | `results/authoring/2026-07-28-procedural-clip.json` | deterministic procedural clip, not production proof |
 | Cage LOD parent maps | `results/authoring/2026-07-28-lods.json` plus `results/authoring/lod-cage-lod*.cage` | deterministic topology/refinement mapping, no visual transition proof |
+| Generated result summary | `results/reproducibility-summary.json` and `.md` | deterministic manifest inventory and aggregate, not a claim promotion |
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
