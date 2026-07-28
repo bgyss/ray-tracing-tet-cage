@@ -1,0 +1,73 @@
+# Developer environment
+
+Nix is the authoritative source of portable build and validation tools. Mise is
+the task front end: every mise task enters the pinned Nix environment, so there
+is only one toolchain definition to maintain.
+
+## Prerequisites
+
+- Install Nix with flakes enabled.
+- Install mise to use the short task names.
+- On macOS, install Xcode or the Xcode Command Line Tools. The Nix shell
+  deliberately selects `/usr/bin/clang` and `/usr/bin/clang++` because Apple
+  frameworks, Objective-C++, and Metal are supplied by Xcode rather than
+  nixpkgs.
+
+The shell contains CMake, Ninja, clang-format/clang-tidy, Python, jq,
+ShellCheck, pkg-config, Vulkan headers and loader, glslang, shaderc, and SPIR-V
+tools. CUDA, GPU drivers, Blender/Cycles, RenderMan, and Xcode's optional
+offline Metal compiler are host integrations: the doctor reports them but does
+not pretend Nix can provide or validate the target hardware.
+
+## Mise workflow
+
+```sh
+MISE_DISABLE_VERSION_CHECK=1 mise run doctor
+MISE_DISABLE_VERSION_CHECK=1 mise run configure
+MISE_DISABLE_VERSION_CHECK=1 mise run build
+MISE_DISABLE_VERSION_CHECK=1 mise run test
+MISE_DISABLE_VERSION_CHECK=1 mise run check
+```
+
+Other tasks are `format`, `format-check`, and `nix-check`. `check` is the
+normal local gate: it validates formatting and shell scripts, builds with the
+`nix` CMake preset, runs CTest, and checks the working diff. `nix-check` also
+builds the Metal-disabled portable package in a pure Nix derivation.
+
+## Direct Nix workflow
+
+Enter an interactive shell:
+
+```sh
+nix develop path:.
+```
+
+Or run the complete repository check without entering one:
+
+```sh
+nix develop path:. --command bash scripts/check.sh nix
+nix flake check path:.
+```
+
+`path:.` is intentional during active development: unlike the implicit Git
+flake form, it includes untracked files in the source tree. The committed
+`flake.lock` pins nixpkgs. Refresh it only as an explicit dependency update:
+
+```sh
+nix flake update path:.
+```
+
+## CMake without mise
+
+Inside `nix develop`, the equivalent commands are:
+
+```sh
+cmake --preset nix
+cmake --build --preset nix
+ctest --preset nix
+```
+
+The existing `dev` preset remains the direct Xcode-clang lane on macOS, and
+`portable` remains the default-compiler fallback. Direct GPU evidence still
+requires a matching physical device, driver, runtime, and SDK; successful Nix
+builds do not satisfy those roadmap gates.

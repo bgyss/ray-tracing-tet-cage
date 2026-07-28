@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "report_kind": "cpu_4d_oracle",
+  "evidence_class": "synthetic",
+  "asset_hash_fnv1a64": "0fc1a55a6843ce11",
+  "seed": 81002718,
+  "command": "./build/dev/tetcage_oracle_report results/assets/two-tet-crossing.tetcage results/cpu/2026-07-27-two-tet-oracle.json --seed 81002718 --random-rays 4096",
+  "ray_count": 4128,
+  "bvh": {
+    "tree_count": 2,
+    "node_count": 2,
+    "leaf_size": 4,
+    "build_ms": 0.095125000000000001
+  },
+  "correctness": {
+    "fast_misses": 0,
+    "exact_misses": 0,
+    "primitive_mismatches": 0,
+    "fast_duplicate_ownership": 0,
+    "exact_duplicate_ownership": 0,
+    "fast_raw_duplicate_candidates": 22,
+    "exact_raw_duplicate_candidates": 20,
+    "max_position_error": 4.360783249020813e-10,
+    "max_attribute_error": 6.1545879503910328e-10,
+    "failures": [
+    ]
+  },
+  "projection_comparison": {
+    "paper_interval_sum": {
+      "summed_node_volume": 0.13680198000450003,
+      "bounds_build_ms": 0.001042,
+      "invalid_bounds": 0,
+      "trace_ms": 20.166291999999999,
+      "visited_nodes": 8256,
+      "hits": 4128,
+      "raw_duplicate_candidates": 20
+    },
+    "bounded_simplex": {
+      "summed_node_volume": 0.13680198000450003,
+      "bounds_build_ms": 0.0032079999999999999,
+      "invalid_bounds": 0,
+      "trace_ms": 30.156041999999999,
+      "visited_nodes": 8256,
+      "hits": 4128,
+      "raw_duplicate_candidates": 20
+    }
+  }
+}

@@ -32,5 +32,48 @@ provenance, numerical consistency, deformation validation, and acceleration
 structure scaling. Once those contracts pass, implement the Metal and Vulkan
 backends independently, then use measured results to choose engine targets.
 
-This repository contains planning and research only as of 2026-07-27. No
-implementation or performance claim has been validated here yet.
+## Current implementation
+
+Portable implementation work now includes:
+
+- a C++20/CMake core with tetrahedral barycentrics, affine deformation,
+  inverse-transpose normals, condition/mirror/singularity classification, and
+  deterministic clipping;
+- a versioned canonical asset compiler with source provenance, deterministic
+  shared-boundary ownership, serialization, checksums, and inspection;
+- real Metal and Vulkan capability-report executables (Vulkan reports
+  unverified when no SDK/loader is present);
+- a versioned result-manifest schema and proof-oriented requirements matrix;
+- analytical, all-permutation, malformed-input, deterministic-build, and seeded
+  differential tests.
+
+The recommended developer workflow uses the pinned Nix environment through
+mise:
+
+```sh
+MISE_DISABLE_VERSION_CHECK=1 mise run doctor
+MISE_DISABLE_VERSION_CHECK=1 mise run check
+```
+
+Nix owns CMake, Ninja, formatting, shell/JSON/Python utilities, and
+Vulkan/SPIR-V tooling. On macOS it deliberately delegates Objective-C++, Apple
+frameworks, and Metal to Xcode clang. See
+[the developer environment guide](docs/development.md) for direct Nix commands,
+tool ownership, formatting, and optional GPU/DCC dependencies.
+
+Configure, build, and test directly on macOS:
+
+```sh
+cmake --preset dev
+cmake --build --preset dev
+ctest --preset dev
+```
+
+Use `cmake --preset portable` on other hosts. Run `bash scripts/check.sh` for
+the complete repo-native check. The current proof state and unresolved hardware
+gates are recorded in [the requirements matrix](docs/requirements-matrix.md)
+and [platform support policy](docs/platform-support.md).
+
+No GPU rendering, production-scale performance, watertightness, or renderer
+integration claim is made until its original roadmap exit gate has direct
+evidence under `results/`.

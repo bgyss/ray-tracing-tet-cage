@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "probe_kind": "metal",
+  "status": "measured",
+  "execution_note": "Captured with direct host GPU-driver access; a filesystem-sandboxed run returned zero devices.",
+  "os": "Version 27.0 (Build 26A5378n)",
+  "device_count": 1,
+  "limitations": [
+    "Metal exposes no direct numeric maximum-instance or AS nesting-depth property; descriptor size queries below are real driver calls but do not prove a successful build at that count.",
+    "Metal API availability is not treated as device support; family and supportsRaytracing values come from each MTLDevice."
+  ],
+  "devices": [
+    {
+      "name": "Apple M1 Max",
+      "registry_id": 4294970056,
+      "unified_memory": true,
+      "recommended_max_working_set_bytes": 55662788608,
+      "max_buffer_length": 41747087360,
+      "supports_raytracing": true,
+      "supports_raytracing_from_render": true,
+      "supports_function_pointers": true,
+      "supports_metal3_family": true,
+      "supports_metal4_family": true,
+      "indirect_instance_descriptor_api_available": true,
+      "extended_limits_usage_api_available": true,
+      "reported_max_instance_count": null,
+      "reported_max_as_nesting_depth": null,
+      "descriptor_queries": {
+        "direct_standard": [
+          {"instance_count": 1, "accepted": true, "acceleration_structure_bytes": 1792, "build_scratch_bytes": 6656, "error": null},
+          {"instance_count": 100000, "accepted": true, "acceleration_structure_bytes": 25200640, "build_scratch_bytes": 16476416, "error": null},
+          {"instance_count": 1000000, "accepted": true, "acceleration_structure_bytes": 252000512, "build_scratch_bytes": 164694784, "error": null},
+          {"instance_count": 2800000, "accepted": true, "acceleration_structure_bytes": 705600512, "build_scratch_bytes": 461128960, "error": null},
+          {"instance_count": 16000000, "accepted": true, "acceleration_structure_bytes": 4032000512, "build_scratch_bytes": 2634991872, "error": null}
+        ],
+        "direct_extended": [
+          {"instance_count": 1, "accepted": true, "acceleration_structure_bytes": 1792, "build_scratch_bytes": 6656, "error": null},
+          {"instance_count": 100000, "accepted": true, "acceleration_structure_bytes": 25200640, "build_scratch_bytes": 16476416, "error": null},
+          {"instance_count": 1000000, "accepted": true, "acceleration_structure_bytes": 252000512, "build_scratch_bytes": 164694784, "error": null},
+          {"instance_count": 2800000, "accepted": true, "acceleration_structure_bytes": 705600512, "build_scratch_bytes": 461128960, "error": null},
+          {"instance_count": 16000000, "accepted": true, "acceleration_structure_bytes": 4032000512, "build_scratch_bytes": 2634991872, "error": null}
+        ],
+        "indirect_standard": [
+          {"instance_count": 1, "accepted": true, "acceleration_structure_bytes": 1792, "build_scratch_bytes": 6656, "error": null},
+          {"instance_count": 100000, "accepted": true, "acceleration_structure_bytes": 25200640, "build_scratch_bytes": 16476416, "error": null},
+          {"instance_count": 1000000, "accepted": true, "acceleration_structure_bytes": 252000512, "build_scratch_bytes": 164694784, "error": null},
+          {"instance_count": 2800000, "accepted": true, "acceleration_structure_bytes": 705600512, "build_scratch_bytes": 461128960, "error": null},
+          {"instance_count": 16000000, "accepted": true, "acceleration_structure_bytes": 4032000512, "build_scratch_bytes": 2634991872, "error": null}
+        ],
+        "indirect_extended": [
+          {"instance_count": 1, "accepted": true, "acceleration_structure_bytes": 1792, "build_scratch_bytes": 6656, "error": null},
+          {"instance_count": 100000, "accepted": true, "acceleration_structure_bytes": 25200640, "build_scratch_bytes": 16476416, "error": null},
+          {"instance_count": 1000000, "accepted": true, "acceleration_structure_bytes": 252000512, "build_scratch_bytes": 164694784, "error": null},
+          {"instance_count": 2800000, "accepted": true, "acceleration_structure_bytes": 705600512, "build_scratch_bytes": 461128960, "error": null},
+          {"instance_count": 16000000, "accepted": true, "acceleration_structure_bytes": 4032000512, "build_scratch_bytes": 2634991872, "error": null}
+        ]
+      }
+    }
+  ]
+}
+

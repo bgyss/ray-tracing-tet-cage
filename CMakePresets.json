@@ -1,0 +1,86 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "Portable development build",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "TETCAGE_BUILD_TESTS": "ON",
+        "TETCAGE_BUILD_TOOLS": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "portable",
+      "displayName": "Portable development build (default compiler)",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/portable",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "TETCAGE_BUILD_TESTS": "ON",
+        "TETCAGE_BUILD_TOOLS": "ON"
+      }
+    },
+    {
+      "name": "nix",
+      "displayName": "Pinned Nix development build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/nix",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "TETCAGE_BUILD_TESTS": "ON",
+        "TETCAGE_BUILD_TOOLS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "portable",
+      "configurePreset": "portable"
+    },
+    {
+      "name": "nix",
+      "configurePreset": "nix"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "portable",
+      "configurePreset": "portable",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "nix",
+      "configurePreset": "nix",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

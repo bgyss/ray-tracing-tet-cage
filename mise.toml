@@ -1,0 +1,38 @@
+min_version = "2025.7.12"
+
+[env]
+MISE_DISABLE_VERSION_CHECK = "1"
+
+[tasks.doctor]
+description = "Report required tools and optional GPU/DCC integrations"
+run = "nix develop path:. --command bash scripts/doctor.sh"
+
+[tasks.configure]
+description = "Configure the Nix-owned CMake build"
+run = "nix develop path:. --command cmake --fresh --preset nix"
+
+[tasks.build]
+description = "Build all portable tools and host capability probes"
+depends = ["configure"]
+run = "nix develop path:. --command cmake --build --preset nix"
+
+[tasks.test]
+description = "Run the CTest suite in the Nix build"
+depends = ["build"]
+run = "nix develop path:. --command ctest --preset nix"
+
+[tasks.format]
+description = "Apply clang-format and nixfmt to project sources"
+run = "nix develop path:. --command bash scripts/format.sh"
+
+[tasks.format-check]
+description = "Check C++, Objective-C++, Metal, and Nix formatting without changes"
+run = "nix develop path:. --command bash scripts/format.sh --check"
+
+[tasks.check]
+description = "Run formatting, shell lint, configure, build, tests, and repository checks"
+run = "nix develop path:. --command bash scripts/check.sh nix"
+
+[tasks.nix-check]
+description = "Build and test the pure portable Nix package and tooling contract"
+run = "nix flake check path:. --print-build-logs"

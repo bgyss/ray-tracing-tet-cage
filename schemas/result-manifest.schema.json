@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/tetcage/result-manifest-v1.schema.json",
+  "title": "Tet-cage result manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "timestamp_utc",
+    "source",
+    "build",
+    "host",
+    "backend",
+    "scene",
+    "configuration",
+    "timings_ms",
+    "memory_bytes",
+    "correctness",
+    "command",
+    "evidence_class"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "dirty"],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "dirty": {
+          "type": "boolean"
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["compiler", "compiler_version", "build_type"],
+      "properties": {
+        "compiler": {
+          "type": "string"
+        },
+        "compiler_version": {
+          "type": "string"
+        },
+        "build_type": {
+          "type": "string"
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["os", "os_version", "architecture"],
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "os_version": {
+          "type": "string"
+        },
+        "architecture": {
+          "type": "string"
+        }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["api", "status", "device", "driver", "capability_manifest"],
+      "properties": {
+        "api": {
+          "enum": ["cpu", "stub", "metal", "vulkan", "cuda", "optix", "unreal", "cycles", "renderman"]
+        },
+        "status": {
+          "enum": ["measured", "unsupported", "unverified", "error"]
+        },
+        "device": {
+          "type": ["string", "null"]
+        },
+        "driver": {
+          "type": ["string", "null"]
+        },
+        "capability_manifest": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "hash"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "seed": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "timings_ms": {
+      "$ref": "#/$defs/timings"
+    },
+    "memory_bytes": {
+      "$ref": "#/$defs/memory"
+    },
+    "correctness": {
+      "$ref": "#/$defs/correctness"
+    },
+    "statistics": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "command": {
+      "type": "string"
+    },
+    "evidence_class": {
+      "enum": ["direct", "partial", "synthetic", "schema_only", "blocked"]
+    }
+  },
+  "$defs": {
+    "nullableMeasurement": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cage_deformation",
+        "transform_generation",
+        "instance_generation",
+        "blas",
+        "tlas",
+        "synchronization",
+        "traversal",
+        "shading",
+        "total",
+        "warmup_iterations",
+        "measured_iterations"
+      ],
+      "properties": {
+        "cage_deformation": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "transform_generation": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "instance_generation": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "blas": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "tlas": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "synchronization": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "traversal": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "shading": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "total": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "median": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "p95": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "variance": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "warmup_iterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "measured_iterations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_geometry",
+        "canonical_geometry",
+        "provenance",
+        "cage",
+        "blas",
+        "tlas",
+        "scratch",
+        "instance_buffers",
+        "api_objects",
+        "renderer_state",
+        "peak_total"
+      ],
+      "properties": {
+        "source_geometry": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "canonical_geometry": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "provenance": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "cage": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "blas": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "tlas": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "scratch": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "instance_buffers": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "api_objects": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "renderer_state": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "peak_total": {
+          "$ref": "#/$defs/nullableMeasurement"
+        }
+      }
+    },
+    "correctness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rays",
+        "misses",
+        "duplicate_hits",
+        "wrong_ownership",
+        "position_error_max",
+        "normal_error_max",
+        "attribute_error_max",
+        "image_error"
+      ],
+      "properties": {
+        "rays": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "misses": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "duplicate_hits": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "wrong_ownership": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "position_error_max": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "normal_error_max": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "attribute_error_max": {
+          "$ref": "#/$defs/nullableMeasurement"
+        },
+        "image_error": {
+          "$ref": "#/$defs/nullableMeasurement"
+        }
+      }
+    }
+  }
+}
+
