@@ -30,7 +30,7 @@ Compilation alone never promotes a row to measured.
 | Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal descriptor sizing measured; builds pending |
 | Metal device capability | Objective-C++ device probe | real `MTLDevice` query output | implemented; requires unsandboxed execution |
 | Vulkan/NVIDIA capability | Vulkan physical-device probe | KHR/NV features, limits, driver/device from real NVIDIA loader | implementation present; host has no Vulkan SDK/device |
-| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; hardware-all-rays has 1 miss and 0.05 position error, while explicit boundary fallback makes 121/128 rays GPU-eligible with zero residuals |
+| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; opt-in GPU descriptor generation is direct-device validated; hardware-all-rays has 1 miss and 0.05 position error, while explicit boundary fallback makes 121/128 rays GPU-eligible with zero residuals |
 | Vulkan fast backend | KHR AS/ray tracing and Vulkan compute | validation-clean NVIDIA results | blocked by absent SDK/NVIDIA hardware |
 | CUDA interop | UUID-matched memory/semaphore experiment | end-to-end retain/remove measurement | blocked until M6 exists |
 | GPU watertight/hybrid experiments | procedural/manual 4D path | equal-work correctness/time/memory comparison | blocked until M5/M6 and M3 exist |

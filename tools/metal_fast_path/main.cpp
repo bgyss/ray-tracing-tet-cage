@@ -16,7 +16,8 @@ namespace {
 void usage() {
   std::cerr << "usage: tetcage_metal_fast_path <asset.tetcage> <result.json> "
                "--copies <u32> --rays <u32> --motion <value> "
-               "[--compact] [--extended-limits] [--boundary-fallback] [--allow-unverified]\n";
+               "[--compact] [--extended-limits] [--boundary-fallback] [--gpu-instances] "
+               "[--allow-unverified]\n";
 }
 
 bool parse_u32(const std::string &text, std::uint32_t &value) {
@@ -55,6 +56,8 @@ int main(int argc, char **argv) {
       options.extended_limits = true;
     } else if (flag == "--boundary-fallback") {
       options.boundary_fallback = true;
+    } else if (flag == "--gpu-instances") {
+      options.gpu_instances = true;
     } else if (flag == "--allow-unverified") {
       options.allow_unverified = true;
     } else {

@@ -14,6 +14,7 @@ struct MetalFastPathOptions {
   bool compact_blas{true};
   bool extended_limits{};
   bool boundary_fallback{};
+  bool gpu_instances{};
   bool allow_unverified{};
 };
 

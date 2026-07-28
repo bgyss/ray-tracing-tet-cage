@@ -87,6 +87,20 @@ static_assert(sizeof(GpuRay) == 32U);
 static_assert(sizeof(GpuProvenance) == 104U);
 static_assert(sizeof(GpuHit) == 96U);
 
+struct GpuInstanceInput {
+  PackedFloat3 c0{};
+  PackedFloat3 c1{};
+  PackedFloat3 c2{};
+  PackedFloat3 translation{};
+  std::uint32_t options{};
+  std::uint32_t mask{};
+  std::uint32_t intersection_function_table_offset{};
+  std::uint32_t acceleration_structure_index{};
+  std::uint32_t user_id{};
+};
+
+static_assert(sizeof(GpuInstanceInput) == sizeof(MTLAccelerationStructureUserIDInstanceDescriptor));
+
 struct BlasGroup {
   std::uint32_t tet_id{};
   std::vector<std::uint32_t> micro_triangle_indices;
@@ -141,6 +155,7 @@ struct RunMeasurements {
   double traversal_gpu_ms{};
   double total_ms{};
   bool runtime_shader_compiled{};
+  bool gpu_instance_generation{};
   bool gpu_attribute_reconstruction{};
   bool mirrored_instances{};
   std::vector<std::string> mismatch_samples;
@@ -260,7 +275,8 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "    \"boundary_policy\": \""
          << (options.boundary_fallback ? "cpu_fallback_experimental" : "hardware_all_rays")
          << "\",\n"
-         << "    \"instance_generation\": \"cpu_direct_baseline\",\n"
+         << "    \"instance_generation\": \""
+         << (options.gpu_instances ? "gpu_compute_descriptor" : "cpu_direct_baseline") << "\",\n"
          << "    \"blas_usage\": \"static_prefer_fast_intersection_when_available\",\n"
          << "    \"triangle_culling\": \"disabled_for_mirror_safe_baseline\"\n"
          << "  },\n"
@@ -341,6 +357,8 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << ",\n"
          << "    \"gpu_attribute_reconstruction\": "
          << (run.gpu_attribute_reconstruction ? "true" : "false") << ",\n"
+         << "    \"gpu_instance_generation\": " << (run.gpu_instance_generation ? "true" : "false")
+         << ",\n"
          << "    \"mirrored_instances\": " << (run.mirrored_instances ? "true" : "false") << ",\n"
          << "    \"mismatch_samples\": [";
   for (std::size_t index = 0; index < run.mismatch_samples.size(); ++index) {
@@ -569,6 +587,33 @@ kernel void trace_rays(instance_acceleration_structure scene [[buffer(0)]],
   const std::string marker = "__INTERSECTOR_TAGS__";
   source.replace(source.find(marker), marker.size(), tags);
   return [NSString stringWithUTF8String:source.c_str()];
+}
+
+NSString *instance_kernel_source() {
+  const char *source = R"METAL(
+#include <metal_stdlib>
+using namespace metal;
+
+struct InstanceDescriptor {
+  packed_float3 c0;
+  packed_float3 c1;
+  packed_float3 c2;
+  packed_float3 translation;
+  uint options;
+  uint mask;
+  uint intersection_function_table_offset;
+  uint acceleration_structure_index;
+  uint user_id;
+};
+
+kernel void write_instance_descriptors(
+    device const InstanceDescriptor *input [[buffer(0)]],
+    device InstanceDescriptor *output [[buffer(1)]],
+    uint tid [[thread_position_in_grid]]) {
+  output[tid] = input[tid];
+}
+)METAL";
+  return [NSString stringWithUTF8String:source];
 }
 
 std::uint64_t source_geometry_bytes(const CompiledAsset &asset) {
@@ -858,9 +903,11 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
 
   const auto transform_begin = Clock::now();
   std::vector<MTLAccelerationStructureUserIDInstanceDescriptor> descriptors;
+  std::vector<GpuInstanceInput> gpu_instance_inputs;
   std::vector<InstanceInfo> instance_info;
   std::vector<std::uint32_t> instance_to_blas;
   descriptors.reserve(options.copies * groups.size());
+  gpu_instance_inputs.reserve(options.copies * groups.size());
   instance_info.reserve(options.copies * groups.size());
   instance_to_blas.reserve(options.copies * groups.size());
   for (std::uint32_t copy = 0; copy < options.copies; ++copy) {
@@ -872,26 +919,37 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     for (std::uint32_t blas_index = 0; blas_index < groups.size(); ++blas_index) {
       const auto tet_id = groups[blas_index].tet_id;
       const auto &transform = transforms.transforms[tet_id];
+      const PackedFloat3 c0{
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].z)};
+      const PackedFloat3 c1{
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].z)};
+      const PackedFloat3 c2{
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].z)};
+      const PackedFloat3 translation{
+          static_cast<float>(transform.object_from_canonical.translation.x),
+          static_cast<float>(transform.object_from_canonical.translation.y),
+          static_cast<float>(transform.object_from_canonical.translation.z)};
       MTLAccelerationStructureUserIDInstanceDescriptor descriptor{};
-      descriptor.transformationMatrix = MTLPackedFloat4x3(
-          MTLPackedFloat3(static_cast<float>(transform.object_from_canonical.linear.columns[0].x),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[0].y),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[0].z)),
-          MTLPackedFloat3(static_cast<float>(transform.object_from_canonical.linear.columns[1].x),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[1].y),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[1].z)),
-          MTLPackedFloat3(static_cast<float>(transform.object_from_canonical.linear.columns[2].x),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[2].y),
-                          static_cast<float>(transform.object_from_canonical.linear.columns[2].z)),
-          MTLPackedFloat3(static_cast<float>(transform.object_from_canonical.translation.x),
-                          static_cast<float>(transform.object_from_canonical.translation.y),
-                          static_cast<float>(transform.object_from_canonical.translation.z)));
+      descriptor.transformationMatrix =
+          MTLPackedFloat4x3(MTLPackedFloat3(c0.x, c0.y, c0.z), MTLPackedFloat3(c1.x, c1.y, c1.z),
+                            MTLPackedFloat3(c2.x, c2.y, c2.z),
+                            MTLPackedFloat3(translation.x, translation.y, translation.z));
       descriptor.options = MTLAccelerationStructureInstanceOptionOpaque |
                            MTLAccelerationStructureInstanceOptionDisableTriangleCulling;
       descriptor.mask = std::numeric_limits<std::uint32_t>::max();
       descriptor.intersectionFunctionTableOffset = 0U;
       descriptor.accelerationStructureIndex = blas_index;
       descriptor.userID = static_cast<std::uint32_t>(descriptors.size());
+      gpu_instance_inputs.push_back({c0, c1, c2, translation,
+                                     static_cast<std::uint32_t>(descriptor.options),
+                                     descriptor.mask, descriptor.intersectionFunctionTableOffset,
+                                     descriptor.accelerationStructureIndex, descriptor.userID});
       run.mirrored_instances =
           run.mirrored_instances || (transform.flags & tet_transform_mirrored) != 0U;
       descriptors.push_back(descriptor);
@@ -904,11 +962,61 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.total_instances = descriptors.size();
 
   const auto instance_begin = Clock::now();
-  id<MTLBuffer> instance_buffer =
-      [device newBufferWithBytes:descriptors.data()
-                          length:descriptors.size() *
-                                 sizeof(MTLAccelerationStructureUserIDInstanceDescriptor)
-                         options:MTLResourceStorageModeShared];
+  id<MTLBuffer> instance_input_buffer = nil;
+  id<MTLBuffer> instance_buffer = nil;
+  if (options.gpu_instances) {
+    instance_input_buffer =
+        [device newBufferWithBytes:gpu_instance_inputs.data()
+                            length:gpu_instance_inputs.size() * sizeof(GpuInstanceInput)
+                           options:MTLResourceStorageModeShared];
+    instance_buffer = [device newBufferWithLength:descriptors.size() * sizeof(GpuInstanceInput)
+                                          options:MTLResourceStorageModeShared];
+    if (instance_input_buffer == nil || instance_buffer == nil) {
+      throw std::runtime_error("failed to allocate GPU instance descriptor buffers");
+    }
+    NSError *instance_library_error = nil;
+    id<MTLLibrary> instance_library = [device newLibraryWithSource:instance_kernel_source()
+                                                           options:nil
+                                                             error:&instance_library_error];
+    if (instance_library == nil) {
+      throw std::runtime_error("Metal instance descriptor shader compilation failed: " +
+                               string_from_ns(instance_library_error.localizedDescription));
+    }
+    id<MTLFunction> instance_function =
+        [instance_library newFunctionWithName:@"write_instance_descriptors"];
+    NSError *instance_pipeline_error = nil;
+    id<MTLComputePipelineState> instance_pipeline =
+        [device newComputePipelineStateWithFunction:instance_function
+                                              error:&instance_pipeline_error];
+    if (instance_pipeline == nil) {
+      throw std::runtime_error("Metal instance descriptor pipeline creation failed: " +
+                               string_from_ns(instance_pipeline_error.localizedDescription));
+    }
+    id<MTLCommandBuffer> instance_commands = [queue commandBuffer];
+    id<MTLComputeCommandEncoder> instance_encoder = [instance_commands computeCommandEncoder];
+    [instance_encoder setComputePipelineState:instance_pipeline];
+    [instance_encoder setBuffer:instance_input_buffer offset:0U atIndex:0U];
+    [instance_encoder setBuffer:instance_buffer offset:0U atIndex:1U];
+    const NSUInteger instance_threads =
+        std::min<NSUInteger>(instance_pipeline.maxTotalThreadsPerThreadgroup,
+                             std::max<NSUInteger>(instance_pipeline.threadExecutionWidth, 1U));
+    [instance_encoder dispatchThreads:MTLSizeMake(descriptors.size(), 1U, 1U)
+                threadsPerThreadgroup:MTLSizeMake(instance_threads, 1U, 1U)];
+    [instance_encoder endEncoding];
+    [instance_commands commit];
+    const auto instance_sync_begin = Clock::now();
+    [instance_commands waitUntilCompleted];
+    const auto instance_sync_end = Clock::now();
+    require_completed(instance_commands, "GPU instance descriptor generation");
+    run.synchronization_ms += milliseconds(instance_sync_begin, instance_sync_end);
+    run.gpu_instance_generation = true;
+  } else {
+    instance_buffer =
+        [device newBufferWithBytes:descriptors.data()
+                            length:descriptors.size() *
+                                   sizeof(MTLAccelerationStructureUserIDInstanceDescriptor)
+                           options:MTLResourceStorageModeShared];
+  }
   id<MTLBuffer> instance_to_blas_buffer =
       [device newBufferWithBytes:instance_to_blas.data()
                           length:instance_to_blas.size() * sizeof(std::uint32_t)
@@ -919,6 +1027,9 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   const auto instance_end = Clock::now();
   run.instance_generation_ms = milliseconds(instance_begin, instance_end);
   run.instance_buffer_bytes = instance_buffer.allocatedSize + instance_to_blas_buffer.allocatedSize;
+  if (instance_input_buffer != nil) {
+    run.instance_buffer_bytes += instance_input_buffer.allocatedSize;
+  }
 
   auto *tlas_descriptor = [MTLInstanceAccelerationStructureDescriptor descriptor];
   tlas_descriptor.instanceDescriptorBuffer = instance_buffer;
