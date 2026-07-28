@@ -130,6 +130,19 @@ def load_documents(path: Path) -> list[dict[str, Any]]:
         return documents
 
 
+def shared_manifests(document: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return shared manifests at this level and in nested scale runs."""
+    manifests: list[dict[str, Any]] = []
+    if isinstance(document.get("backend"), dict):
+        manifests.append(document)
+    runs = document.get("runs")
+    if isinstance(runs, list):
+        for run in runs:
+            if isinstance(run, dict):
+                manifests.extend(shared_manifests(run))
+    return manifests
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print(f"usage: {sys.argv[0]} <results-dir>", file=sys.stderr)
@@ -139,13 +152,13 @@ def main() -> int:
     try:
         for path in sorted(root.rglob("*.json")):
             documents = load_documents(path)
-            # RenderMan and integration reports deliberately use their own
-            # schemas; only shared result manifests have a backend section.
             for manifest in documents:
-                if "backend" not in manifest:
-                    continue
-                validate_manifest(path, manifest)
-                checked += 1
+                # RenderMan and integration reports deliberately use their own
+                # schemas; shared manifests may also be nested in scale-sweep
+                # report wrappers.
+                for shared in shared_manifests(manifest):
+                    validate_manifest(path, shared)
+                    checked += 1
     except (OSError, ValueError) as error:
         print(error, file=sys.stderr)
         return 1

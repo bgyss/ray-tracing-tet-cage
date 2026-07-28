@@ -11,9 +11,10 @@ jq . build/nix/asset-fuzz-report.json
 ```
 
 The CTest `tetcage.result_manifest_smoke` check also parses every checked-in
-shared result manifest, including each line of the Metal scale sweep, and
-requires the common timing, memory, correctness, evidence, and provenance
-fields. Feasibility and integration reports remain separate schemas by design.
+shared result manifest, including nested runs in the Metal and portable scale
+sweeps, and requires the common timing, memory, correctness, evidence, and
+provenance fields. Feasibility and integration reports remain separate schemas
+by design.
 The `tetcage.result_report_smoke` check exercises the deterministic aggregate
 generator used by `mise run report`, so checked-in summaries can be regenerated
 without hand-editing benchmark claims.
