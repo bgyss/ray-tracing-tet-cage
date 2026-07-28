@@ -148,6 +148,15 @@ if(TETCAGE_BUILD_TOOLS)
       FIXTURES_REQUIRED generated_cage
       FIXTURES_SETUP generated_asset
       PASS_REGULAR_EXPRESSION "\"cage_tetrahedra\": 12")
+    add_test(NAME tetcage.asset_fuzz_smoke
+      COMMAND python3
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/fuzz_asset.py"
+        "$<TARGET_FILE:tetcage_inspect>"
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/asset-fuzz-report.json")
+    set_tests_properties(tetcage.asset_fuzz_smoke PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)
