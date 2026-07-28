@@ -174,6 +174,12 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.asset_fuzz_smoke PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "")
+    add_test(NAME tetcage.result_manifest_smoke
+      COMMAND python3
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/result_manifest_smoke.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/results")
+    set_tests_properties(tetcage.result_manifest_smoke PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"checked_manifests\":")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

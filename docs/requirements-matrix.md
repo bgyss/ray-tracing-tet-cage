@@ -25,7 +25,7 @@ Compilation alone never promotes a row to measured.
 | Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | implemented and seeded corpus-tested |
 | Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | implemented and property-tested |
 | Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested; explicit per-frame instance-limit rejection added |
-| Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | implemented and machine-checked |
+| Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | implemented and machine-checked, including checked-in manifest smoke validation |
 | Acceleration-structure nesting | flattened two-level production contract | real API/engine queries; no inferred third level | Metal exposes no numeric property; UE/Vulkan blocked |
 | Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal synthetic 2-tet sweep measured through 128 instances; correctness residuals remain, so no crossover claim |
 | Metal device capability | Objective-C++ device probe | real `MTLDevice` query output | implemented; requires unsandboxed execution |

@@ -10,6 +10,11 @@ XDG_CACHE_HOME="$PWD/.cache" mise run check
 jq . build/nix/asset-fuzz-report.json
 ```
 
+The CTest `tetcage.result_manifest_smoke` check also parses every checked-in
+shared result manifest, including each line of the Metal scale sweep, and
+requires the common timing, memory, correctness, evidence, and provenance
+fields. Feasibility and integration reports remain separate schemas by design.
+
 This is a parser safety gate, not a substitute for coverage-guided fuzzing or
 device-loss testing. The remaining M14 work is explicitly platform-specific:
 allocation/cancellation/device-reset behavior on retained GPU backends,
