@@ -101,3 +101,8 @@ checkout for a task invocation:
 ```sh
 XDG_CACHE_HOME="$PWD/.cache" mise run check
 ```
+
+The checked-in `.github/workflows/portable.yml` runs the same portable check
+on Ubuntu using the flake as the authoritative environment. That CI job proves
+portable build/test reproducibility only; device-specific Metal, NVIDIA, and
+renderer gates still require their documented hosts.

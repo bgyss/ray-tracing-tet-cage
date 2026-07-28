@@ -17,6 +17,10 @@ and builds the Metal-disabled package in a pure Nix derivation. The v1 format
 golden checksum is recorded in
 `results/formats/2026-07-28-v1-golden.json`.
 
+CI invokes the same first command through
+`.github/workflows/portable.yml` on Ubuntu. No hardware-specific result is
+promoted by that job.
+
 ## Direct evidence already retained
 
 | Area | Manifest or artifact | Evidence class |
