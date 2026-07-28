@@ -103,6 +103,7 @@
               ninja
               pkg-config
               python3
+              jq
             ];
             buildInputs = with pkgs; [
               vulkan-headers
