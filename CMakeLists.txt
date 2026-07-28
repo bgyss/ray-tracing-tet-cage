@@ -57,6 +57,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_cage_quality PRIVATE tetcage_core)
   add_executable(tetcage_cage_animation tools/cage_animation/main.cpp)
   target_link_libraries(tetcage_cage_animation PRIVATE tetcage_core)
+  add_executable(tetcage_cage_lods tools/cage_lods/main.cpp)
+  target_link_libraries(tetcage_cage_lods PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -145,6 +147,14 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.cage_animation_cli PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "\"clip_kind\": \"procedural_non_affine\"")
+    add_test(NAME tetcage.cage_lods_cli
+      COMMAND tetcage_cage_lods
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/lod-cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cage-lods.json"
+        --levels 2)
+    set_tests_properties(tetcage.cage_lods_cli PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"parent_map_valid\": true")
     add_test(NAME tetcage.cage_generate_cli
       COMMAND tetcage_cage_generate
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"

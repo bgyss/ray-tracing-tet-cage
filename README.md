@@ -49,7 +49,7 @@ Portable implementation work now includes:
 - reproducible cage-generation and cage-quality analysis tools that report
   conditioning, residuals, explicit fallback reasons, and deterministic
   conforming cage refinement, plus a clip-wide non-affine animation evaluator
-  with constrained cage-weight fitting;
+  with constrained cage-weight fitting and parent-mapped cage LOD generation;
 - a bounded, finite-value-checked asset loader with malformed-stream tests and
   a v1 golden serialization fixture;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded

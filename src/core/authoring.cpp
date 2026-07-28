@@ -383,6 +383,109 @@ CageRefinementResult refine_cage(const Cage &input, std::uint32_t levels) {
   return result;
 }
 
+CageLodSet build_cage_lods(const Cage &input, std::uint32_t refinement_levels) {
+  CageLodSet result{};
+  if (refinement_levels > 4U) {
+    result.error = "cage LOD generation is limited to four refinement levels";
+    return result;
+  }
+  const auto base = refine_cage(input, 0U);
+  if (!base.cage) {
+    result.error = base.error;
+    return result;
+  }
+  result.levels.push_back({0U, *base.cage, {}});
+  Cage current = *base.cage;
+  for (std::uint32_t level = 1U; level <= refinement_levels; ++level) {
+    const auto refined = refine_cage(current, 1U);
+    if (!refined.cage) {
+      result.error = refined.error;
+      result.levels.clear();
+      return result;
+    }
+    std::vector<std::uint32_t> parents;
+    parents.reserve(refined.cage->tetrahedra.size());
+    for (const auto &child : refined.cage->tetrahedra) {
+      Vec3 centroid{};
+      for (const auto vertex_index : child.vertex_indices) {
+        if (vertex_index >= refined.cage->vertices.size()) {
+          result.error = "cage LOD child references an invalid vertex";
+          result.levels.clear();
+          return result;
+        }
+        centroid = centroid + refined.cage->vertices[vertex_index] * 0.25;
+      }
+      std::optional<std::uint32_t> parent;
+      for (std::uint32_t parent_index = 0U; parent_index < current.tetrahedra.size();
+           ++parent_index) {
+        const auto parent_tet = cage_tet(current, current.tetrahedra[parent_index]);
+        const auto barycentric = to_barycentric(parent_tet, centroid, 1.0e-11);
+        if (!barycentric) {
+          continue;
+        }
+        constexpr double containment_tolerance = 1.0e-9;
+        if (barycentric->x >= -containment_tolerance && barycentric->y >= -containment_tolerance &&
+            barycentric->z >= -containment_tolerance && barycentric->w >= -containment_tolerance) {
+          parent = parent_index;
+          break;
+        }
+      }
+      if (!parent) {
+        result.error = "cage LOD child has no deterministic parent tetrahedron";
+        result.levels.clear();
+        return result;
+      }
+      parents.push_back(*parent);
+    }
+    result.levels.push_back({level, *refined.cage, std::move(parents)});
+    current = *refined.cage;
+  }
+  return result;
+}
+
+std::string cage_lod_json(const CageLodSet &lods) {
+  std::ostringstream output;
+  output << "{\n  \"schema_version\": 1,\n"
+         << "  \"transition_policy\": \"whole_cage_level_switch; visual_crossfade_not_claimed\",\n"
+         << "  \"levels\": [";
+  for (std::size_t level_index = 0; level_index < lods.levels.size(); ++level_index) {
+    const auto &level = lods.levels[level_index];
+    bool parent_map_valid = level.level == 0U;
+    for (const auto parent : level.parent_tetrahedra) {
+      parent_map_valid =
+          parent_map_valid || parent < lods.levels[level.level - 1U].cage.tetrahedra.size();
+    }
+    if (level.level != 0U) {
+      parent_map_valid = level.parent_tetrahedra.size() == level.cage.tetrahedra.size();
+      if (parent_map_valid) {
+        for (const auto parent : level.parent_tetrahedra) {
+          parent_map_valid = parent < lods.levels[level.level - 1U].cage.tetrahedra.size();
+          if (!parent_map_valid) {
+            break;
+          }
+        }
+      }
+    }
+    output << "{\"level\": " << level.level << ", \"vertices\": " << level.cage.vertices.size()
+           << ", \"tetrahedra\": " << level.cage.tetrahedra.size()
+           << ", \"parent_map_valid\": " << (parent_map_valid ? "true" : "false")
+           << ", \"parent_tetrahedra\": [";
+    for (std::size_t parent_index = 0; parent_index < level.parent_tetrahedra.size();
+         ++parent_index) {
+      output << level.parent_tetrahedra[parent_index];
+      if (parent_index + 1U != level.parent_tetrahedra.size()) {
+        output << ", ";
+      }
+    }
+    output << "]}";
+    if (level_index + 1U != lods.levels.size()) {
+      output << ", ";
+    }
+  }
+  output << "],\n  \"error\": \"" << json_escape(lods.error) << "\"\n}\n";
+  return output.str();
+}
+
 CageQualityReport analyze_cage_quality(const CompiledAsset &asset, std::uint32_t samples,
                                        double motion_amplitude) {
   CageQualityReport report{};

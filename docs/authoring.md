@@ -35,5 +35,14 @@ asset.
 `optimized_maximum_position_error` and `optimized_rms_position_error` show
 whether weight fitting improves the same clip; they do not override a failed
 base-cage threshold. Conforming refinement remains available through
-`tetcage_cage_refine`, but LOD decimation and transition validation still
+`tetcage_cage_refine`. `tetcage_cage_lods` builds a deterministic level set and
+emits one parent-tetrahedron map per refined level:
+
+```sh
+./build/dev/tetcage_cage_lods tests/assets/one-tet.cage build/dev/lod-cage \
+  results/authoring/lods.json --levels 2
+```
+
+The manifest uses whole-cage level switching and explicitly does not claim
+visual cross-fade, popping, or TLAS transition performance. Those checks still
 require representative production clips.

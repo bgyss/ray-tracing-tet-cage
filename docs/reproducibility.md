@@ -28,6 +28,7 @@ promoted by that job.
 | CPU oracles | `results/cpu/2026-07-27-two-tet-oracle.json` | direct portable |
 | CPU/stub benchmark and corruption gate | `results/benchmarks/2026-07-27-cpu-stub.json` and `results/benchmarks/2026-07-27-cpu-stub-corrupt.json` | synthetic differential |
 | Cage animation suitability diagnostic | `results/authoring/2026-07-28-procedural-clip.json` | deterministic procedural clip, not production proof |
+| Cage LOD parent maps | `results/authoring/2026-07-28-lods.json` plus `results/authoring/lod-cage-lod*.cage` | deterministic topology/refinement mapping, no visual transition proof |
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |

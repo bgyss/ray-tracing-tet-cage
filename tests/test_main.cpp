@@ -1043,6 +1043,46 @@ void test_cage_refinement_is_conforming_and_orientation_preserving() {
   }
 }
 
+void test_cage_lod_set_has_deterministic_parent_maps() {
+  constexpr const char *test = "cage LOD set has deterministic parent maps";
+  const auto first = tetcage::build_cage_lods(single_tet_cage(), 2U);
+  const auto second = tetcage::build_cage_lods(single_tet_cage(), 2U);
+  CHECK_IN(test, first.error.empty());
+  CHECK_IN(test, second.error.empty());
+  CHECK_IN(test, first.levels.size() == 3U);
+  CHECK_IN(test, second.levels.size() == first.levels.size());
+  for (std::size_t level = 0; level < first.levels.size(); ++level) {
+    CHECK_IN(test,
+             first.levels[level].cage.vertices.size() == second.levels[level].cage.vertices.size());
+    if (first.levels[level].cage.vertices.size() == second.levels[level].cage.vertices.size()) {
+      for (std::size_t vertex = 0; vertex < first.levels[level].cage.vertices.size(); ++vertex) {
+        CHECK_IN(test, near(first.levels[level].cage.vertices[vertex],
+                            second.levels[level].cage.vertices[vertex]));
+      }
+    }
+    CHECK_IN(test, first.levels[level].cage.tetrahedra.size() ==
+                       second.levels[level].cage.tetrahedra.size());
+    if (first.levels[level].cage.tetrahedra.size() == second.levels[level].cage.tetrahedra.size()) {
+      for (std::size_t tet = 0; tet < first.levels[level].cage.tetrahedra.size(); ++tet) {
+        CHECK_IN(test, first.levels[level].cage.tetrahedra[tet].vertex_indices ==
+                           second.levels[level].cage.tetrahedra[tet].vertex_indices);
+      }
+    }
+    CHECK_IN(test, first.levels[level].parent_tetrahedra == second.levels[level].parent_tetrahedra);
+    if (level == 0U) {
+      CHECK_IN(test, first.levels[level].parent_tetrahedra.empty());
+    } else {
+      CHECK_IN(test, first.levels[level].parent_tetrahedra.size() ==
+                         first.levels[level].cage.tetrahedra.size());
+      for (const auto parent : first.levels[level].parent_tetrahedra) {
+        CHECK_IN(test, parent < first.levels[level - 1U].cage.tetrahedra.size());
+      }
+    }
+  }
+  CHECK_IN(test,
+           tetcage::cage_lod_json(first).find("\"parent_map_valid\": true") != std::string::npos);
+}
+
 } // namespace
 
 int main() {
@@ -1082,6 +1122,7 @@ int main() {
   test_cage_quality_analysis_is_deterministic_and_actionable();
   test_cage_animation_analysis_reports_clip_residuals_and_weight_fit();
   test_cage_refinement_is_conforming_and_orientation_preserving();
+  test_cage_lod_set_has_deterministic_parent_maps();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

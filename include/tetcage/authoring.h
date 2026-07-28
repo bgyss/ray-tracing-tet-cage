@@ -66,7 +66,23 @@ struct CageRefinementResult {
   std::string error;
 };
 
+struct CageLodLevel {
+  std::uint32_t level{};
+  Cage cage;
+  // For level > 0, one entry per tetrahedron identifies its parent in level-1.
+  std::vector<std::uint32_t> parent_tetrahedra;
+};
+
+struct CageLodSet {
+  std::vector<CageLodLevel> levels;
+  std::string error;
+};
+
 [[nodiscard]] CageRefinementResult refine_cage(const Cage &cage, std::uint32_t levels);
+
+[[nodiscard]] CageLodSet build_cage_lods(const Cage &cage, std::uint32_t refinement_levels);
+
+[[nodiscard]] std::string cage_lod_json(const CageLodSet &lods);
 
 [[nodiscard]] CageQualityReport
 analyze_cage_quality(const CompiledAsset &asset, std::uint32_t samples, double motion_amplitude);

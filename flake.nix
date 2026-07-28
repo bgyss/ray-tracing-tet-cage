@@ -133,6 +133,7 @@
                 tetcage_cage_refine \
                 tetcage_cage_quality \
                 tetcage_cage_animation \
+                tetcage_cage_lods \
                 tetcage_inspect \
                 tetcage_oracle_report \
                 tetcage_vulkan_probe; do

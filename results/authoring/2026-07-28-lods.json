@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "transition_policy": "whole_cage_level_switch; visual_crossfade_not_claimed",
+  "levels": [{"level": 0, "vertices": 4, "tetrahedra": 1, "parent_map_valid": true, "parent_tetrahedra": []}, {"level": 1, "vertices": 10, "tetrahedra": 8, "parent_map_valid": true, "parent_tetrahedra": [0, 0, 0, 0, 0, 0, 0, 0]}, {"level": 2, "vertices": 35, "tetrahedra": 64, "parent_map_valid": true, "parent_tetrahedra": [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7]}],
+  "error": ""
+}
