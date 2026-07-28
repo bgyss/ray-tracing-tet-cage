@@ -1001,6 +1001,15 @@ void test_backend_adapter_uses_neutral_frame_contract() {
   const auto reset = reset_backend.build_frame(reset_frame);
   CHECK_IN(test, reset.status == tetcage::FrameBuildStatus::reset_required);
   CHECK_IN(test, reset.fallback == tetcage::FrameFallback::conventional_dynamic);
+  tetcage::CpuStubBackend fresh_backend(asset);
+  auto fresh_cancel = frame;
+  fresh_cancel.control.device_lost = false;
+  fresh_cancel.control.reset_requested = false;
+  fresh_cancel.control.cancellation_requested = true;
+  const auto cancelled_before_first_frame = fresh_backend.build_frame(fresh_cancel);
+  CHECK_IN(test, cancelled_before_first_frame.status == tetcage::FrameBuildStatus::cancelled);
+  CHECK_IN(test,
+           cancelled_before_first_frame.fallback == tetcage::FrameFallback::conventional_dynamic);
   CHECK_IN(test, std::string(tetcage::frame_build_status_name(lost.status)) == "device_lost");
   CHECK_IN(test, std::string(tetcage::frame_fallback_name(cancelled.fallback)) ==
                      "retain_last_valid_frame");
