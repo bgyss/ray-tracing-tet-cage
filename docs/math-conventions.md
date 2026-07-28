@@ -52,3 +52,11 @@ declare looser FP32 tolerances with evidence. Copying raw matrix memory between
 this column convention and Metal/Vulkan descriptors is prohibited without a
 conformance vector.
 
+## Robust fast-path policy
+
+`derive_robust_tolerance` derives a position and barycentric tolerance from
+coordinate scale, minimum edge length, a condition estimate, and an explicit
+ULP multiplier. It returns one of `fast_path`, `conservative_boundary`,
+`conventional_fallback`, or `invalid_input`. The policy is shared and
+deterministic, but the decision is not GPU watertightness evidence; backend
+residuals must still be measured on the target device.

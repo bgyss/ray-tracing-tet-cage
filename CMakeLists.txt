@@ -63,6 +63,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_asset_migrate PRIVATE tetcage_core)
   add_executable(tetcage_method_select tools/method_select/main.cpp)
   target_link_libraries(tetcage_method_select PRIVATE tetcage_core)
+  add_executable(tetcage_tolerance_probe tools/tolerance_probe/main.cpp)
+  target_link_libraries(tetcage_tolerance_probe PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -226,6 +228,11 @@ if(TETCAGE_BUILD_TOOLS)
         1000 16 64 1000.0 0.0001 0.001 0.05 1 1 1)
     set_tests_properties(tetcage.method_selection_cli PROPERTIES
       PASS_REGULAR_EXPRESSION "\"representation\":\"tet_cage\"")
+    add_test(NAME tetcage.tolerance_policy_cli
+      COMMAND tetcage_tolerance_probe
+        "${CMAKE_CURRENT_BINARY_DIR}/tolerance-policy.json" 1000000 0.25 1000 8)
+    set_tests_properties(tetcage.tolerance_policy_cli PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"decision\":\"conservative_boundary\"")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

@@ -1115,6 +1115,24 @@ void test_method_selection_policy_is_explicit_and_deterministic() {
   CHECK_IN(test, rigid.choice == tetcage::RepresentationChoice::rigid_instancing);
 }
 
+void test_robust_tolerance_policy_scales_and_falls_back() {
+  constexpr const char *test = "robust tolerance policy scales and falls back";
+  const auto fast = tetcage::derive_robust_tolerance({1.0, 1.0, 100.0, 8U});
+  CHECK_IN(test, fast.decision == tetcage::RobustPolicyDecision::fast_path);
+  CHECK_IN(test, fast.position_epsilon > 0.0);
+  CHECK_IN(test, fast.barycentric_epsilon > 0.0);
+
+  const auto conservative = tetcage::derive_robust_tolerance({1.0e6, 0.25, 1000.0, 8U});
+  CHECK_IN(test, conservative.decision == tetcage::RobustPolicyDecision::conservative_boundary);
+  CHECK_IN(test, conservative.edge_factor > fast.edge_factor);
+
+  const auto fallback = tetcage::derive_robust_tolerance({1.0, 1.0, 1.0e9, 8U});
+  CHECK_IN(test, fallback.decision == tetcage::RobustPolicyDecision::conventional_fallback);
+
+  const auto invalid = tetcage::derive_robust_tolerance({0.0, 1.0, 1.0, 8U});
+  CHECK_IN(test, invalid.decision == tetcage::RobustPolicyDecision::invalid_input);
+}
+
 } // namespace
 
 int main() {
@@ -1156,6 +1174,7 @@ int main() {
   test_cage_refinement_is_conforming_and_orientation_preserving();
   test_cage_lod_set_has_deterministic_parent_maps();
   test_method_selection_policy_is_explicit_and_deterministic();
+  test_robust_tolerance_policy_scales_and_falls_back();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

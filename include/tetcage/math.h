@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace tetcage {
@@ -80,7 +81,32 @@ struct TetDiagnostics {
   TetClass classification{TetClass::near_singular};
 };
 
+enum class RobustPolicyDecision : std::uint8_t {
+  fast_path,
+  conservative_boundary,
+  conventional_fallback,
+  invalid_input,
+};
+
+struct RobustToleranceInput {
+  double coordinate_scale{1.0};
+  double minimum_edge{1.0};
+  double condition_estimate{1.0};
+  std::uint32_t ulp_multiplier{8U};
+};
+
+struct RobustToleranceResult {
+  double position_epsilon{};
+  double barycentric_epsilon{};
+  double condition_factor{};
+  double edge_factor{};
+  RobustPolicyDecision decision{RobustPolicyDecision::invalid_input};
+  std::string reason;
+};
+
 [[nodiscard]] TetDiagnostics diagnose(const Tetrahedron &tet, double relative_epsilon = 1.0e-12);
+[[nodiscard]] RobustToleranceResult derive_robust_tolerance(const RobustToleranceInput &input);
+[[nodiscard]] const char *robust_policy_decision_name(RobustPolicyDecision decision);
 [[nodiscard]] std::optional<Vec4> to_barycentric(const Tetrahedron &tet, Vec3 point,
                                                  double relative_epsilon = 1.0e-12);
 [[nodiscard]] Vec3 from_barycentric(const Tetrahedron &tet, Vec4 barycentric);

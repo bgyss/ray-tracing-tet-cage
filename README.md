@@ -55,6 +55,8 @@ Portable implementation work now includes:
 - a measured-input representation-selection policy that chooses rigid,
   conventional dynamic, tet-cage, or hybrid fallback modes without turning
   synthetic or unproven GPU results into performance claims;
+- a scale/ULP/edge/conditioning-aware tolerance policy with explicit
+  conservative-boundary and conventional-fallback decisions;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded
   differential tests.
 

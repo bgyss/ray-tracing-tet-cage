@@ -165,6 +165,54 @@ TetDiagnostics diagnose(const Tetrahedron &tet, double relative_epsilon) {
   return result;
 }
 
+const char *robust_policy_decision_name(RobustPolicyDecision decision) {
+  switch (decision) {
+  case RobustPolicyDecision::fast_path:
+    return "fast_path";
+  case RobustPolicyDecision::conservative_boundary:
+    return "conservative_boundary";
+  case RobustPolicyDecision::conventional_fallback:
+    return "conventional_fallback";
+  case RobustPolicyDecision::invalid_input:
+    return "invalid_input";
+  }
+  return "invalid_input";
+}
+
+RobustToleranceResult derive_robust_tolerance(const RobustToleranceInput &input) {
+  RobustToleranceResult result{};
+  if (!std::isfinite(input.coordinate_scale) || !std::isfinite(input.minimum_edge) ||
+      !std::isfinite(input.condition_estimate) || input.coordinate_scale <= 0.0 ||
+      input.minimum_edge <= 0.0 || input.condition_estimate <= 0.0 || input.ulp_multiplier == 0U) {
+    result.reason = "nonfinite_or_nonpositive_tolerance_input";
+    return result;
+  }
+  const double scale = std::max(1.0, input.coordinate_scale);
+  const double machine_position_epsilon =
+      std::numeric_limits<double>::epsilon() * scale * static_cast<double>(input.ulp_multiplier);
+  result.condition_factor = std::clamp(input.condition_estimate / 1.0e4, 1.0, 1.0e4);
+  result.edge_factor = std::clamp(scale / input.minimum_edge, 1.0, 1.0e4);
+  const double amplification =
+      std::min(1.0e4, result.condition_factor * std::sqrt(result.edge_factor));
+  result.position_epsilon = machine_position_epsilon * amplification;
+  result.barycentric_epsilon = std::clamp(result.position_epsilon / input.minimum_edge,
+                                          4.0 * std::numeric_limits<double>::epsilon(), 1.0e-4);
+
+  if (input.condition_estimate >= 1.0e8 ||
+      input.minimum_edge <= machine_position_epsilon * result.condition_factor * 4.0) {
+    result.decision = RobustPolicyDecision::conventional_fallback;
+    result.reason = "conditioning_or_edge_scale_requires_conventional_fallback";
+  } else if (result.condition_factor > 4.0 || result.edge_factor > 64.0 ||
+             result.barycentric_epsilon > 1.0e-6) {
+    result.decision = RobustPolicyDecision::conservative_boundary;
+    result.reason = "scale_and_conditioning_require_conservative_boundary_policy";
+  } else {
+    result.decision = RobustPolicyDecision::fast_path;
+    result.reason = "well_scaled_and_conditioned_for_fast_policy";
+  }
+  return result;
+}
+
 std::optional<Vec4> to_barycentric(const Tetrahedron &tet, Vec3 point, double relative_epsilon) {
   const auto inverse = edge_matrix(tet).inverse(relative_epsilon);
   if (!inverse) {

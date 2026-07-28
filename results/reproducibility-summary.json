@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 2
   },
-  "file_count": 19,
+  "file_count": 20,
   "files": [
     {
       "documents": 1,
@@ -151,6 +151,14 @@
         "feasibility"
       ],
       "path": "renderman-feasibility.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "robustness/2026-07-28-tolerance-policy.json",
       "shared_records": 0
     },
     {

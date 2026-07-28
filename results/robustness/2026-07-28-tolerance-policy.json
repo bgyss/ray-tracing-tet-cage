@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "report_kind": "robust_tolerance_policy",
+  "evidence_class": "portable_policy",
+  "inputs": {
+    "coordinate_scale": 1000000,
+    "minimum_edge": 0.25,
+    "condition_estimate": 1000,
+    "ulp_multiplier": 8
+  },
+  "outputs": {
+    "position_epsilon": 1.7763568394002505e-07,
+    "barycentric_epsilon": 7.1054273576010019e-07,
+    "condition_factor": 1,
+    "edge_factor": 10000,
+    "decision": "conservative_boundary",
+    "reason": "scale_and_conditioning_require_conservative_boundary_policy"
+  },
+  "claim_boundary": "This derives a deterministic tolerance; it does not establish GPU watertightness."
+}

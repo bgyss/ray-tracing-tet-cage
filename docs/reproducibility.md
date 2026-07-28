@@ -43,6 +43,7 @@ promoted by that job.
 | Vulkan capability | `results/capabilities/2026-07-27-vulkan.json` | unverified/host-limited |
 | CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |
 | Representation selection policy | `results/selection/2026-07-28-two-tet-policy.json` | deterministic fallback evaluation from measured inputs; not performance evidence |
+| Robust tolerance policy | `results/robustness/2026-07-28-tolerance-policy.json` | scale/edge/conditioning-aware portable policy; no GPU watertightness claim |
 | Unreal/Cycles gates | `results/integrations/2026-07-28-host-gates.json` | blocked host inspection |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 

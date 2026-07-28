@@ -46,3 +46,8 @@ count. The portable stub preflights visible objects against that limit before
 building transforms and returns an actionable error instead of allocating an
 oversized frame. Hardware adapters must apply their queried device limit to the
 same policy.
+
+The shared math layer also derives scale-, ULP-, edge-length-, and
+conditioning-aware tolerance decisions. `tetcage_tolerance_probe` records the
+portable policy case in `results/robustness/2026-07-28-tolerance-policy.json`;
+GPU boundary residuals remain an M8 hardware gate.
