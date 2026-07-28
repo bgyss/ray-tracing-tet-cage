@@ -57,6 +57,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_cage_quality PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
+  add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
+  target_link_libraries(tetcage_cage_refine PRIVATE tetcage_core)
   execute_process(
     COMMAND git rev-parse HEAD
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -148,6 +150,21 @@ if(TETCAGE_BUILD_TOOLS)
       FIXTURES_REQUIRED generated_cage
       FIXTURES_SETUP generated_asset
       PASS_REGULAR_EXPRESSION "\"cage_tetrahedra\": 12")
+    add_test(NAME tetcage.cage_refine_cli
+      COMMAND tetcage_cage_refine
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/refined.cage" --levels 1)
+    set_tests_properties(tetcage.cage_refine_cli PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"tetrahedra\":8"
+      FIXTURES_SETUP refined_cage)
+    add_test(NAME tetcage.cage_refine_compiles
+      COMMAND tetcage_asset_compiler
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"
+        "${CMAKE_CURRENT_BINARY_DIR}/refined.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/refined.tetcage")
+    set_tests_properties(tetcage.cage_refine_compiles PROPERTIES
+      FIXTURES_REQUIRED refined_cage
+      PASS_REGULAR_EXPRESSION "\"cage_tetrahedra\": 8")
     add_test(NAME tetcage.asset_fuzz_smoke
       COMMAND python3
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/fuzz_asset.py"

@@ -7,11 +7,61 @@
 #include <cmath>
 #include <iomanip>
 #include <limits>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 
 namespace tetcage {
 namespace {
+
+using EdgeKey = std::array<std::uint64_t, 2>;
+
+EdgeKey edge_key(const Cage &cage, std::uint32_t first, std::uint32_t second) {
+  EdgeKey result{cage.vertex_ids[first], cage.vertex_ids[second]};
+  if (result[1] < result[0]) {
+    std::swap(result[0], result[1]);
+  }
+  return result;
+}
+
+std::uint64_t midpoint_id(EdgeKey edge, std::set<std::uint64_t> &used) {
+  std::uint64_t hash = 1469598103934665603ULL;
+  for (const auto word : edge) {
+    hash ^= word;
+    hash *= 1099511628211ULL;
+  }
+  hash ^= 0x6d6964706f696e74ULL;
+  hash *= 1099511628211ULL;
+  if (hash == 0U) {
+    hash = 1U;
+  }
+  while (used.contains(hash)) {
+    hash = hash * 1099511628211ULL + 1U;
+    if (hash == 0U) {
+      hash = 1U;
+    }
+  }
+  used.insert(hash);
+  return hash;
+}
+
+Tetrahedron cage_tet(const Cage &cage, CageTet tet) {
+  Tetrahedron result{};
+  for (std::size_t corner = 0; corner < 4U; ++corner) {
+    result.positions[corner] = cage.vertices[tet.vertex_indices[corner]];
+    result.vertex_ids[corner] = cage.vertex_ids[tet.vertex_indices[corner]];
+  }
+  return result;
+}
+
+CageTet orient_like(const Cage &cage, CageTet candidate, double reference_determinant) {
+  const double candidate_determinant = diagnose(cage_tet(cage, candidate)).determinant;
+  if (std::isfinite(candidate_determinant) && reference_determinant * candidate_determinant < 0.0) {
+    std::swap(candidate.vertex_indices[2], candidate.vertex_indices[3]);
+  }
+  return candidate;
+}
 
 std::vector<Vec3> sample_pose(const CompiledAsset &asset, std::uint32_t frame, double amplitude) {
   std::vector<Vec3> pose = asset.cage.vertices;
@@ -48,6 +98,87 @@ std::string json_escape(const std::string &value) {
 }
 
 } // namespace
+
+CageRefinementResult refine_cage(const Cage &input, std::uint32_t levels) {
+  CageRefinementResult result{};
+  if (input.vertices.size() != input.vertex_ids.size() || input.vertices.empty() ||
+      input.tetrahedra.empty()) {
+    result.error = "cage refinement requires vertices, stable IDs, and tetrahedra";
+    return result;
+  }
+  std::set<std::uint64_t> stable_ids(input.vertex_ids.begin(), input.vertex_ids.end());
+  if (stable_ids.size() != input.vertex_ids.size()) {
+    result.error = "cage refinement requires globally unique stable IDs";
+    return result;
+  }
+  for (const auto &vertex : input.vertices) {
+    if (!std::isfinite(vertex.x) || !std::isfinite(vertex.y) || !std::isfinite(vertex.z)) {
+      result.error = "cage refinement rejects non-finite vertex positions";
+      return result;
+    }
+  }
+  Cage current = input;
+  for (std::uint32_t level = 0; level < levels; ++level) {
+    if (current.tetrahedra.size() > 125'000U) {
+      result.error = "cage refinement would exceed the one-million-tetrahedron safety limit";
+      return result;
+    }
+    std::map<EdgeKey, std::array<std::uint32_t, 2>> edge_vertices;
+    for (const auto &tet : current.tetrahedra) {
+      for (std::size_t first = 0; first < 4U; ++first) {
+        for (std::size_t second = first + 1U; second < 4U; ++second) {
+          const auto key = edge_key(current, tet.vertex_indices[first], tet.vertex_indices[second]);
+          edge_vertices.emplace(key, std::array<std::uint32_t, 2>{tet.vertex_indices[first],
+                                                                  tet.vertex_indices[second]});
+        }
+      }
+    }
+    Cage next = current;
+    std::map<EdgeKey, std::uint32_t> midpoint_indices;
+    for (const auto &[key, endpoints] : edge_vertices) {
+      const auto index = static_cast<std::uint32_t>(next.vertices.size());
+      next.vertices.push_back((current.vertices[endpoints[0]] + current.vertices[endpoints[1]]) *
+                              0.5);
+      next.vertex_ids.push_back(midpoint_id(key, stable_ids));
+      midpoint_indices.emplace(key, index);
+    }
+    next.tetrahedra.clear();
+    next.tetrahedra.reserve(current.tetrahedra.size() * 8U);
+    for (const auto &tet : current.tetrahedra) {
+      const auto original_determinant = diagnose(cage_tet(current, tet)).determinant;
+      const auto midpoint = [&](std::size_t first, std::size_t second) {
+        return midpoint_indices.at(
+            edge_key(current, tet.vertex_indices[first], tet.vertex_indices[second]));
+      };
+      const auto a = tet.vertex_indices[0];
+      const auto b = tet.vertex_indices[1];
+      const auto c = tet.vertex_indices[2];
+      const auto d = tet.vertex_indices[3];
+      const auto ab = midpoint(0U, 1U);
+      const auto ac = midpoint(0U, 2U);
+      const auto ad = midpoint(0U, 3U);
+      const auto bc = midpoint(1U, 2U);
+      const auto bd = midpoint(1U, 3U);
+      const auto cd = midpoint(2U, 3U);
+      const std::array<CageTet, 8> candidates{{
+          {{a, ab, ac, ad}},
+          {{b, ab, bc, bd}},
+          {{c, ac, bc, cd}},
+          {{d, ad, bd, cd}},
+          {{ab, ac, ad, cd}},
+          {{ab, ac, bc, cd}},
+          {{ab, ad, bd, cd}},
+          {{ab, bc, bd, cd}},
+      }};
+      for (const auto candidate : candidates) {
+        next.tetrahedra.push_back(orient_like(next, candidate, original_determinant));
+      }
+    }
+    current = std::move(next);
+  }
+  result.cage = std::move(current);
+  return result;
+}
 
 CageQualityReport analyze_cage_quality(const CompiledAsset &asset, std::uint32_t samples,
                                        double motion_amplitude) {

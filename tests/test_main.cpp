@@ -989,6 +989,34 @@ void test_cage_quality_analysis_is_deterministic_and_actionable() {
   CHECK_IN(test, tetcage::cage_quality_json(first).find("\"suitable\": true") != std::string::npos);
 }
 
+void test_cage_refinement_is_conforming_and_orientation_preserving() {
+  constexpr const char *test = "cage refinement is conforming and orientation preserving";
+  const auto refined = tetcage::refine_cage(single_tet_cage(), 1U);
+  CHECK_IN(test, refined.cage.has_value());
+  CHECK_IN(test, refined.error.empty());
+  if (!refined.cage) {
+    return;
+  }
+  CHECK_IN(test, refined.cage->vertices.size() == 10U);
+  CHECK_IN(test, refined.cage->tetrahedra.size() == 8U);
+  CHECK_IN(test,
+           std::set<std::uint64_t>(refined.cage->vertex_ids.begin(), refined.cage->vertex_ids.end())
+                   .size() == refined.cage->vertex_ids.size());
+  for (const auto &tet : refined.cage->tetrahedra) {
+    tetcage::Tetrahedron geometry{};
+    for (std::size_t corner = 0; corner < 4U; ++corner) {
+      geometry.positions[corner] = refined.cage->vertices[tet.vertex_indices[corner]];
+      geometry.vertex_ids[corner] = refined.cage->vertex_ids[tet.vertex_indices[corner]];
+    }
+    CHECK_IN(test, tetcage::diagnose(geometry).determinant > 0.0);
+  }
+  const auto refined_twice = tetcage::refine_cage(single_tet_cage(), 2U);
+  CHECK_IN(test, refined_twice.cage.has_value());
+  if (refined_twice.cage) {
+    CHECK_IN(test, refined_twice.cage->tetrahedra.size() == 64U);
+  }
+}
+
 } // namespace
 
 int main() {
@@ -1026,6 +1054,7 @@ int main() {
   test_benchmark_detects_corrupt_stub_and_keeps_nullable_metrics();
   test_backend_adapter_uses_neutral_frame_contract();
   test_cage_quality_analysis_is_deterministic_and_actionable();
+  test_cage_refinement_is_conforming_and_orientation_preserving();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

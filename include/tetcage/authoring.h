@@ -31,6 +31,13 @@ struct CageQualityReport {
   bool suitable{};
 };
 
+struct CageRefinementResult {
+  std::optional<Cage> cage;
+  std::string error;
+};
+
+[[nodiscard]] CageRefinementResult refine_cage(const Cage &cage, std::uint32_t levels);
+
 [[nodiscard]] CageQualityReport
 analyze_cage_quality(const CompiledAsset &asset, std::uint32_t samples, double motion_amplitude);
 

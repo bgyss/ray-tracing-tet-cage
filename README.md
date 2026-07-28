@@ -47,7 +47,8 @@ Portable implementation work now includes:
 - an independent CPU fast/4D oracle, runtime/stub benchmark manifests, and
   deliberate-corruption detection;
 - reproducible cage-generation and cage-quality analysis tools that report
-  conditioning, residuals, and explicit fallback reasons;
+  conditioning, residuals, explicit fallback reasons, and deterministic
+  conforming cage refinement;
 - a bounded, finite-value-checked asset loader with malformed-stream tests and
   a v1 golden serialization fixture;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded

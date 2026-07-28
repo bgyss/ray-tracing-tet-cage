@@ -81,6 +81,7 @@ sample its conditioning and affine residuals:
 
 ```sh
 tetcage_cage_generate mesh.obj build/generated-baseline.cage
+tetcage_cage_refine build/generated-baseline.cage build/refined.cage --levels 1
 tetcage_asset_compiler mesh.obj build/generated-baseline.cage build/asset.tetcage
 tetcage_cage_quality build/asset.tetcage results/authoring/cage-quality.json \
   --samples 32 --motion 0.05
@@ -90,7 +91,9 @@ The quality report records per-sample minimum edge length, condition estimate,
 mirrors/near-singular tetrahedra, boundary-fragment counts, and the direct
 barycentric-versus-affine residual. `suitable: false` is an explicit fallback
 recommendation; it does not claim that a baseline cage represents an animation
-well. Full clip residuals require an animation-aware source deformation input.
+well. Refinement is conforming: shared edge midpoints are emitted once with
+stable IDs and each tet is split into eight orientation-preserving children.
+Full clip residuals require an animation-aware source deformation input.
 
 If the sandbox makes the global Nix cache read-only, keep the cache local to the
 checkout for a task invocation:

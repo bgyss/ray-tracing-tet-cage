@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -230,6 +231,36 @@ LoadResult<Cage> load_tet_cage(const std::string &path) {
     return file_error<Cage>(path, "cage contains no tetrahedra");
   }
   return {std::move(cage), {}};
+}
+
+std::string write_tet_cage_file(const std::string &path, const Cage &cage) {
+  if (cage.vertices.size() != cage.vertex_ids.size()) {
+    return "cage vertex positions and stable IDs differ in count";
+  }
+  std::ofstream output(path);
+  if (!output) {
+    return path + ": cannot create cage file";
+  }
+  output << std::setprecision(17) << "# tetcage deterministic cage export\n";
+  for (std::size_t index = 0; index < cage.vertices.size(); ++index) {
+    const auto &vertex = cage.vertices[index];
+    output << "v " << cage.vertex_ids[index] << ' ' << vertex.x << ' ' << vertex.y << ' '
+           << vertex.z << '\n';
+  }
+  for (const auto &tet : cage.tetrahedra) {
+    output << "t";
+    for (const auto index : tet.vertex_indices) {
+      if (index >= cage.vertex_ids.size()) {
+        return "cage tetrahedron index is out of range";
+      }
+      output << ' ' << cage.vertex_ids[index];
+    }
+    output << '\n';
+  }
+  if (!output) {
+    return path + ": cannot write cage file";
+  }
+  return {};
 }
 
 LoadResult<CompiledAsset> load_asset_file(const std::string &path) {
