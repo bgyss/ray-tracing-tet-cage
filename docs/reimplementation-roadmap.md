@@ -15,6 +15,9 @@ Read [paper-analysis.md](paper-analysis.md) first. It contains the reconstructed
 
 This is a proof-gated roadmap. A milestone is complete only when its acceptance evidence exists. A small synthetic scene proves plumbing, not the paper's scale, animation quality, watertightness, or performance claims.
 
+For the current blocker survey and an ordered, one-at-a-time execution queue,
+see [open-roadmap-workplan.md](open-roadmap-workplan.md).
+
 ## 1. The implementation thesis
 
 The method is most naturally implemented as a portable asset compiler plus a thin, backend-specific acceleration-structure runtime:

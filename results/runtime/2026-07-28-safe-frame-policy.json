@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "report_kind": "runtime_safety_policy",
+  "evidence_class": "portable_contract",
+  "asset_format_version": 1,
+  "cases": [
+    {"name": "normal_build", "status": "built", "fallback": "none", "allocation_bytes": 184, "error": ""},
+    {"name": "unsupported_update", "status": "unsupported", "fallback": "conventional_dynamic", "allocation_bytes": 0, "error": "CPU stub backend does not support in-place acceleration-structure updates"},
+    {"name": "allocation_limit", "status": "resource_limit", "fallback": "conventional_dynamic", "allocation_bytes": 184, "error": "frame exceeds the configured allocation byte limit"},
+    {"name": "cancelled_after_valid_frame", "status": "cancelled", "fallback": "retain_last_valid_frame", "allocation_bytes": 0, "error": "frame build was cancelled before submission"},
+    {"name": "device_lost", "status": "device_lost", "fallback": "conventional_dynamic", "allocation_bytes": 0, "error": "backend device was lost; discard frame and rebuild through the conventional path"},
+    {"name": "reset_required", "status": "reset_required", "fallback": "conventional_dynamic", "allocation_bytes": 0, "error": "backend reset is required before another tet-cage frame can be built"}
+  ],
+  "claim_boundary": "This report proves portable policy behavior only; GPU device-loss recovery and renderer integration remain hardware/source gates."
+}

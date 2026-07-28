@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "identity_current_format",
+  "source_format_version": 1,
+  "target_format_version": 1,
+  "migration": "v1_identity_round_trip",
+  "source_bytes": 844,
+  "target_bytes": 844,
+  "source_checksum": "325c89d5964ef6a7",
+  "target_checksum": "325c89d5964ef6a7",
+  "byte_identical": true,
+  "evidence_class": "portable_test"
+}

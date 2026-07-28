@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "report_kind": "cpu_4d_oracle",
+  "evidence_class": "synthetic",
+  "asset_hash_fnv1a64": "0fc1a55a6843ce11",
+  "seed": 81002718,
+  "command": "./build/dev/tetcage_oracle_report results/assets/two-tet-crossing.tetcage results/cpu/2026-07-27-two-tet-oracle-failing.json --seed 81002718 --random-rays 4096",
+  "counterexample_note": "Pre-fix evidence: absolute parallel thresholds and non-inflated projected bounds missed small-fragment grazing and exact-vertex rays. Retained as a negative result.",
+  "ray_count": 4128,
+  "bvh": {
+    "tree_count": 2,
+    "node_count": 2,
+    "leaf_size": 4,
+    "build_ms": 0.10104100000000001
+  },
+  "correctness": {
+    "fast_misses": 2,
+    "exact_misses": 4,
+    "primitive_mismatches": 0,
+    "fast_duplicate_ownership": 0,
+    "exact_duplicate_ownership": 0,
+    "fast_raw_duplicate_candidates": 22,
+    "exact_raw_duplicate_candidates": 20,
+    "max_position_error": 3.2068170604558909e-10,
+    "max_attribute_error": 3.8435388205471099e-10,
+    "failures": [
+      {"ray_index": 15, "origin": [0.099991379328373889, -0.39442592824507916, 0.54722028745889895], "direction": [1.1120671626107621e-05, 0.89442342824507481, -0.4472211207922302], "fast_hit": false, "exact_hit": false},
+      {"ray_index": 19, "origin": [1.2976143046671971, 0.45856858280031843, 0.51713716560063605], "direction": [-0.597614304667197, -0.35856858280031839, -0.71713716560063612], "fast_hit": true, "exact_hit": false},
+      {"ray_index": 26, "origin": [1.2976143046613562, 0.45856858279136237, 0.51713716560998124], "direction": [-0.59761430466135623, -0.35856858279136233, -0.71713716560998131], "fast_hit": true, "exact_hit": false},
+      {"ray_index": 31, "origin": [-0.38824940581833389, 1.1882420993577425, 0.16275359461307787], "direction": [0.6882494058183305, -0.68824376602440585, -0.2294194279464101], "fast_hit": false, "exact_hit": false}
+    ]
+  },
+  "projection_comparison": {
+    "paper_interval_sum": {
+      "summed_node_volume": 0.13680198000450003,
+      "trace_ms": 15.719042,
+      "visited_nodes": 8256,
+      "hits": 4124,
+      "raw_duplicate_candidates": 20
+    },
+    "bounded_simplex": {
+      "summed_node_volume": 0.13680198000450003,
+      "trace_ms": 26.513833000000002,
+      "visited_nodes": 8256,
+      "hits": 4124,
+      "raw_duplicate_candidates": 20
+    }
+  }
+}

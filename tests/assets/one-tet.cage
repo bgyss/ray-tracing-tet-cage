@@ -1,0 +1,7 @@
+# Stable vertex ID followed by xyz in meters.
+v 10 0 0 0
+v 20 1 0 0
+v 30 0 1 0
+v 40 0 0 1
+t 10 20 30 40
+

@@ -1,0 +1,7 @@
+/build/
+/result
+/results/generated/
+/.cache/
+/.mise.local.toml
+*.dSYM/
+.DS_Store

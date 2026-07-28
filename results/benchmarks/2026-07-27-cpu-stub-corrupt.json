@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "run_id": "cpu-stub-0fc1a55a6843ce11-12345",
+  "timestamp_utc": "2026-07-28T01:26:49Z",
+  "source": {"commit": "d0158e190fce54ebafc7b14a94f397852f4ec489", "dirty": true},
+  "build": {"compiler": "AppleClang", "compiler_version": "21.0.0 (clang-2100.1.1.101)", "build_type": "local"},
+  "host": {"os": "macOS", "os_version": "27.0.0", "architecture": "arm64"},
+  "backend": {"api": "stub", "status": "measured", "device": "CPU reference", "driver": null, "capability_manifest": null},
+  "scene": {"id": "two-tet-corrupt", "hash": "0fc1a55a6843ce11", "seed": 12345},
+  "configuration": {"copies": 8, "ray_count": 256, "motion_amplitude": 0.050000000000000003, "visible_fraction": 1, "inject_stub_corruption": true},
+  "timings_ms": {
+    "cage_deformation": 0.00095799999999999998,
+    "transform_generation": 0.026228999999999999,
+    "instance_generation": 0.00074950000000000006,
+    "blas": null,
+    "tlas": null,
+    "synchronization": null,
+    "traversal": 2.6395420000000001,
+    "shading": null,
+    "total": 2.6674785000000001,
+    "median": 2.6674785000000001,
+    "p95": 2.750416,
+    "variance": 0.0068786289062499808,
+    "warmup_iterations": 0,
+    "measured_iterations": 2
+  },
+  "memory_bytes": {
+    "source_geometry": 212,
+    "canonical_geometry": 288,
+    "provenance": 320,
+    "cage": 152,
+    "blas": null,
+    "tlas": null,
+    "scratch": null,
+    "instance_buffers": 2944,
+    "api_objects": null,
+    "renderer_state": null,
+    "peak_total": null
+  },
+  "correctness": {"rays": 512, "misses": 0, "duplicate_hits": 0, "wrong_ownership": 0, "position_error_max": 7.8619738605993835e-09, "normal_error_max": null, "attribute_error_max": 1.1187662796174891e-08, "image_error": null},
+  "statistics": {
+    "correctness_errors": 2,
+    "corruption_detected": true,
+    "dense_cpu_baseline": {
+      "deformation_median_ms": 0.0067705000000000005,
+      "traversal_median_ms": 0.23675000000000002,
+      "total_median_ms": 0.2435205,
+      "total_p95_ms": 0.24875,
+      "oracle_ray_misses": 8,
+      "provenance_mismatches": 0,
+      "blas_update_ms": null,
+      "blas_rebuild_ms": null,
+      "note": "CPU geometry/traversal baseline only; no GPU performance conclusion"
+    }
+  },
+  "failures": [
+    {"code": "benchmark_failure", "message": "stub hit provenance differs from the CPU 4D oracle"},
+    {"code": "benchmark_failure", "message": "stub hit provenance differs from the CPU 4D oracle"}
+  ],
+  "command": "./build/dev/tetcage_benchmark results/assets/two-tet-crossing.tetcage results/benchmarks/2026-07-27-cpu-stub-corrupt.json --scene two-tet-corrupt --seed 12345 --copies 8 --rays 256 --warmup 0 --iterations 2 --motion 0.05 --visible 1 --inject-corruption",
+  "evidence_class": "synthetic"
+}

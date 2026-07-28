@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "probe_kind": "vulkan",
+  "status": "unverified",
+  "sdk_available_at_build": false,
+  "reason": "No Vulkan loader and development headers were found at configure time.",
+  "devices": []
+}
+

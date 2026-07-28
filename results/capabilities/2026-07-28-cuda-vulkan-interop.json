@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "evidence_class": "host_capability_gate",
+  "hypothesis": "CUDA may reduce GPU instance-descriptor generation time, but external-memory and semaphore ownership could erase that benefit.",
+  "vulkaninfo_present": false,
+  "nvcc_present": false,
+  "nvidia_smi_present": false,
+  "matched_device_uuid": false,
+  "external_memory_bridge_measured": false,
+  "external_semaphore_bridge_measured": false,
+  "status": "blocked",
+  "ready_for_experiment": false,
+  "decision": "remove_from_production_path",
+  "reason": "A matched NVIDIA Vulkan/CUDA device and both compute implementations are required before interop can be measured.",
+  "next_step": "On a real NVIDIA host, record physical-device UUIDs, implement equivalent Vulkan/CUDA kernels, include ownership and synchronization in end-to-end timings, and retain CUDA only for a material benefit or required ecosystem integration."
+}

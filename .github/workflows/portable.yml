@@ -1,0 +1,32 @@
+name: portable
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  nix-portable:
+    name: Nix portable checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install Nix with flakes enabled
+        uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Run authoritative repository check
+        env:
+          XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+        run: nix develop path:. --command bash scripts/check.sh nix
+      - name: Verify checked-in reproducibility summary
+        env:
+          XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+        run: |
+          nix develop path:. --command python3 scripts/result_report.py results \
+            --json-out results/reproducibility-summary.json \
+            --markdown-out results/reproducibility-summary.md
+          git diff --exit-code -- results/reproducibility-summary.json results/reproducibility-summary.md
