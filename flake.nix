@@ -135,6 +135,7 @@
                 tetcage_cage_animation \
                 tetcage_cage_lods \
                 tetcage_asset_migrate \
+                tetcage_method_select \
                 tetcage_inspect \
                 tetcage_oracle_report \
                 tetcage_vulkan_probe; do

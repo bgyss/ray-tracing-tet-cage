@@ -52,6 +52,9 @@ Portable implementation work now includes:
   with constrained cage-weight fitting and parent-mapped cage LOD generation;
 - a bounded, finite-value-checked asset loader with malformed-stream tests and
   a v1 golden serialization fixture;
+- a measured-input representation-selection policy that chooses rigid,
+  conventional dynamic, tet-cage, or hybrid fallback modes without turning
+  synthetic or unproven GPU results into performance claims;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded
   differential tests.
 

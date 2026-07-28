@@ -149,6 +149,102 @@ std::vector<Vec3> animated_pose(const CompiledAsset &asset, const BenchmarkScene
 
 } // namespace
 
+const char *representation_choice_name(RepresentationChoice choice) {
+  switch (choice) {
+  case RepresentationChoice::rigid_instancing:
+    return "rigid_instancing";
+  case RepresentationChoice::conventional_dynamic:
+    return "conventional_dynamic";
+  case RepresentationChoice::tet_cage:
+    return "tet_cage";
+  case RepresentationChoice::hybrid:
+    return "hybrid";
+  }
+  return "conventional_dynamic";
+}
+
+MethodSelectionResult select_representation(const MethodSelectionInput &input) {
+  MethodSelectionResult result{};
+  const auto add_reason = [&result](const char *reason) { result.reasons.emplace_back(reason); };
+  if (input.source_triangles == 0U || input.occupied_tetrahedra == 0U) {
+    add_reason("asset_has_no_renderable_geometry");
+    return result;
+  }
+  if (!input.animated) {
+    result.choice = RepresentationChoice::rigid_instancing;
+    add_reason("no_deformation_workload");
+    return result;
+  }
+  if (!std::isfinite(input.maximum_condition) || input.maximum_condition >= 1.0e8) {
+    add_reason("conditioning_requires_conventional_fallback");
+    return result;
+  }
+  if (!std::isfinite(input.maximum_position_error) || !std::isfinite(input.maximum_normal_error) ||
+      input.maximum_position_error > 1.0e-3 || input.maximum_normal_error > 1.0e-2) {
+    add_reason("animation_residual_exceeds_authoring_threshold");
+    return result;
+  }
+  if (!input.hardware_tet_backend || !input.gpu_correctness_proven) {
+    add_reason("tet_backend_correctness_is_not_proven_on_target_device");
+    return result;
+  }
+  if (!std::isfinite(input.boundary_fallback_fraction) || input.boundary_fallback_fraction < 0.0 ||
+      input.boundary_fallback_fraction > 1.0) {
+    add_reason("boundary_fallback_fraction_is_invalid");
+    return result;
+  }
+  if (input.boundary_fallback_fraction > 0.25) {
+    result.choice = RepresentationChoice::hybrid;
+    add_reason("boundary_fallback_fraction_is_high");
+    return result;
+  }
+  if (input.copies < 8U || input.source_triangles < 100U) {
+    result.choice = RepresentationChoice::conventional_dynamic;
+    add_reason("measured_instancing_workload_is_too_small_for_tet_cage");
+    return result;
+  }
+  result.choice = RepresentationChoice::tet_cage;
+  add_reason("animated_geometry_and_repeated_instances_match_tet_cage_domain");
+  return result;
+}
+
+std::string method_selection_json(const MethodSelectionInput &input,
+                                  const MethodSelectionResult &result) {
+  std::ostringstream output;
+  output << std::setprecision(17) << "{\n"
+         << "  \"schema_version\": 1,\n"
+         << "  \"policy_version\": 1,\n"
+         << "  \"report_kind\": \"representation_selection\",\n"
+         << "  \"evidence_class\": \"policy_evaluation\",\n"
+         << "  \"inputs\": {\n"
+         << "    \"source_triangles\": " << input.source_triangles << ",\n"
+         << "    \"occupied_tetrahedra\": " << input.occupied_tetrahedra << ",\n"
+         << "    \"copies\": " << input.copies << ",\n"
+         << "    \"maximum_condition\": " << input.maximum_condition << ",\n"
+         << "    \"maximum_position_error\": " << input.maximum_position_error << ",\n"
+         << "    \"maximum_normal_error\": " << input.maximum_normal_error << ",\n"
+         << "    \"boundary_fallback_fraction\": " << input.boundary_fallback_fraction << ",\n"
+         << "    \"animated\": " << (input.animated ? "true" : "false") << ",\n"
+         << "    \"hardware_tet_backend\": " << (input.hardware_tet_backend ? "true" : "false")
+         << ",\n"
+         << "    \"gpu_correctness_proven\": " << (input.gpu_correctness_proven ? "true" : "false")
+         << "\n  },\n"
+         << "  \"selection\": {\n"
+         << "    \"representation\": \"" << representation_choice_name(result.choice) << "\",\n"
+         << "    \"reasons\": [";
+  for (std::size_t index = 0; index < result.reasons.size(); ++index) {
+    output << (index == 0U ? "\n" : ",\n") << "      \"" << result.reasons[index] << "\"";
+  }
+  if (!result.reasons.empty()) {
+    output << '\n';
+  }
+  output << "    ]\n  },\n"
+         << "  \"claim_boundary\": \"This deterministic policy consumes measured inputs; it does "
+            "not create performance evidence.\"\n"
+         << "}\n";
+  return output.str();
+}
+
 TransformBuildResult build_tet_transforms(const CompiledAsset &asset, const CagePose &pose,
                                           std::uint32_t object_id, std::uint32_t mesh_id) {
   TransformBuildResult result{};

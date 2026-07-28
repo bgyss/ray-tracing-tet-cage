@@ -125,3 +125,16 @@ jq . results/capabilities/2026-07-28-cuda-vulkan-interop.json
 The probe keeps the M7 decision at `remove_from_production_path` until matched
 device UUIDs, external memory/semaphore ownership, equivalent kernels, and
 end-to-end timings are measured on NVIDIA hardware.
+
+The M9 representation policy is also available as a deterministic CLI. It
+chooses rigid, conventional dynamic, tet-cage, or hybrid treatment from
+measured asset quality, workload, boundary-fallback, and backend-correctness
+inputs:
+
+```sh
+tetcage_method_select out.json 1000 16 64 1000 0.0001 0.001 0.05 1 1 1
+```
+
+The checked-in two-tet evaluation deliberately selects conventional dynamic
+geometry because the direct Metal residual is outside the declared threshold;
+the policy is a fallback decision, not a performance claim.

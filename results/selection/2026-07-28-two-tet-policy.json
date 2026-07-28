@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "policy_version": 1,
+  "report_kind": "representation_selection",
+  "evidence_class": "policy_evaluation",
+  "inputs": {
+    "source_triangles": 1,
+    "occupied_tetrahedra": 2,
+    "copies": 64,
+    "maximum_condition": 1,
+    "maximum_position_error": 0.21652030959357527,
+    "maximum_normal_error": 5.192103136e-08,
+    "boundary_fallback_fraction": 0.1484375,
+    "animated": true,
+    "hardware_tet_backend": true,
+    "gpu_correctness_proven": false
+  },
+  "selection": {
+    "representation": "conventional_dynamic",
+    "reasons": [
+      "animation_residual_exceeds_authoring_threshold"
+    ]
+  },
+  "claim_boundary": "This deterministic policy consumes measured inputs; it does not create performance evidence."
+}

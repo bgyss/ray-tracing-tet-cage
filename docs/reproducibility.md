@@ -42,6 +42,7 @@ promoted by that job.
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
 | Vulkan capability | `results/capabilities/2026-07-27-vulkan.json` | unverified/host-limited |
 | CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |
+| Representation selection policy | `results/selection/2026-07-28-two-tet-policy.json` | deterministic fallback evaluation from measured inputs; not performance evidence |
 | Unreal/Cycles gates | `results/integrations/2026-07-28-host-gates.json` | blocked host inspection |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 

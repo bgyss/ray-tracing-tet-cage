@@ -30,6 +30,36 @@ struct BuildPolicy {
   std::optional<std::uint64_t> max_instances;
 };
 
+enum class RepresentationChoice : std::uint8_t {
+  rigid_instancing,
+  conventional_dynamic,
+  tet_cage,
+  hybrid,
+};
+
+struct MethodSelectionInput {
+  std::uint64_t source_triangles{};
+  std::uint64_t occupied_tetrahedra{};
+  std::uint64_t copies{};
+  double maximum_condition{};
+  double maximum_position_error{};
+  double maximum_normal_error{};
+  double boundary_fallback_fraction{};
+  bool animated{};
+  bool hardware_tet_backend{};
+  bool gpu_correctness_proven{};
+};
+
+struct MethodSelectionResult {
+  RepresentationChoice choice{RepresentationChoice::conventional_dynamic};
+  std::vector<std::string> reasons;
+};
+
+[[nodiscard]] MethodSelectionResult select_representation(const MethodSelectionInput &input);
+[[nodiscard]] const char *representation_choice_name(RepresentationChoice choice);
+[[nodiscard]] std::string method_selection_json(const MethodSelectionInput &input,
+                                                const MethodSelectionResult &result);
+
 enum TetTransformFlags : std::uint32_t {
   tet_transform_none = 0U,
   tet_transform_mirrored = 1U << 0U,

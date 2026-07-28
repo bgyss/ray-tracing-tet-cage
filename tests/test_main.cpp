@@ -1083,6 +1083,38 @@ void test_cage_lod_set_has_deterministic_parent_maps() {
            tetcage::cage_lod_json(first).find("\"parent_map_valid\": true") != std::string::npos);
 }
 
+void test_method_selection_policy_is_explicit_and_deterministic() {
+  constexpr const char *test = "method selection policy is explicit and deterministic";
+  tetcage::MethodSelectionInput input{};
+  input.source_triangles = 1000U;
+  input.occupied_tetrahedra = 16U;
+  input.copies = 64U;
+  input.maximum_condition = 1000.0;
+  input.maximum_position_error = 1.0e-4;
+  input.maximum_normal_error = 1.0e-3;
+  input.boundary_fallback_fraction = 0.05;
+  input.animated = true;
+  input.hardware_tet_backend = true;
+  input.gpu_correctness_proven = true;
+  const auto tet = tetcage::select_representation(input);
+  CHECK_IN(test, tet.choice == tetcage::RepresentationChoice::tet_cage);
+  CHECK_IN(test,
+           tetcage::method_selection_json(input, tet).find("\"tet_cage\"") != std::string::npos);
+
+  input.gpu_correctness_proven = false;
+  const auto unproven = tetcage::select_representation(input);
+  CHECK_IN(test, unproven.choice == tetcage::RepresentationChoice::conventional_dynamic);
+
+  input.gpu_correctness_proven = true;
+  input.boundary_fallback_fraction = 0.5;
+  const auto hybrid = tetcage::select_representation(input);
+  CHECK_IN(test, hybrid.choice == tetcage::RepresentationChoice::hybrid);
+
+  input.animated = false;
+  const auto rigid = tetcage::select_representation(input);
+  CHECK_IN(test, rigid.choice == tetcage::RepresentationChoice::rigid_instancing);
+}
+
 } // namespace
 
 int main() {
@@ -1123,6 +1155,7 @@ int main() {
   test_cage_animation_analysis_reports_clip_residuals_and_weight_fit();
   test_cage_refinement_is_conforming_and_orientation_preserving();
   test_cage_lod_set_has_deterministic_parent_maps();
+  test_method_selection_policy_is_explicit_and_deterministic();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

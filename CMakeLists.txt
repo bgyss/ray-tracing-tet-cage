@@ -61,6 +61,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_cage_lods PRIVATE tetcage_core)
   add_executable(tetcage_asset_migrate tools/asset_migrate/main.cpp)
   target_link_libraries(tetcage_asset_migrate PRIVATE tetcage_core)
+  add_executable(tetcage_method_select tools/method_select/main.cpp)
+  target_link_libraries(tetcage_method_select PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -218,6 +220,12 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.asset_migration_cli PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "\"byte_identical\":true")
+    add_test(NAME tetcage.method_selection_cli
+      COMMAND tetcage_method_select
+        "${CMAKE_CURRENT_BINARY_DIR}/method-selection.json"
+        1000 16 64 1000.0 0.0001 0.001 0.05 1 1 1)
+    set_tests_properties(tetcage.method_selection_cli PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"representation\":\"tet_cage\"")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 2
   },
-  "file_count": 18,
+  "file_count": 19,
   "files": [
     {
       "documents": 1,
@@ -151,6 +151,14 @@
         "feasibility"
       ],
       "path": "renderman-feasibility.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "selection/2026-07-28-two-tet-policy.json",
       "shared_records": 0
     }
   ],
