@@ -22,24 +22,24 @@ Compilation alone never promotes a row to measured.
 | Portable canonical asset | versioned little-endian `.tetcage` stream | byte-identical repeated builds, migration/golden and malformed-input tests | format v1 implemented; golden corpus pending |
 | Hit provenance | source primitive/material plus source barycentrics | position, UV, normal, material and custom-attribute differential | position/material implemented; full renderer attributes pending |
 | Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | baseline policy implemented; GPU proof blocked |
-| Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | pending M3 |
-| Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | pending M3 |
-| Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | pending M4 |
-| Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | schema implemented; writer pending M4 |
+| Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | implemented and seeded corpus-tested |
+| Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | implemented and property-tested |
+| Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested |
+| Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | implemented and machine-checked |
 | Acceleration-structure nesting | flattened two-level production contract | real API/engine queries; no inferred third level | Metal exposes no numeric property; UE/Vulkan blocked |
 | Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal descriptor sizing measured; builds pending |
 | Metal device capability | Objective-C++ device probe | real `MTLDevice` query output | implemented; requires unsandboxed execution |
 | Vulkan/NVIDIA capability | Vulkan physical-device probe | KHR/NV features, limits, driver/device from real NVIDIA loader | implementation present; host has no Vulkan SDK/device |
-| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | blocked by unfinished backend and missing Metal shader toolchain |
+| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; boundary/grazing corpus has 1 miss and 0.05 position error on one-tet probe |
 | Vulkan fast backend | KHR AS/ray tracing and Vulkan compute | validation-clean NVIDIA results | blocked by absent SDK/NVIDIA hardware |
 | CUDA interop | UUID-matched memory/semaphore experiment | end-to-end retain/remove measurement | blocked until M6 exists |
 | GPU watertight/hybrid experiments | procedural/manual 4D path | equal-work correctness/time/memory comparison | blocked until M5/M6 and M3 exist |
 | Crossover/optimization policy | common benchmark matrix | measured Metal and NVIDIA crossover surfaces | blocked until both GPU backends |
-| Cage authoring and LOD | residual analyzer, conforming refinement, suitability policy | representative clip-wide quality evidence | pending M10 |
+| Cage authoring and LOD | baseline cage generator, conditioning/residual analyzer, suitability policy | representative clip-wide quality evidence | portable baseline/analyzer implemented; clip-wide quality and conforming refinement pending |
 | Unreal Engine | importer, RDG proof, material bridge, source changes if needed | pinned Windows/NVIDIA sample and million-instance report | blocked: no UE source/install |
 | Cycles | canonical loader, MetalRT and OptiX device integration | pinned source build and same-scene device comparison | blocked: Blender binary exists, Cycles source checkout absent |
 | RenderMan | public-API procedural and capability matrix | licensed pinned-runtime prototype plus go/no-go | RenderMan 26.2 headers/runtime present; M13 study pending |
-| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | pending M14; cannot precede retained-backend gates |
+| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | tooling/license foundation implemented; retained-backend and integration gates remain |
 
 ## Overall roadmap success criteria
 
@@ -55,4 +55,3 @@ Compilation alone never promotes a row to measured.
 | Mixed-scene coexistence | static, rigid, skinned, procedural, and tet geometry in one renderer scene |
 | No hidden third AS level | code/API evidence for the actual flattened or nested hierarchy |
 | Reproducible release | clean-checkout commands, pinned dependencies, manifests, chart regeneration, and explicit unsupported paths |
-

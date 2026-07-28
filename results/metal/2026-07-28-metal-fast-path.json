@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "run_id": "metal-fast-325c89d5964ef6a7",
+  "timestamp_utc": "2026-07-28T02:11:38Z",
+  "source": {"commit": "2d9747d3aa682da26d29a26c764af14b09f2a4e3", "dirty": true},
+  "build": {"compiler": "AppleClang", "compiler_version": "21.0.0.21000101", "build_type": "Debug"},
+  "host": {"os": "macOS", "os_version": "27.0.0", "architecture": "arm64"},
+  "backend": {"api": "metal", "status": "measured", "device": "Apple M1 Max", "driver": "Metal framework", "capability_manifest": "results/capabilities/2026-07-27-metal.json"},
+  "scene": {"id": "metal-fast-path", "hash": "325c89d5964ef6a7", "seed": 81002718},
+  "configuration": {
+    "copies": 1,
+    "requested_rays": 128,
+    "motion_amplitude": 0,
+    "compact_blas": true,
+    "extended_limits": false,
+    "instance_generation": "cpu_direct_baseline",
+    "blas_usage": "static_prefer_fast_intersection_when_available",
+    "triangle_culling": "disabled_for_mirror_safe_baseline"
+  },
+  "timings_ms": {
+    "cage_deformation": 0.0044159999999999998,
+    "transform_generation": 0.053999999999999999,
+    "instance_generation": 0.016792000000000001,
+    "blas": 48.682667000000002,
+    "tlas": 3.074875,
+    "synchronization": 33.697832999999996,
+    "traversal": 0.50837500000000002,
+    "shading": 0,
+    "total": 102.731875,
+    "warmup_iterations": 0,
+    "measured_iterations": 1
+  },
+  "memory_bytes": {
+    "source_geometry": 212,
+    "canonical_geometry": 272,
+    "provenance": 336,
+    "cage": 144,
+    "blas": 1280,
+    "tlas": 2048,
+    "scratch": 13056,
+    "instance_buffers": 72,
+    "api_objects": null,
+    "renderer_state": null,
+    "peak_total": 33804
+  },
+  "correctness": {
+    "rays": 128,
+    "misses": 1,
+    "duplicate_hits": 0,
+    "wrong_ownership": 0,
+    "position_error_max": 0.050000011949689727,
+    "normal_error_max": 0,
+    "attribute_error_max": 0.083333333381259866,
+    "image_error": null
+  },
+  "statistics": {
+    "occupied_micro_blas": 1,
+    "instances": 1,
+    "blas_uncompacted_bytes": 1536,
+    "blas_compacted_bytes": 1280,
+    "blas_build_gpu_ms": 0.21466665202751756,
+    "blas_compaction_gpu_ms": 0.056583347031846642,
+    "tlas_build_gpu_ms": 0.16924997908063233,
+    "traversal_gpu_ms": 0.037375022657215595,
+    "runtime_shader_compiled": true,
+    "gpu_attribute_reconstruction": true,
+    "mirrored_instances": false,
+    "mismatch_samples": [{"kind":"hit_presence","ray_index":5,"origin":[0.4,0.4,1.1],"direction":[-0,-0,-1],"cpu_hit":true,"gpu_hit":false,"cpu_t":1,"gpu_t":null,"gpu_triangle_bary":[0,0],"cpu_source_bary":[3.33066907e-16,0.5,0.5],"gpu_source_bary":[0,0,0]}, {"kind":"value","ray_index":7,"origin":[-0.7,0.3,0.1000001],"direction":[1,0,-1e-07],"cpu_hit":true,"gpu_hit":true,"cpu_t":1,"gpu_t":0.949999988,"gpu_triangle_bary":[0.25,0.333333343],"cpu_source_bary":[0.333333333,0.333333333,0.333333333],"gpu_source_bary":[0.416666627,0.25,0.333333343]}]
+  },
+  "failures": [{"code": "metal_cpu_oracle_mismatch", "message": "GPU hits or reconstructed attributes exceeded the declared 2.5e-5 tolerance"}],
+  "command": "./build/dev/tetcage_metal_fast_path build/dev/one-tet.tetcage results/metal/2026-07-28-metal-fast-path.json --copies 1 --rays 128 --motion 0 --compact",
+  "evidence_class": "direct"
+}

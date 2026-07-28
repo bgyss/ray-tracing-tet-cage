@@ -31,7 +31,8 @@ add_library(tetcage_core
   src/compiler/asset_compiler.cpp
   src/compiler/io.cpp
   src/cpu_reference/oracle.cpp
-  src/core/runtime.cpp)
+  src/core/runtime.cpp
+  src/core/authoring.cpp)
 target_include_directories(tetcage_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(tetcage_core PUBLIC tetcage_project_options)
 
@@ -52,6 +53,10 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_oracle_report PRIVATE tetcage_core)
   add_executable(tetcage_benchmark tools/benchmark/main.cpp)
   target_link_libraries(tetcage_benchmark PRIVATE tetcage_core)
+  add_executable(tetcage_cage_quality tools/cage_quality/main.cpp)
+  target_link_libraries(tetcage_cage_quality PRIVATE tetcage_core)
+  add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
+  target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   execute_process(
     COMMAND git rev-parse HEAD
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -120,6 +125,29 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.benchmark_corruption_cli PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       WILL_FAIL TRUE)
+    add_test(NAME tetcage.cage_quality_cli
+      COMMAND tetcage_cage_quality
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cage-quality.json"
+        --samples 4 --motion 0.05)
+    set_tests_properties(tetcage.cage_quality_cli PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "\"suitable\": true")
+    add_test(NAME tetcage.cage_generate_cli
+      COMMAND tetcage_cage_generate
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated-baseline.cage")
+    set_tests_properties(tetcage.cage_generate_cli PROPERTIES
+      FIXTURES_SETUP generated_cage)
+    add_test(NAME tetcage.cage_generate_compiles
+      COMMAND tetcage_asset_compiler
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated-baseline.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/generated-baseline.tetcage")
+    set_tests_properties(tetcage.cage_generate_compiles PROPERTIES
+      FIXTURES_REQUIRED generated_cage
+      FIXTURES_SETUP generated_asset
+      PASS_REGULAR_EXPRESSION "\"cage_tetrahedra\": 12")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

@@ -72,7 +72,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     failures=$((failures + 1))
   fi
 
-  if command -v xcrun >/dev/null 2>&1 && xcrun metal --version >/dev/null 2>&1; then
+  if [[ -x /usr/bin/xcrun ]] && /usr/bin/xcrun metal --version >/dev/null 2>&1; then
     printf 'optional  %-18s available  %s\n' "Metal compiler" "offline MSL compilation"
   else
     printf 'optional  %-18s unavailable  %s\n' \

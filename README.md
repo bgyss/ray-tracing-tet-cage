@@ -44,6 +44,10 @@ Portable implementation work now includes:
 - real Metal and Vulkan capability-report executables (Vulkan reports
   unverified when no SDK/loader is present);
 - a versioned result-manifest schema and proof-oriented requirements matrix;
+- an independent CPU fast/4D oracle, runtime/stub benchmark manifests, and
+  deliberate-corruption detection;
+- reproducible cage-generation and cage-quality analysis tools that report
+  conditioning, residuals, and explicit fallback reasons;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded
   differential tests.
 
@@ -74,6 +78,11 @@ the complete repo-native check. The current proof state and unresolved hardware
 gates are recorded in [the requirements matrix](docs/requirements-matrix.md)
 and [platform support policy](docs/platform-support.md).
 
-No GPU rendering, production-scale performance, watertightness, or renderer
-integration claim is made until its original roadmap exit gate has direct
-evidence under `results/`.
+The standalone Metal fast path now builds real immutable micro-BLAS objects,
+compacts them, builds a TLAS, runs a runtime MSL ray-query kernel, and emits
+direct-device manifests. Its current one-tet probe matches interior rays but
+still reports boundary/grazing-ray differences, so it remains a measured
+partial result rather than a completed M5 gate. Vulkan/NVIDIA, CUDA, Unreal,
+Cycles, and RenderMan remain explicitly hardware/source/license gated. No
+production-scale performance, watertightness, or renderer integration claim is
+made until its original roadmap exit gate has direct evidence under `results/`.

@@ -71,3 +71,30 @@ The existing `dev` preset remains the direct Xcode-clang lane on macOS, and
 `portable` remains the default-compiler fallback. Direct GPU evidence still
 requires a matching physical device, driver, runtime, and SDK; successful Nix
 builds do not satisfy those roadmap gates.
+
+## Cage authoring and quality checks
+
+The portable authoring tools provide a reproducible baseline and a proof-gated
+quality report. Generate an AABB-plus-center starter cage (the result is a
+starting point, not a production-quality deformation cage), compile it, and
+sample its conditioning and affine residuals:
+
+```sh
+tetcage_cage_generate mesh.obj build/generated-baseline.cage
+tetcage_asset_compiler mesh.obj build/generated-baseline.cage build/asset.tetcage
+tetcage_cage_quality build/asset.tetcage results/authoring/cage-quality.json \
+  --samples 32 --motion 0.05
+```
+
+The quality report records per-sample minimum edge length, condition estimate,
+mirrors/near-singular tetrahedra, boundary-fragment counts, and the direct
+barycentric-versus-affine residual. `suitable: false` is an explicit fallback
+recommendation; it does not claim that a baseline cage represents an animation
+well. Full clip residuals require an animation-aware source deformation input.
+
+If the sandbox makes the global Nix cache read-only, keep the cache local to the
+checkout for a task invocation:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" mise run check
+```

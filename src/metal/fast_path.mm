@@ -38,6 +38,13 @@ struct PackedFloat3 {
   float z{};
 };
 
+struct BlasVertex {
+  float x{};
+  float y{};
+  float z{};
+  float padding{};
+};
+
 static_assert(sizeof(PackedFloat2) == 8U);
 static_assert(sizeof(PackedFloat3) == 12U);
 
@@ -83,7 +90,7 @@ static_assert(sizeof(GpuHit) == 96U);
 struct BlasGroup {
   std::uint32_t tet_id{};
   std::vector<std::uint32_t> micro_triangle_indices;
-  std::vector<PackedFloat3> vertices;
+  std::vector<BlasVertex> vertices;
 };
 
 struct InstanceInfo {
@@ -358,7 +365,7 @@ std::vector<BlasGroup> make_blas_groups(const CompiledAsset &asset) {
       const auto &barycentric = asset.generated_vertices[vertex_index].cage_barycentric;
       group.vertices.push_back({static_cast<float>(barycentric.y),
                                 static_cast<float>(barycentric.z),
-                                static_cast<float>(barycentric.w)});
+                                static_cast<float>(barycentric.w), 0.0F});
     }
   }
   std::vector<BlasGroup> groups;
@@ -665,6 +672,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
       provenance.size() * sizeof(GpuProvenance) + primitive_offsets.size() * sizeof(std::uint32_t);
 
   NSMutableArray<id<MTLBuffer>> *vertex_buffers = [NSMutableArray array];
+  NSMutableArray<id<MTLBuffer>> *index_buffers = [NSMutableArray array];
   NSMutableArray<MTLPrimitiveAccelerationStructureDescriptor *> *blas_descriptors =
       [NSMutableArray array];
   NSMutableArray<id<MTLAccelerationStructure>> *blas = [NSMutableArray array];
@@ -675,18 +683,34 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   for (const auto &group : groups) {
     id<MTLBuffer> vertex_buffer =
         [device newBufferWithBytes:group.vertices.data()
-                            length:group.vertices.size() * sizeof(PackedFloat3)
+                            length:group.vertices.size() * sizeof(BlasVertex)
                            options:MTLResourceStorageModeShared];
     if (vertex_buffer == nil) {
       throw std::runtime_error("failed to allocate canonical micro-mesh vertex buffer");
     }
     [vertex_buffers addObject:vertex_buffer];
 
+    std::vector<std::uint32_t> local_indices(group.vertices.size());
+    for (std::uint32_t vertex_index = 0; vertex_index < local_indices.size(); ++vertex_index) {
+      local_indices[vertex_index] = vertex_index;
+    }
+    id<MTLBuffer> index_buffer =
+        [device newBufferWithBytes:local_indices.data()
+                            length:local_indices.size() * sizeof(std::uint32_t)
+                           options:MTLResourceStorageModeShared];
+    if (index_buffer == nil) {
+      throw std::runtime_error("failed to allocate canonical micro-mesh index buffer");
+    }
+    [index_buffers addObject:index_buffer];
+
     auto *geometry = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
     geometry.vertexBuffer = vertex_buffer;
     geometry.vertexBufferOffset = 0U;
-    geometry.vertexStride = sizeof(PackedFloat3);
+    geometry.vertexStride = sizeof(BlasVertex);
     geometry.triangleCount = group.micro_triangle_indices.size();
+    geometry.indexBuffer = index_buffer;
+    geometry.indexBufferOffset = 0U;
+    geometry.indexType = MTLIndexTypeUInt32;
     geometry.opaque = YES;
     if (@available(macOS 13.0, *)) {
       geometry.vertexFormat = MTLAttributeFormatFloat3;

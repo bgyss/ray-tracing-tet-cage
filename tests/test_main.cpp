@@ -1,4 +1,5 @@
 #include "tetcage/asset_format.h"
+#include "tetcage/authoring.h"
 #include "tetcage/io.h"
 #include "tetcage/math.h"
 #include "tetcage/oracle.h"
@@ -914,6 +915,23 @@ void test_backend_adapter_uses_neutral_frame_contract() {
   CHECK_IN(test, !backend.capabilities().hardware_acceleration);
 }
 
+void test_cage_quality_analysis_is_deterministic_and_actionable() {
+  constexpr const char *test = "cage quality analysis is deterministic and actionable";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  const auto first = tetcage::analyze_cage_quality(*compiled.asset, 4U, 0.05);
+  const auto second = tetcage::analyze_cage_quality(*compiled.asset, 4U, 0.05);
+  CHECK_IN(test, first.asset_hash == second.asset_hash);
+  CHECK_IN(test, first.frames.size() == 4U);
+  CHECK_IN(test, first.suitable);
+  CHECK_IN(test, first.maximum_affine_residual < 1.0e-12);
+  CHECK_IN(test, tetcage::cage_quality_json(first).find("\"suitable\": true") != std::string::npos);
+}
+
 } // namespace
 
 int main() {
@@ -949,6 +967,7 @@ int main() {
   test_asset_cache_owns_opaque_handles_without_serializing_them();
   test_benchmark_detects_corrupt_stub_and_keeps_nullable_metrics();
   test_backend_adapter_uses_neutral_frame_contract();
+  test_cage_quality_analysis_is_deterministic_and_actionable();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";
