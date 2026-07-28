@@ -670,21 +670,42 @@ void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
          << actual.triangle_barycentric.y << "],\"cpu_source_bary\":";
   if (expected) {
     sample << '[' << expected->source_barycentric.x << ',' << expected->source_barycentric.y << ','
-           << expected->source_barycentric.z << ']';
+           << expected->source_barycentric.z << "],\"cpu_tet_id\":" << expected->tet_id;
   } else {
     sample << "null";
   }
   sample << ",\"gpu_source_bary\":[" << actual.source_barycentric.x << ','
-         << actual.source_barycentric.y << ',' << actual.source_barycentric.z << "]}";
+         << actual.source_barycentric.y << ',' << actual.source_barycentric.z
+         << "],\"gpu_user_instance_id\":" << actual.user_instance_id
+         << ",\"gpu_primitive_id\":" << actual.primitive_id << "}";
   run.mismatch_samples.push_back(sample.str());
 }
 
-bool boundary_sensitive_ray(const Ray &ray, const TraceHit &expected) {
+Tetrahedron posed_tet(const CompiledAsset &asset, const std::vector<Vec3> &pose,
+                      std::uint32_t tet_id) {
+  Tetrahedron tet{};
+  const auto &source = asset.cage.tetrahedra[tet_id];
+  for (std::size_t corner = 0; corner < 4U; ++corner) {
+    tet.positions[corner] = pose[source.vertex_indices[corner]];
+    tet.vertex_ids[corner] = asset.cage.vertex_ids[source.vertex_indices[corner]];
+  }
+  return tet;
+}
+
+bool boundary_sensitive_ray(const CompiledAsset &asset, const std::vector<Vec3> &pose,
+                            const Ray &ray, const TraceHit &expected) {
   const double source_edge = std::min({expected.source_barycentric.x, expected.source_barycentric.y,
                                        expected.source_barycentric.z});
   const auto direction = normalized(ray.direction);
   const double normal_alignment = direction ? std::abs(dot(*direction, expected.normal)) : 0.0;
-  return source_edge <= 1.0e-6 || normal_alignment <= 1.0e-5;
+  const auto cage_barycentric =
+      expected.tet_id < asset.cage.tetrahedra.size()
+          ? to_barycentric(posed_tet(asset, pose, expected.tet_id), expected.position)
+          : std::nullopt;
+  const double cage_edge = cage_barycentric ? std::min({cage_barycentric->x, cage_barycentric->y,
+                                                        cage_barycentric->z, cage_barycentric->w})
+                                            : 1.0;
+  return source_edge <= 1.0e-6 || cage_edge <= 1.0e-5 || normal_alignment <= 1.0e-5;
 }
 
 MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOptions &options,
@@ -1171,7 +1192,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.gpu_eligible_rays = rays.size();
   for (std::size_t index = 0; index < rays.size(); ++index) {
     const auto cpu = trace_fast(asset, poses.front(), rays[index]);
-    if (cpu.closest && boundary_sensitive_ray(rays[index], *cpu.closest)) {
+    if (cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], *cpu.closest)) {
       ++run.boundary_sensitive_rays;
       if (options.boundary_fallback) {
         --run.gpu_eligible_rays;

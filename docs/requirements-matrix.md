@@ -27,7 +27,7 @@ Compilation alone never promotes a row to measured.
 | Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested |
 | Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | implemented and machine-checked |
 | Acceleration-structure nesting | flattened two-level production contract | real API/engine queries; no inferred third level | Metal exposes no numeric property; UE/Vulkan blocked |
-| Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal descriptor sizing measured; builds pending |
+| Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal synthetic 2-tet sweep measured through 128 instances; correctness residuals remain, so no crossover claim |
 | Metal device capability | Objective-C++ device probe | real `MTLDevice` query output | implemented; requires unsandboxed execution |
 | Vulkan/NVIDIA capability | Vulkan physical-device probe | KHR/NV features, limits, driver/device from real NVIDIA loader | implementation present; host has no Vulkan SDK/device |
 | Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; opt-in GPU descriptor generation is direct-device validated; hardware-all-rays has 1 miss and 0.05 position error, while explicit boundary fallback makes 121/128 rays GPU-eligible with zero residuals |
