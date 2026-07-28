@@ -3,5 +3,6 @@
 /results/generated/
 /.cache/
 /.mise.local.toml
+__pycache__/
 *.dSYM/
 .DS_Store

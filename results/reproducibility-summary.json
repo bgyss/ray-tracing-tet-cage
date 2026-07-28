@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 6
   },
-  "file_count": 22,
+  "file_count": 28,
   "files": [
     {
       "documents": 1,
@@ -78,6 +78,46 @@
       "kinds": [
         "other"
       ],
+      "path": "compiler/2026-07-28-asset-corpus.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/dense_animated_embedded_surface/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/face_edge_vertex_sharing/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/sharp_material_uv_seam/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/smooth_closed/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
       "path": "cpu/2026-07-27-two-tet-oracle.json",
       "shared_records": 0
     },
@@ -87,6 +127,14 @@
         "other"
       ],
       "path": "cpu/2026-07-27-two-tet-pre-fix-counterexample.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "cpu/2026-07-28-oracle-corpus.json",
       "shared_records": 0
     },
     {

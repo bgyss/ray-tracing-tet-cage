@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "version": "wp0-corpus-v1",
+  "coordinate_convention": "right-handed XYZ, meters; OBJ positions and cage vertices share object space",
+  "license_policy": "All required exit-gate fixtures are original CC0-1.0 content committed in this repository. No unredistributable asset is required.",
+  "source_assets": [
+    {"path": "assets/corpus/smooth-closed.obj", "sha256": "56bb3063587f89b67e43a1c88b5f0e5bbd3623bedef220a0c7245a450476ba18", "license": "CC0-1.0", "origin": "original tetcage WP0 fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/sharp-seam.obj", "sha256": "67f2c787462dfe58ea69907ae87b62d720fb32766374b28802f8719cbf2d3949", "license": "CC0-1.0", "origin": "original tetcage WP0 fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/animated-dense.obj", "sha256": "3b84b4ef98a56a72712f68d9cdba8de973a5a47d57259e15a47304273d11533f", "license": "CC0-1.0", "origin": "original tetcage WP0 fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/unit.cage", "sha256": "434970b82054377763689bead9905308e803be6b0f55d468ec347e2a574b4e4f", "license": "CC0-1.0", "origin": "original tetcage WP0 fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/topology-sharing.cage", "sha256": "006beb5970a3c16ee9f8aa6dfda7afacb7ddb5a3edaf51e6ea965d77b8566719", "license": "CC0-1.0", "origin": "original tetcage WP0 fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/near-degenerate.cage", "sha256": "534087a8da41e4e827184040f7ffbc0213d765c8d43778a4e3d1731186250694", "license": "CC0-1.0", "origin": "original tetcage WP0 negative fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "assets/corpus/duplicate-topology.cage", "sha256": "28eb1c1c08585da1b8c7515e741b3d990788ad436066a21d66f34dddf3e6ce1c", "license": "CC0-1.0", "origin": "original tetcage WP0 negative fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"},
+    {"path": "tests/assets/invalid.cage", "sha256": "21ca3bd58ee93e3b3d02ec551c2479bf6776a0c2e58937e115bc8d20eb4cd295", "license": "CC0-1.0", "origin": "existing original repository malformed fixture", "scale": "meters, unit cage", "coordinate_convention": "right-handed XYZ"}
+  ],
+  "cases": [
+    {"id": "smooth_closed", "mesh": "assets/corpus/smooth-closed.obj", "cage": "assets/corpus/unit.cage", "golden": "assets/golden/smooth_closed.tetcage", "expected_compiler_outcome": "accepted", "animation_frames": 1, "motion": 0.0},
+    {"id": "sharp_material_uv_seam", "mesh": "assets/corpus/sharp-seam.obj", "cage": "assets/corpus/unit.cage", "golden": "assets/golden/sharp_material_uv_seam.tetcage", "expected_compiler_outcome": "accepted", "animation_frames": 1, "motion": 0.0},
+    {"id": "face_edge_vertex_sharing", "mesh": "assets/corpus/smooth-closed.obj", "cage": "assets/corpus/topology-sharing.cage", "golden": "assets/golden/face_edge_vertex_sharing.tetcage", "expected_compiler_outcome": "accepted", "animation_frames": 1, "motion": 0.0},
+    {"id": "dense_animated_embedded_surface", "mesh": "assets/corpus/animated-dense.obj", "cage": "assets/corpus/unit.cage", "golden": "assets/golden/dense_animated_embedded_surface.tetcage", "expected_compiler_outcome": "accepted", "animation_frames": 8, "motion": 0.025},
+    {"id": "near_degenerate", "mesh": "assets/corpus/smooth-closed.obj", "cage": "assets/corpus/near-degenerate.cage", "golden": null, "expected_compiler_outcome": "rejected:degenerate_cage_tet"},
+    {"id": "duplicate_topology", "mesh": "assets/corpus/smooth-closed.obj", "cage": "assets/corpus/duplicate-topology.cage", "golden": null, "expected_compiler_outcome": "rejected:duplicate_cage_tet"},
+    {"id": "malformed_cage", "mesh": "assets/corpus/smooth-closed.obj", "cage": "tests/assets/invalid.cage", "golden": null, "expected_compiler_outcome": "rejected:parse_error"}
+  ]
+}

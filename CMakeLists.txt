@@ -51,6 +51,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_inspect PRIVATE tetcage_core)
   add_executable(tetcage_oracle_report tools/oracle_report/main.cpp)
   target_link_libraries(tetcage_oracle_report PRIVATE tetcage_core)
+  add_executable(tetcage_image_differential tools/image_differential/main.cpp)
+  target_link_libraries(tetcage_image_differential PRIVATE tetcage_core)
   add_executable(tetcage_benchmark tools/benchmark/main.cpp)
   target_link_libraries(tetcage_benchmark PRIVATE tetcage_core)
   add_executable(tetcage_cage_quality tools/cage_quality/main.cpp)
@@ -131,6 +133,28 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.oracle_report_cli PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "\"exact_misses\": 0")
+    add_test(NAME tetcage.image_differential_cli
+      COMMAND tetcage_image_differential
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-differential"
+        --width 24 --height 24)
+    set_tests_properties(tetcage.image_differential_cli PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "\"miss_classification\"")
+    add_test(NAME tetcage.asset_corpus
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_asset_corpus.py"
+        "$<TARGET_FILE:tetcage_asset_compiler>"
+        "$<TARGET_FILE:tetcage_oracle_report>"
+        "$<TARGET_FILE:tetcage_image_differential>"
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/asset-corpus")
+    set_tests_properties(tetcage.asset_corpus PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"accepted_assets\": 4")
+    add_test(NAME tetcage.asset_corpus_manifest
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/corpus_smoke.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}")
+    set_tests_properties(tetcage.asset_corpus_manifest PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"cases\": 7")
     add_test(NAME tetcage.benchmark_cli
       COMMAND tetcage_benchmark
         "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
