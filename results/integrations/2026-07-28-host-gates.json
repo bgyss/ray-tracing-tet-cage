@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "unreal": {
+    "root": "/Users/briangyss/src/UnrealEngine",
+    "checkout_present": true,
+    "revision": "4.19.2-release-1-g08ee319f80e",
+    "ue5_target": "blocked",
+    "status": "blocked",
+    "reason": "The discovered checkout is Unreal 4.19.2; M11 requires a pinned UE5 RHI/renderer proof."
+  },
+  "blender_cycles": {
+    "binary": "/Applications/Blender.app/Contents/MacOS/blender",
+    "binary_present": true,
+    "version": "Blender 5.2.0 LTS",
+    "source_root": "",
+    "cycles_source_present": false,
+    "status": "blocked",
+    "reason": "A Blender binary is present, but no pinned Blender/Cycles source checkout was supplied for device-layer integration."
+  }
+}

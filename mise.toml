@@ -40,3 +40,7 @@ run = "nix flake check path:. --print-build-logs"
 [tasks.renderman-probe]
 description = "Inspect the installed RenderMan public headers and write a feasibility result"
 run = "nix develop path:. --command bash -lc 'mkdir -p results && bash scripts/renderman_feasibility.sh > results/renderman-feasibility.json'"
+
+[tasks.integration-probe]
+description = "Record installed Unreal and Blender/Cycles integration prerequisites"
+run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && bash scripts/integration_probe.sh > results/integrations/2026-07-28-host-gates.json'"
