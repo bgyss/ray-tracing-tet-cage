@@ -1,13 +1,13 @@
 {
   "api_counts": {
     "metal": 8,
-    "stub": 2
+    "stub": 6
   },
   "evidence_class_counts": {
     "direct": 8,
-    "synthetic": 2
+    "synthetic": 6
   },
-  "file_count": 20,
+  "file_count": 21,
   "files": [
     {
       "documents": 1,
@@ -40,6 +40,14 @@
       ],
       "path": "benchmarks/2026-07-27-cpu-stub.json",
       "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "scale_sweep"
+      ],
+      "path": "benchmarks/2026-07-28-portable-scale-sweep.json",
+      "shared_records": 4
     },
     {
       "documents": 1,
@@ -173,8 +181,8 @@
   "generator": "scripts/result_report.py",
   "results_root": "results",
   "schema_version": 1,
-  "shared_manifest_count": 10,
-  "shared_manifest_failure_count": 8,
+  "shared_manifest_count": 14,
+  "shared_manifest_failure_count": 12,
   "shared_manifests": [
     {
       "api": "stub",
@@ -212,6 +220,82 @@
       "source_dirty": true,
       "status": "measured",
       "total_ms": 20.76398,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 1,
+      "misses": 1,
+      "path": "benchmarks/2026-07-28-portable-scale-sweep.json",
+      "peak_total_bytes": null,
+      "rays": 1536,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-81002718",
+      "run_index": 0,
+      "scene": "portable-scale-1",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "febe2e7b7e0c9f55f19be0d76212c92da36bf8d7",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 2.476708,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 1,
+      "misses": 1,
+      "path": "benchmarks/2026-07-28-portable-scale-sweep.json",
+      "peak_total_bytes": null,
+      "rays": 1536,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-81002718",
+      "run_index": 1,
+      "scene": "portable-scale-16",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "febe2e7b7e0c9f55f19be0d76212c92da36bf8d7",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 2.573333,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 1,
+      "misses": 1,
+      "path": "benchmarks/2026-07-28-portable-scale-sweep.json",
+      "peak_total_bytes": null,
+      "rays": 1536,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-81002718",
+      "run_index": 2,
+      "scene": "portable-scale-4",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "febe2e7b7e0c9f55f19be0d76212c92da36bf8d7",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 2.492917,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "stub",
+      "duplicate_hits": 0,
+      "evidence_class": "synthetic",
+      "failure_count": 1,
+      "misses": 1,
+      "path": "benchmarks/2026-07-28-portable-scale-sweep.json",
+      "peak_total_bytes": null,
+      "rays": 1536,
+      "run_id": "cpu-stub-0fc1a55a6843ce11-81002718",
+      "run_index": 3,
+      "scene": "portable-scale-64",
+      "scene_hash": "0fc1a55a6843ce11",
+      "source_commit": "febe2e7b7e0c9f55f19be0d76212c92da36bf8d7",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 2.746416,
       "wrong_ownership": 0
     },
     {
@@ -368,6 +452,6 @@
     }
   ],
   "status_counts": {
-    "measured": 10
+    "measured": 14
   }
 }
