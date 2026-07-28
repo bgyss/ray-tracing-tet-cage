@@ -27,12 +27,16 @@ MISE_DISABLE_VERSION_CHECK=1 mise run configure
 MISE_DISABLE_VERSION_CHECK=1 mise run build
 MISE_DISABLE_VERSION_CHECK=1 mise run test
 MISE_DISABLE_VERSION_CHECK=1 mise run check
+MISE_DISABLE_VERSION_CHECK=1 mise run report
 ```
 
-Other tasks are `format`, `format-check`, and `nix-check`. `check` is the
+Other tasks are `format`, `format-check`, `nix-check`, `report`,
+`renderman-probe`, and `integration-probe`. `check` is the
 normal local gate: it validates formatting and shell scripts, builds with the
 `nix` CMake preset, runs CTest, and checks the working diff. `nix-check` also
 builds the Metal-disabled portable package in a pure Nix derivation.
+`report` regenerates deterministic JSON/Markdown summaries from `results/` and
+retains partial or synthetic evidence labels.
 
 ## Direct Nix workflow
 
@@ -93,7 +97,10 @@ barycentric-versus-affine residual. `suitable: false` is an explicit fallback
 recommendation; it does not claim that a baseline cage represents an animation
 well. Refinement is conforming: shared edge midpoints are emitted once with
 stable IDs and each tet is split into eight orientation-preserving children.
-Full clip residuals require an animation-aware source deformation input.
+`tetcage_cage_animation` provides a deterministic non-affine diagnostic clip,
+and `tetcage_cage_lods` emits parent-mapped whole-level cages; neither
+substitutes for production clip transition evidence. Full clip residuals still
+require an animation-aware source deformation input.
 
 If the sandbox makes the global Nix cache read-only, keep the cache local to the
 checkout for a task invocation:

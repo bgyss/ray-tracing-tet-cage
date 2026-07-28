@@ -61,13 +61,15 @@ mise:
 ```sh
 MISE_DISABLE_VERSION_CHECK=1 mise run doctor
 MISE_DISABLE_VERSION_CHECK=1 mise run check
+MISE_DISABLE_VERSION_CHECK=1 mise run report
 ```
 
 Nix owns CMake, Ninja, formatting, shell/JSON/Python utilities, and
 Vulkan/SPIR-V tooling. On macOS it deliberately delegates Objective-C++, Apple
 frameworks, and Metal to Xcode clang. See
 [the developer environment guide](docs/development.md) for direct Nix commands,
-tool ownership, formatting, and optional GPU/DCC dependencies.
+tool ownership, formatting, result-summary regeneration, and optional GPU/DCC
+dependencies.
 
 Configure, build, and test directly on macOS:
 
