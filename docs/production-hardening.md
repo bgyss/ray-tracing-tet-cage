@@ -17,6 +17,8 @@ fields. Feasibility and integration reports remain separate schemas by design.
 The `tetcage.result_report_smoke` check exercises the deterministic aggregate
 generator used by `mise run report`, so checked-in summaries can be regenerated
 without hand-editing benchmark claims.
+Portable CI regenerates both summary files and fails if the checked-in copies
+would change, making report drift visible during review.
 
 This is a parser safety gate, not a substitute for coverage-guided fuzzing or
 device-loss testing. The remaining M14 work is explicitly platform-specific:

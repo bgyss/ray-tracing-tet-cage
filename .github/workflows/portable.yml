@@ -22,3 +22,11 @@ jobs:
         env:
           XDG_CACHE_HOME: ${{ github.workspace }}/.cache
         run: nix develop path:. --command bash scripts/check.sh nix
+      - name: Verify checked-in reproducibility summary
+        env:
+          XDG_CACHE_HOME: ${{ github.workspace }}/.cache
+        run: |
+          nix develop path:. --command python3 scripts/result_report.py results \
+            --json-out results/reproducibility-summary.json \
+            --markdown-out results/reproducibility-summary.md
+          git diff --exit-code -- results/reproducibility-summary.json results/reproducibility-summary.md

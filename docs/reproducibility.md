@@ -59,3 +59,7 @@ green portable build is not substituted for any of those requirements.
 The v1 identity round-trip is a compatibility harness, not historical-version
 translation; a future format version must add an explicit migration table and
 golden fixtures before it is considered supported.
+
+The dated [goal audit](../results/status/2026-07-28-goal-audit.md) classifies
+each prompt as directly proven, partial, contradicted, or blocked and names the
+exact next evidence for every remaining exit gate.
