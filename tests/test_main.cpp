@@ -723,6 +723,42 @@ void test_adversarial_ray_corpus_matches_4d_oracle() {
   CHECK_IN(test, comparison.exact_visited_nodes > 0U);
 }
 
+void test_fast_stub_accepts_animated_crossing_boundary_rays() {
+  constexpr const char *test = "fast stub accepts animated crossing boundary rays";
+  tetcage::Cage cage{};
+  cage.vertices = {
+      {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0}};
+  cage.vertex_ids = {10U, 20U, 30U, 40U, 50U};
+  cage.tetrahedra = {{{0U, 1U, 2U, 3U}}, {{0U, 2U, 1U, 4U}}};
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.3}, {0.7, 0.1, -0.2}, {0.1, 0.7, 0.0});
+  tetcage::TolerancePolicy tolerance{};
+  tolerance.expanded_barycentric_epsilon = 2.5e-6;
+  const auto compiled = tetcage::compile_asset(mesh, cage, tolerance);
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+
+  const auto bvh = tetcage::build_bvh4d(*compiled.asset, 4U);
+  for (std::uint32_t frame = 0; frame < 8U; ++frame) {
+    auto pose = cage.vertices;
+    const double phase = static_cast<double>(frame) * 0.17;
+    for (std::size_t index = 0; index < pose.size(); ++index) {
+      const double weight =
+          0.25 + static_cast<double>(index + 1U) / static_cast<double>(pose.size() + 1U);
+      pose[index].z += 0.1 * std::sin(phase + weight);
+      pose[index].x += 0.025 * std::cos(phase * 0.5 + weight);
+    }
+    for (std::uint64_t seed = 12345U; seed < 12409U; ++seed) {
+      const auto rays = tetcage::generate_adversarial_rays(*compiled.asset, pose, seed, 128U);
+      const auto comparison = tetcage::compare_oracles(*compiled.asset, bvh, pose, rays);
+      CHECK_IN(test, comparison.fast_misses == 0U);
+      CHECK_IN(test, comparison.exact_misses == 0U);
+      CHECK_IN(test, comparison.primitive_mismatches == 0U);
+    }
+  }
+}
+
 void test_exact_projection_is_no_looser_than_interval_sum() {
   constexpr const char *test = "exact projection is no looser than interval sum";
   const tetcage::BarycentricBounds bounds{{0.05, 0.1, 0.0, 0.0}, {0.8, 0.7, 0.6, 0.5}};
@@ -1207,6 +1243,7 @@ int main() {
   test_bounded_simplex_projection_matches_vertex_enumeration();
   test_cpu_fast_and_4d_oracles_reconstruct_same_hit();
   test_adversarial_ray_corpus_matches_4d_oracle();
+  test_fast_stub_accepts_animated_crossing_boundary_rays();
   test_exact_projection_is_no_looser_than_interval_sum();
   test_oracles_cover_mirrored_near_degenerate_and_scale_poses();
   test_rest_pose_image_and_attributes_match_dense_source();

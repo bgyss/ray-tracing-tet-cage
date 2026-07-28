@@ -550,7 +550,7 @@ TraceResult trace_fast(const CompiledAsset &asset, const std::vector<Vec3> &pose
         asset.generated_vertices[triangle.vertex_indices[1]].cage_barycentric, pose);
     const Vec3 c = reconstruct_local(
         asset.generated_vertices[triangle.vertex_indices[2]].cage_barycentric, pose);
-    const auto intersection = intersect_moller(ray, a, b, c);
+    const auto intersection = intersect_projected_edges(ray, a, b, c);
     if (intersection) {
       hits.push_back(make_hit(asset, triangle_index, *intersection, ray));
     }
