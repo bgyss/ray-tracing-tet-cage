@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "format_version": 1,
+  "fixture": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+  "serialized_bytes": 844,
+  "fnv1a64": "325c89d5964ef6a7",
+  "verification_command": "cmake --preset dev && cmake --build --preset dev --target tetcage_tests && ./build/dev/tetcage_tests",
+  "evidence_class": "portable_test"
+}

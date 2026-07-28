@@ -127,6 +127,7 @@ struct RunMeasurements {
   std::uint64_t wrong_ownership{};
   std::uint64_t boundary_sensitive_rays{};
   std::uint64_t gpu_eligible_rays{};
+  std::uint64_t cpu_fallback_rays{};
   double position_error_max{};
   double normal_error_max{};
   double attribute_error_max{};
@@ -336,6 +337,8 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   emit_integer_or_null(output, measured, run.boundary_sensitive_rays);
   output << ",\n    \"gpu_eligible_rays\": ";
   emit_integer_or_null(output, measured, run.gpu_eligible_rays);
+  output << ",\n    \"cpu_fallback_rays\": ";
+  emit_integer_or_null(output, measured, run.cpu_fallback_rays);
   output << ",\n    \"position_error_max\": ";
   emit_number_or_null(output, measured, run.position_error_max);
   output << ",\n    \"normal_error_max\": ";
@@ -1213,6 +1216,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
       ++run.boundary_sensitive_rays;
       if (options.boundary_fallback) {
         --run.gpu_eligible_rays;
+        ++run.cpu_fallback_rays;
         continue;
       }
     }

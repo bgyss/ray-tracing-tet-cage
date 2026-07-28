@@ -241,6 +241,10 @@ LoadResult<CompiledAsset> load_asset_file(const std::string &path) {
   if (size < 0) {
     return file_error<CompiledAsset>(path, "cannot determine compiled asset size");
   }
+  if (static_cast<std::uintmax_t>(size) > static_cast<std::uintmax_t>(maximum_asset_bytes)) {
+    return file_error<CompiledAsset>(path,
+                                     "compiled asset exceeds the maximum supported byte size");
+  }
   std::vector<std::byte> bytes(static_cast<std::size_t>(size));
   input.seekg(0);
   input.read(reinterpret_cast<char *>(bytes.data()), size);

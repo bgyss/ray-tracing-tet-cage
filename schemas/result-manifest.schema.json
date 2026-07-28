@@ -307,6 +307,18 @@
           "type": ["integer", "null"],
           "minimum": 0
         },
+        "boundary_sensitive_rays": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "gpu_eligible_rays": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "cpu_fallback_rays": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
         "position_error_max": {
           "$ref": "#/$defs/nullableMeasurement"
         },
@@ -323,4 +335,3 @@
     }
   }
 }
-

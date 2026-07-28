@@ -19,9 +19,9 @@ Compilation alone never promotes a row to measured.
 | Determinant, mirror, inversion, and degeneration | tet diagnostics plus backend fallback policy | adversarial pose corpus with no NaN/singular API submission | implemented on CPU; GPU proof pending |
 | Robust clipping | deterministic half-space clipping with explicit tolerance policy | containment, area, feature, and scale tests | implemented for portable baseline; broader corpus pending |
 | Shared-boundary identity and ownership | stable cage/source feature IDs and lowest-owner rule | two-tet fixtures plus watertight boundary corpus | implemented for coplanar ownership; full corpus pending |
-| Portable canonical asset | versioned little-endian `.tetcage` stream | byte-identical repeated builds, migration/golden and malformed-input tests | format v1 implemented; golden corpus pending |
+| Portable canonical asset | versioned little-endian `.tetcage` stream | byte-identical repeated builds, migration/golden and malformed-input tests | format v1 implemented; golden checksum and malformed/safety tests measured; migration beyond initial v1 pending |
 | Hit provenance | source primitive/material plus source barycentrics | position, UV, normal, material and custom-attribute differential | position/material implemented; full renderer attributes pending |
-| Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | Metal boundary-policy experiment measured: 7/128 rays classified boundary-sensitive and excluded by explicit experimental CPU fallback; default hardware-all-rays still fails |
+| Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | Metal boundary-policy experiment measured: 7/128 rays classified boundary-sensitive and routed through explicit experimental CPU fallback (121 GPU-eligible); default hardware-all-rays still fails |
 | Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | implemented and seeded corpus-tested |
 | Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | implemented and property-tested |
 | Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested |
@@ -39,7 +39,7 @@ Compilation alone never promotes a row to measured.
 | Unreal Engine | importer, RDG proof, material bridge, source changes if needed | pinned Windows/NVIDIA sample and million-instance report | blocked: no UE source/install |
 | Cycles | canonical loader, MetalRT and OptiX device integration | pinned source build and same-scene device comparison | blocked: Blender binary exists, Cycles source checkout absent |
 | RenderMan | public-API procedural and capability matrix | licensed pinned-runtime prototype plus go/no-go | RenderMan 26.2 headers/runtime present; M13 study pending |
-| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | tooling/license foundation implemented; retained-backend and integration gates remain |
+| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | parser/fuzz/golden foundation implemented; migration, hardware conformance, samples, and retained-backend/integration gates remain |
 
 ## Overall roadmap success criteria
 

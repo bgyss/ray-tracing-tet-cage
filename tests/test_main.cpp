@@ -383,6 +383,58 @@ void test_serialized_asset_round_trips() {
   }
 }
 
+void write_u64_le(std::vector<std::byte> &bytes, std::size_t offset, std::uint64_t value) {
+  CHECK_IN("serialized mutation helper", offset + sizeof(value) <= bytes.size());
+  if (offset + sizeof(value) > bytes.size()) {
+    return;
+  }
+  for (std::size_t byte = 0; byte < sizeof(value); ++byte) {
+    bytes[offset + byte] = static_cast<std::byte>((value >> (byte * 8U)) & 0xffU);
+  }
+}
+
+void test_deserializer_rejects_unsafe_and_nonfinite_assets() {
+  constexpr const char *test = "deserializer rejects unsafe and nonfinite assets";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.6, 0.1, 0.1}, {0.1, 0.6, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  const auto bytes = tetcage::serialize_asset(*compiled.asset);
+  // Header is magic, two u32 values, and three little-endian doubles. The
+  // first stream count therefore begins at byte 40.
+  constexpr std::size_t source_vertex_count_offset = 40U;
+  constexpr std::size_t first_source_position_offset = 48U;
+  constexpr std::size_t source_triangle_index_offset = 248U;
+
+  auto oversized = bytes;
+  write_u64_le(oversized, source_vertex_count_offset,
+               static_cast<std::uint64_t>(tetcage::maximum_asset_bytes) + 1U);
+  const auto oversized_result = tetcage::deserialize_asset(oversized);
+  CHECK_IN(test, !oversized_result.asset.has_value());
+
+  auto impossible_count = bytes;
+  write_u64_le(impossible_count, source_vertex_count_offset, 10'000U);
+  const auto impossible_count_result = tetcage::deserialize_asset(impossible_count);
+  CHECK_IN(test, !impossible_count_result.asset.has_value());
+
+  auto nonfinite = bytes;
+  write_u64_le(nonfinite, first_source_position_offset, 0x7ff8000000000001ULL);
+  const auto nonfinite_result = tetcage::deserialize_asset(nonfinite);
+  CHECK_IN(test, !nonfinite_result.asset.has_value());
+
+  auto bad_index = bytes;
+  write_u64_le(bad_index, source_triangle_index_offset, 99U);
+  const auto bad_index_result = tetcage::deserialize_asset(bad_index);
+  CHECK_IN(test, !bad_index_result.asset.has_value());
+
+  auto unsupported_version = bytes;
+  write_u64_le(unsupported_version, 8U, 2U);
+  const auto unsupported_result = tetcage::deserialize_asset(unsupported_version);
+  CHECK_IN(test, !unsupported_result.asset.has_value());
+}
+
 void test_shared_face_has_one_deterministic_owner() {
   constexpr const char *test = "shared face has one deterministic owner";
   tetcage::Cage cage{};
@@ -514,6 +566,11 @@ void test_obj_and_cage_files_compile() {
     CHECK_IN(test, compiled.asset.has_value());
     if (compiled.asset) {
       CHECK_IN(test, compiled.asset->source.triangles.front().material_id == 7U);
+      // Golden checksum for the checked-in one-tet source/cage pair. This
+      // catches accidental format drift while repeated-build tests catch
+      // traversal-order nondeterminism.
+      CHECK_IN(test, tetcage::asset_checksum(tetcage::serialize_asset(*compiled.asset)) ==
+                         0x325c89d5964ef6a7ULL);
     }
   }
 }
@@ -949,6 +1006,7 @@ int main() {
   test_compiler_preserves_provenance_and_reconstructs_rest_pose();
   test_asset_build_is_byte_deterministic();
   test_serialized_asset_round_trips();
+  test_deserializer_rejects_unsafe_and_nonfinite_assets();
   test_shared_face_has_one_deterministic_owner();
   test_uncovered_geometry_is_actionable();
   test_dense_smooth_fixture_compiles_without_losing_provenance();

@@ -12,6 +12,7 @@
 namespace tetcage {
 
 inline constexpr std::uint32_t asset_format_version = 1;
+inline constexpr std::size_t maximum_asset_bytes = 256U * 1024U * 1024U;
 
 struct SourceVertex {
   Vec3 position{};

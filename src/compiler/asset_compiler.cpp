@@ -260,10 +260,97 @@ std::optional<Vec4> read_vec4(const std::vector<std::byte> &input, std::size_t &
 
 bool count_is_safe(std::uint64_t count) { return count <= maximum_serialized_elements; }
 
+bool finite(Vec2 value) { return std::isfinite(value.x) && std::isfinite(value.y); }
+bool finite(Vec3 value) {
+  return std::isfinite(value.x) && std::isfinite(value.y) && std::isfinite(value.z);
+}
+bool finite(Vec4 value) {
+  return std::isfinite(value.x) && std::isfinite(value.y) && std::isfinite(value.z) &&
+         std::isfinite(value.w);
+}
+
+bool source_primitive_exists(const CompiledAsset &asset, std::uint32_t primitive_id) {
+  return std::any_of(asset.source.triangles.begin(), asset.source.triangles.end(),
+                     [primitive_id](const SourceTriangle &triangle) {
+                       return triangle.primitive_id == primitive_id;
+                     });
+}
+
+bool indices_are_valid(const CompiledAsset &asset) {
+  if (asset.cage.vertex_ids.size() != asset.cage.vertices.size() ||
+      asset.tet_metadata.size() != asset.cage.tetrahedra.size()) {
+    return false;
+  }
+  for (const auto &vertex : asset.source.vertices) {
+    if (!finite(vertex.position) || !finite(vertex.normal) || !finite(vertex.uv)) {
+      return false;
+    }
+  }
+  for (const auto &triangle : asset.source.triangles) {
+    for (const auto index : triangle.vertex_indices) {
+      if (index >= asset.source.vertices.size()) {
+        return false;
+      }
+    }
+  }
+  for (const auto &vertex : asset.cage.vertices) {
+    if (!finite(vertex)) {
+      return false;
+    }
+  }
+  for (const auto &tet : asset.cage.tetrahedra) {
+    for (const auto index : tet.vertex_indices) {
+      if (index >= asset.cage.vertices.size()) {
+        return false;
+      }
+    }
+  }
+  for (const auto &metadata : asset.tet_metadata) {
+    if (!std::isfinite(metadata.determinant) || !std::isfinite(metadata.condition_estimate) ||
+        !std::isfinite(metadata.minimum_edge)) {
+      return false;
+    }
+    for (const auto adjacent : metadata.adjacent_tet) {
+      if (adjacent < -1 || adjacent >= static_cast<std::int32_t>(asset.cage.tetrahedra.size())) {
+        return false;
+      }
+    }
+    for (const auto owner : metadata.face_owner) {
+      if (owner >= asset.cage.tetrahedra.size()) {
+        return false;
+      }
+    }
+  }
+  for (const auto &vertex : asset.generated_vertices) {
+    if (!finite(vertex.cage_barycentric) || !finite(vertex.source_barycentric) ||
+        vertex.tet_id >= asset.cage.tetrahedra.size() ||
+        !source_primitive_exists(asset, vertex.source_primitive)) {
+      return false;
+    }
+  }
+  for (const auto &triangle : asset.micro_triangles) {
+    for (const auto index : triangle.vertex_indices) {
+      if (index >= asset.generated_vertices.size()) {
+        return false;
+      }
+    }
+    if (triangle.tet_id >= asset.cage.tetrahedra.size() ||
+        triangle.owner_tet >= asset.cage.tetrahedra.size() ||
+        !source_primitive_exists(asset, triangle.source_primitive)) {
+      return false;
+    }
+  }
+  return std::isfinite(asset.statistics.triangle_expansion) &&
+         std::isfinite(asset.statistics.vertex_expansion) &&
+         std::isfinite(asset.statistics.worst_condition);
+}
+
 template <typename T>
-bool read_count(const std::vector<std::byte> &bytes, std::size_t &offset, T &destination) {
+bool read_count(const std::vector<std::byte> &bytes, std::size_t &offset, T &destination,
+                std::size_t minimum_serialized_bytes) {
   const auto value = read_integral<std::uint64_t>(bytes, offset);
-  if (!value || !count_is_safe(*value)) {
+  if (!value || !count_is_safe(*value) || minimum_serialized_bytes == 0U ||
+      *value > (bytes.size() - offset) / minimum_serialized_bytes) {
     return false;
   }
   destination.resize(static_cast<std::size_t>(*value));
@@ -615,6 +702,10 @@ std::vector<std::byte> serialize_asset(const CompiledAsset &asset) {
 
 DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
   DeserializeResult result{};
+  if (bytes.size() > maximum_asset_bytes) {
+    result.error = "asset exceeds the maximum supported byte size";
+    return result;
+  }
   if (bytes.size() < asset_magic.size() + sizeof(std::uint32_t)) {
     result.error = "asset is truncated";
     return result;
@@ -640,7 +731,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
   asset.format_version = *version;
   asset.tolerance = {*tolerance_version, *expansion, *snap, *minimum_area};
 
-  if (!read_count(bytes, offset, asset.source.vertices)) {
+  if (!read_count(bytes, offset, asset.source.vertices, 64U)) {
     result.error = "source vertex count is invalid";
     return result;
   }
@@ -654,7 +745,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
     }
     vertex = {*position, *normal, *uv};
   }
-  if (!read_count(bytes, offset, asset.source.triangles)) {
+  if (!read_count(bytes, offset, asset.source.triangles, 20U)) {
     result.error = "source triangle count is invalid";
     return result;
   }
@@ -677,7 +768,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
     triangle.material_id = *material;
   }
 
-  if (!read_count(bytes, offset, asset.cage.vertices)) {
+  if (!read_count(bytes, offset, asset.cage.vertices, 32U)) {
     result.error = "cage vertex count is invalid";
     return result;
   }
@@ -692,7 +783,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
     asset.cage.vertices[index] = *position;
     asset.cage.vertex_ids[index] = *id;
   }
-  if (!read_count(bytes, offset, asset.cage.tetrahedra)) {
+  if (!read_count(bytes, offset, asset.cage.tetrahedra, 16U)) {
     result.error = "cage tetrahedron count is invalid";
     return result;
   }
@@ -706,7 +797,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
       index = *value;
     }
   }
-  if (!read_count(bytes, offset, asset.tet_metadata)) {
+  if (!read_count(bytes, offset, asset.tet_metadata, 58U)) {
     result.error = "tet metadata count is invalid";
     return result;
   }
@@ -743,7 +834,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
     }
   }
 
-  if (!read_count(bytes, offset, asset.generated_vertices)) {
+  if (!read_count(bytes, offset, asset.generated_vertices, 74U)) {
     result.error = "generated vertex count is invalid";
     return result;
   }
@@ -763,7 +854,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
     vertex = {*cage_bary, *source_bary, {*cage_mask, *source_boundary},
               *stable_id, *tet_id,      *primitive};
   }
-  if (!read_count(bytes, offset, asset.micro_triangles)) {
+  if (!read_count(bytes, offset, asset.micro_triangles, 32U)) {
     result.error = "micro-triangle count is invalid";
     return result;
   }
@@ -819,7 +910,7 @@ DeserializeResult deserialize_asset(const std::vector<std::byte> &bytes) {
       asset.statistics.generated_triangles != asset.micro_triangles.size() ||
       asset.statistics.generated_vertices != asset.generated_vertices.size() ||
       asset.statistics.occupied_tetrahedra > asset.cage.tetrahedra.size() ||
-      asset.tet_metadata.size() != asset.cage.tetrahedra.size()) {
+      asset.tet_metadata.size() != asset.cage.tetrahedra.size() || !indices_are_valid(asset)) {
     result.error = "asset statistics contradict serialized stream counts";
     return result;
   }
