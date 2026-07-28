@@ -52,3 +52,7 @@ run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && b
 [tasks.interop-probe]
 description = "Record Vulkan/CUDA interop prerequisites without claiming a benchmark"
 run = "nix develop path:. --command bash -lc 'mkdir -p results/capabilities && bash scripts/interop_probe.sh > results/capabilities/2026-07-28-cuda-vulkan-interop.json'"
+
+[tasks.portable-scale]
+description = "Run the synthetic CPU/stub scale matrix without promoting GPU claims"
+run = "nix develop path:. --command bash -lc 'bash scripts/portable_scale_sweep.sh results/assets/two-tet-crossing.tetcage results/benchmarks/2026-07-28-portable-scale-sweep.json'"

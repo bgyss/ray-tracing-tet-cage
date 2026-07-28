@@ -40,6 +40,7 @@ promoted by that job.
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
+| Portable scale control | `results/benchmarks/2026-07-28-portable-scale-sweep.json` | CPU/stub synthetic control; no GPU claim |
 | Vulkan capability | `results/capabilities/2026-07-27-vulkan.json` | unverified/host-limited |
 | CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |
 | Representation selection policy | `results/selection/2026-07-28-two-tet-policy.json` | deterministic fallback evaluation from measured inputs; not performance evidence |
