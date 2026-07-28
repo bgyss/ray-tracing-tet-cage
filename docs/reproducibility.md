@@ -27,6 +27,7 @@ promoted by that job.
 | --- | --- | --- |
 | CPU oracles | `results/cpu/2026-07-27-two-tet-oracle.json` | direct portable |
 | CPU/stub benchmark and corruption gate | `results/benchmarks/2026-07-27-cpu-stub.json` and `results/benchmarks/2026-07-27-cpu-stub-corrupt.json` | synthetic differential |
+| Cage animation suitability diagnostic | `results/authoring/2026-07-28-procedural-clip.json` | deterministic procedural clip, not production proof |
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
@@ -37,8 +38,9 @@ promoted by that job.
 ## Explicitly unproven
 
 The repository does not claim completion of M5, M6, M7, M8, M9, M10, M11, M12,
-or M14. Closing those milestones requires the real NVIDIA/Vulkan environment,
-representative animation clips, pinned UE5 and Cycles source trees, a licensed
-RenderMan runtime, or additional production hardening beyond the portable
-parser gate. A green portable build is not substituted for any of those
-requirements.
+or M14. The new clip evaluator advances M10 authoring diagnostics but does not
+close its representative-production-clip or LOD gates. Closing the remaining
+milestones requires the real NVIDIA/Vulkan environment, representative
+animation clips, pinned UE5 and Cycles source trees, a licensed RenderMan
+runtime, or additional production hardening beyond the portable parser gate. A
+green portable build is not substituted for any of those requirements.

@@ -35,7 +35,7 @@ Compilation alone never promotes a row to measured.
 | CUDA interop | UUID-matched memory/semaphore experiment | end-to-end retain/remove measurement | blocked until M6 exists |
 | GPU watertight/hybrid experiments | procedural/manual 4D path | equal-work correctness/time/memory comparison | blocked until M5/M6 and M3 exist |
 | Crossover/optimization policy | common benchmark matrix | measured Metal and NVIDIA crossover surfaces | blocked until both GPU backends |
-| Cage authoring and LOD | baseline cage generator, conditioning/residual analyzer, suitability policy | representative clip-wide quality evidence | portable baseline/analyzer and conforming 8-way refinement implemented; clip-wide residuals, weight optimization, and LOD transitions pending |
+| Cage authoring and LOD | baseline cage generator, conditioning/residual analyzer, suitability policy | representative clip-wide quality evidence | portable baseline/analyzer, deterministic procedural clip residuals, constrained weight fitting, and conforming 8-way refinement implemented; production clips and LOD transitions pending |
 | Unreal Engine | importer, RDG proof, material bridge, source changes if needed | pinned Windows/NVIDIA sample and million-instance report | blocked: no UE source/install |
 | Cycles | canonical loader, MetalRT and OptiX device integration | pinned source build and same-scene device comparison | blocked: Blender binary exists, Cycles source checkout absent |
 | RenderMan | public-API procedural and capability matrix | licensed pinned-runtime prototype plus go/no-go | RenderMan 26.2 headers/runtime present; M13 study pending |

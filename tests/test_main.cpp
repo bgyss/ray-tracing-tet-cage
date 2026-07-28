@@ -993,6 +993,28 @@ void test_cage_quality_analysis_is_deterministic_and_actionable() {
   CHECK_IN(test, tetcage::cage_quality_json(first).find("\"suitable\": true") != std::string::npos);
 }
 
+void test_cage_animation_analysis_reports_clip_residuals_and_weight_fit() {
+  constexpr const char *test = "cage animation analysis reports clip residuals and weight fit";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  const auto first = tetcage::analyze_cage_animation(*compiled.asset, 8U, 0.05);
+  const auto second = tetcage::analyze_cage_animation(*compiled.asset, 8U, 0.05);
+  CHECK_IN(test, first.asset_hash == second.asset_hash);
+  CHECK_IN(test, first.samples == 8U);
+  CHECK_IN(test, first.surface_samples == compiled.asset->generated_vertices.size());
+  CHECK_IN(test, first.uncovered_samples == 0U);
+  CHECK_IN(test, first.frames.size() == 8U);
+  CHECK_IN(test, std::isfinite(first.maximum_position_error));
+  CHECK_IN(test, std::isfinite(first.maximum_normal_error));
+  CHECK_IN(test, first.optimized_rms_position_error <= first.rms_position_error);
+  CHECK_IN(test, tetcage::cage_animation_json(first).find(
+                     "\"clip_kind\": \"procedural_non_affine\"") != std::string::npos);
+}
+
 void test_cage_refinement_is_conforming_and_orientation_preserving() {
   constexpr const char *test = "cage refinement is conforming and orientation preserving";
   const auto refined = tetcage::refine_cage(single_tet_cage(), 1U);
@@ -1058,6 +1080,7 @@ int main() {
   test_benchmark_detects_corrupt_stub_and_keeps_nullable_metrics();
   test_backend_adapter_uses_neutral_frame_contract();
   test_cage_quality_analysis_is_deterministic_and_actionable();
+  test_cage_animation_analysis_reports_clip_residuals_and_weight_fit();
   test_cage_refinement_is_conforming_and_orientation_preserving();
   if (failures != 0) {
     const std::filesystem::path corpus =

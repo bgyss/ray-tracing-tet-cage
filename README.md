@@ -48,7 +48,8 @@ Portable implementation work now includes:
   deliberate-corruption detection;
 - reproducible cage-generation and cage-quality analysis tools that report
   conditioning, residuals, explicit fallback reasons, and deterministic
-  conforming cage refinement;
+  conforming cage refinement, plus a clip-wide non-affine animation evaluator
+  with constrained cage-weight fitting;
 - a bounded, finite-value-checked asset loader with malformed-stream tests and
   a v1 golden serialization fixture;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded
@@ -85,6 +86,10 @@ The portable proof inventory is summarized in the
 [reproducibility report](docs/reproducibility.md), which links checked-in
 manifests and identifies hardware, source-tree, and license gates that remain
 unproven.
+
+The [authoring guide](docs/authoring.md) shows how to run the deterministic
+clip evaluator. Its procedural clip is a diagnostic and does not substitute for
+representative production animation.
 
 The standalone Metal fast path now builds real immutable micro-BLAS objects,
 compacts them, builds a TLAS, runs a runtime MSL ray-query kernel, and emits

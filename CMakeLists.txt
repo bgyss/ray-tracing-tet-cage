@@ -55,6 +55,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_benchmark PRIVATE tetcage_core)
   add_executable(tetcage_cage_quality tools/cage_quality/main.cpp)
   target_link_libraries(tetcage_cage_quality PRIVATE tetcage_core)
+  add_executable(tetcage_cage_animation tools/cage_animation/main.cpp)
+  target_link_libraries(tetcage_cage_animation PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -135,6 +137,14 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.cage_quality_cli PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "\"suitable\": true")
+    add_test(NAME tetcage.cage_animation_cli
+      COMMAND tetcage_cage_animation
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cage-animation.json"
+        --samples 6 --motion 0.05 --position-threshold 0.05 --normal-threshold 2.0)
+    set_tests_properties(tetcage.cage_animation_cli PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "\"clip_kind\": \"procedural_non_affine\"")
     add_test(NAME tetcage.cage_generate_cli
       COMMAND tetcage_cage_generate
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"
