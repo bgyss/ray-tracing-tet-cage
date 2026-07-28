@@ -24,7 +24,7 @@ Compilation alone never promotes a row to measured.
 | Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | Metal boundary-policy experiment measured: 7/128 rays classified boundary-sensitive and routed through explicit experimental CPU fallback (121 GPU-eligible); default hardware-all-rays still fails |
 | Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | implemented and seeded corpus-tested |
 | Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | implemented and property-tested |
-| Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested |
+| Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested; explicit per-frame instance-limit rejection added |
 | Result manifests | JSON Schema v1 and benchmark writer | schema-valid manifests with null unavailable counters | implemented and machine-checked |
 | Acceleration-structure nesting | flattened two-level production contract | real API/engine queries; no inferred third level | Metal exposes no numeric property; UE/Vulkan blocked |
 | Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal synthetic 2-tet sweep measured through 128 instances; correctness residuals remain, so no crossover claim |

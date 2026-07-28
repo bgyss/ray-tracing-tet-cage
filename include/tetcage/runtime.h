@@ -27,6 +27,7 @@ struct BuildPolicy {
   BuildStrategy strategy{BuildStrategy::rebuild};
   std::uint32_t rebuild_period{1U};
   bool allow_one_frame_latency{};
+  std::optional<std::uint64_t> max_instances;
 };
 
 enum TetTransformFlags : std::uint32_t {

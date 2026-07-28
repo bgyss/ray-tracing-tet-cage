@@ -25,3 +25,9 @@ checked-in one-tet fixture against its golden checksum. Version 1 is the
 initial format, so there is no older version to migrate yet; future format
 changes must add an explicit migration table and golden fixtures rather than
 silently accepting a new version.
+
+The backend-neutral frame policy also accepts an optional maximum instance
+count. The portable stub preflights visible objects against that limit before
+building transforms and returns an actionable error instead of allocating an
+oversized frame. Hardware adapters must apply their queried device limit to the
+same policy.

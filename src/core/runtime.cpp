@@ -290,6 +290,21 @@ BackendFrameResult CpuStubBackend::build_frame(const FrameBuildInput &input) {
     result.error = "periodic rebuild policy requires a nonzero period";
     return result;
   }
+  std::uint64_t planned_instances = 0U;
+  for (const auto &object : input.objects) {
+    if (!object.visible) {
+      continue;
+    }
+    if (object.pose_index >= input.poses.size()) {
+      result.error = "visible object references an unavailable cage pose";
+      return result;
+    }
+    planned_instances += asset_->cage.tetrahedra.size();
+  }
+  if (input.policy.max_instances && planned_instances > *input.policy.max_instances) {
+    result.error = "frame exceeds the build policy instance limit";
+    return result;
+  }
   bool selected_pose = false;
   for (const auto &object : input.objects) {
     if (!object.visible) {

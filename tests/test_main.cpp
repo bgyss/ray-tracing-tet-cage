@@ -961,11 +961,15 @@ void test_backend_adapter_uses_neutral_frame_contract() {
   tetcage::FrameBuildInput frame{};
   frame.objects.push_back({77U, 4U, 0U, true});
   frame.poses.push_back({asset->cage.vertices});
-  frame.policy = {tetcage::BuildStrategy::periodic_rebuild, 8U, false};
+  frame.policy = {tetcage::BuildStrategy::periodic_rebuild, 8U, false, std::nullopt};
   const auto built = backend.build_frame(frame);
   CHECK_IN(test, built.error.empty());
   CHECK_IN(test, built.visible_instances == 1U);
   CHECK_IN(test, built.transforms == asset->cage.tetrahedra.size());
+  frame.policy.max_instances = 0U;
+  const auto rejected = backend.build_frame(frame);
+  CHECK_IN(test, rejected.error.find("instance limit") != std::string::npos);
+  frame.policy.max_instances = std::nullopt;
   const auto traced = backend.trace({{0.25, 0.25, 2.0}, {0.0, 0.0, -1.0}, 0.0, 10.0});
   CHECK_IN(test, traced.closest.has_value());
   CHECK_IN(test, backend.api_name() == "stub");
