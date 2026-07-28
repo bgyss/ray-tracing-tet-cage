@@ -45,6 +45,7 @@ promoted by that job.
 | CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |
 | Representation selection policy | `results/selection/2026-07-28-two-tet-policy.json` | deterministic fallback evaluation from measured inputs; not performance evidence |
 | Robust tolerance policy | `results/robustness/2026-07-28-tolerance-policy.json` | scale/edge/conditioning-aware portable policy; no GPU watertightness claim |
+| Runtime safety policy | `results/runtime/2026-07-28-safe-frame-policy.json` | portable allocation/cancellation/reset/device-loss/unsupported fallback contract |
 | Unreal/Cycles gates | `results/integrations/2026-07-28-host-gates.json` | blocked host inspection |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 

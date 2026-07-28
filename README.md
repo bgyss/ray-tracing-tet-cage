@@ -57,6 +57,9 @@ Portable implementation work now includes:
   synthetic or unproven GPU results into performance claims;
 - a scale/ULP/edge/conditioning-aware tolerance policy with explicit
   conservative-boundary and conventional-fallback decisions;
+- a neutral runtime safety contract and `tetcage_runtime_policy` probe covering
+  allocation limits, cancellation, unsupported updates, device loss, reset,
+  and explicit conventional/last-valid-frame fallbacks;
 - analytical, all-permutation, malformed-input, deterministic-build, and seeded
   differential tests.
 
@@ -97,6 +100,11 @@ unproven.
 The [authoring guide](docs/authoring.md) shows how to run the deterministic
 clip evaluator. Its procedural clip is a diagnostic and does not substitute for
 representative production animation.
+
+The runtime safety contract can be exercised with
+`tetcage_runtime_policy`; its checked-in portable result is
+`results/runtime/2026-07-28-safe-frame-policy.json`. It proves fallback policy
+behavior only, not recovery of a real GPU driver after reset or device loss.
 
 The standalone Metal fast path now builds real immutable micro-BLAS objects,
 compacts them, builds a TLAS, runs a runtime MSL ray-query kernel, and emits

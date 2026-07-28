@@ -163,6 +163,38 @@ const char *representation_choice_name(RepresentationChoice choice) {
   return "conventional_dynamic";
 }
 
+const char *frame_build_status_name(FrameBuildStatus status) {
+  switch (status) {
+  case FrameBuildStatus::built:
+    return "built";
+  case FrameBuildStatus::invalid_input:
+    return "invalid_input";
+  case FrameBuildStatus::unsupported:
+    return "unsupported";
+  case FrameBuildStatus::resource_limit:
+    return "resource_limit";
+  case FrameBuildStatus::cancelled:
+    return "cancelled";
+  case FrameBuildStatus::device_lost:
+    return "device_lost";
+  case FrameBuildStatus::reset_required:
+    return "reset_required";
+  }
+  return "invalid_input";
+}
+
+const char *frame_fallback_name(FrameFallback fallback) {
+  switch (fallback) {
+  case FrameFallback::none:
+    return "none";
+  case FrameFallback::conventional_dynamic:
+    return "conventional_dynamic";
+  case FrameFallback::retain_last_valid_frame:
+    return "retain_last_valid_frame";
+  }
+  return "conventional_dynamic";
+}
+
 MethodSelectionResult select_representation(const MethodSelectionInput &input) {
   MethodSelectionResult result{};
   const auto add_reason = [&result](const char *reason) { result.reasons.emplace_back(reason); };
@@ -381,10 +413,40 @@ BackendCapabilities CpuStubBackend::capabilities() const {
 
 BackendFrameResult CpuStubBackend::build_frame(const FrameBuildInput &input) {
   BackendFrameResult result{};
+  const auto reject = [&result](FrameBuildStatus status, FrameFallback fallback,
+                                const char *message) {
+    result.status = status;
+    result.fallback = fallback;
+    result.error = message;
+    return result;
+  };
+  if (input.control.device_lost) {
+    has_valid_frame_ = false;
+    active_pose_ = asset_->cage.vertices;
+    return reject(
+        FrameBuildStatus::device_lost, FrameFallback::conventional_dynamic,
+        "backend device was lost; discard frame and rebuild through the conventional path");
+  }
+  if (input.control.reset_requested) {
+    has_valid_frame_ = false;
+    active_pose_ = asset_->cage.vertices;
+    return reject(FrameBuildStatus::reset_required, FrameFallback::conventional_dynamic,
+                  "backend reset is required before another tet-cage frame can be built");
+  }
+  if (input.control.cancellation_requested) {
+    return reject(FrameBuildStatus::cancelled,
+                  has_valid_frame_ ? FrameFallback::retain_last_valid_frame
+                                   : FrameFallback::conventional_dynamic,
+                  "frame build was cancelled before submission");
+  }
   if (input.policy.strategy == BuildStrategy::periodic_rebuild &&
       input.policy.rebuild_period == 0U) {
-    result.error = "periodic rebuild policy requires a nonzero period";
-    return result;
+    return reject(FrameBuildStatus::invalid_input, FrameFallback::conventional_dynamic,
+                  "periodic rebuild policy requires a nonzero period");
+  }
+  if (input.policy.strategy == BuildStrategy::update) {
+    return reject(FrameBuildStatus::unsupported, FrameFallback::conventional_dynamic,
+                  "CPU stub backend does not support in-place acceleration-structure updates");
   }
   std::uint64_t planned_instances = 0U;
   for (const auto &object : input.objects) {
@@ -392,14 +454,35 @@ BackendFrameResult CpuStubBackend::build_frame(const FrameBuildInput &input) {
       continue;
     }
     if (object.pose_index >= input.poses.size()) {
-      result.error = "visible object references an unavailable cage pose";
-      return result;
+      return reject(FrameBuildStatus::invalid_input, FrameFallback::conventional_dynamic,
+                    "visible object references an unavailable cage pose");
     }
-    planned_instances += asset_->cage.tetrahedra.size();
+    if (input.control.cancellation_requested) {
+      return reject(FrameBuildStatus::cancelled,
+                    has_valid_frame_ ? FrameFallback::retain_last_valid_frame
+                                     : FrameFallback::conventional_dynamic,
+                    "frame build was cancelled before transform generation");
+    }
+    const auto tet_count = static_cast<std::uint64_t>(asset_->cage.tetrahedra.size());
+    if (planned_instances > std::numeric_limits<std::uint64_t>::max() - tet_count) {
+      return reject(FrameBuildStatus::resource_limit, FrameFallback::conventional_dynamic,
+                    "frame transform count overflows the allocation budget");
+    }
+    planned_instances += tet_count;
   }
   if (input.policy.max_instances && planned_instances > *input.policy.max_instances) {
-    result.error = "frame exceeds the build policy instance limit";
-    return result;
+    return reject(FrameBuildStatus::resource_limit, FrameFallback::conventional_dynamic,
+                  "frame exceeds the build policy instance limit");
+  }
+  if (planned_instances > std::numeric_limits<std::uint64_t>::max() / sizeof(TetTransform)) {
+    return reject(FrameBuildStatus::resource_limit, FrameFallback::conventional_dynamic,
+                  "frame transform allocation exceeds representable size");
+  }
+  result.allocation_bytes = planned_instances * sizeof(TetTransform);
+  if (input.control.max_allocation_bytes &&
+      result.allocation_bytes > *input.control.max_allocation_bytes) {
+    return reject(FrameBuildStatus::resource_limit, FrameFallback::conventional_dynamic,
+                  "frame exceeds the configured allocation byte limit");
   }
   bool selected_pose = false;
   for (const auto &object : input.objects) {
@@ -407,12 +490,20 @@ BackendFrameResult CpuStubBackend::build_frame(const FrameBuildInput &input) {
       continue;
     }
     if (object.pose_index >= input.poses.size()) {
-      result.error = "visible object references an unavailable cage pose";
-      return result;
+      return reject(FrameBuildStatus::invalid_input, FrameFallback::conventional_dynamic,
+                    "visible object references an unavailable cage pose");
+    }
+    if (input.control.cancellation_requested) {
+      return reject(FrameBuildStatus::cancelled,
+                    has_valid_frame_ ? FrameFallback::retain_last_valid_frame
+                                     : FrameFallback::conventional_dynamic,
+                    "frame build was cancelled during transform generation");
     }
     const auto transforms = build_tet_transforms(*asset_, input.poses[object.pose_index],
                                                  object.object_id, object.mesh_id);
     if (!transforms.error.empty()) {
+      result.status = FrameBuildStatus::invalid_input;
+      result.fallback = FrameFallback::conventional_dynamic;
       result.error = transforms.error;
       return result;
     }
@@ -423,6 +514,8 @@ BackendFrameResult CpuStubBackend::build_frame(const FrameBuildInput &input) {
       selected_pose = true;
     }
   }
+  has_valid_frame_ = true;
+  result.status = FrameBuildStatus::built;
   return result;
 }
 

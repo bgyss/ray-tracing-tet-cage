@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 6
   },
-  "file_count": 21,
+  "file_count": 22,
   "files": [
     {
       "documents": 1,
@@ -167,6 +167,14 @@
         "other"
       ],
       "path": "robustness/2026-07-28-tolerance-policy.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "runtime/2026-07-28-safe-frame-policy.json",
       "shared_records": 0
     },
     {

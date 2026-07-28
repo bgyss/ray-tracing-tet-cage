@@ -65,6 +65,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_method_select PRIVATE tetcage_core)
   add_executable(tetcage_tolerance_probe tools/tolerance_probe/main.cpp)
   target_link_libraries(tetcage_tolerance_probe PRIVATE tetcage_core)
+  add_executable(tetcage_runtime_policy tools/runtime_policy/main.cpp)
+  target_link_libraries(tetcage_runtime_policy PRIVATE tetcage_core)
   add_executable(tetcage_cage_generate tools/cage_generate/main.cpp)
   target_link_libraries(tetcage_cage_generate PRIVATE tetcage_core)
   add_executable(tetcage_cage_refine tools/cage_refine/main.cpp)
@@ -244,6 +246,13 @@ if(TETCAGE_BUILD_TOOLS)
         "${CMAKE_CURRENT_BINARY_DIR}/tolerance-policy.json" 1000000 0.25 1000 8)
     set_tests_properties(tetcage.tolerance_policy_cli PROPERTIES
       PASS_REGULAR_EXPRESSION "\"decision\":\"conservative_boundary\"")
+    add_test(NAME tetcage.runtime_policy_cli
+      COMMAND tetcage_runtime_policy
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/runtime-policy.json")
+    set_tests_properties(tetcage.runtime_policy_cli PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "\"cases\":6")
   endif()
 
   add_executable(tetcage_vulkan_probe src/vulkan/capability_probe.cpp)

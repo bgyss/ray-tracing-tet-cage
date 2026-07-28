@@ -20,7 +20,7 @@ not promote unavailable GPU, renderer, scale, or production-content gates.
 | 11 — Unreal Engine 5 | blocked by source/target mismatch | `results/integrations/2026-07-28-host-gates.json` finds Unreal 4.19.2, not the required pinned UE5 checkout |
 | 12 — Cycles | blocked by source checkout | Blender executable exists, but no pinned Blender/Cycles source tree for Metal/OptiX device-layer work |
 | 13 — RenderMan | partial feasibility / no-go for public fast path | local 26.2 header/runtime study records Riley prototype/instance APIs but no public custom AS/intersection control; licensed runtime prototype remains required |
-| 14 — production hardening | partially proven | portable CI, fuzz/malformed checks, v1 golden/migration, deterministic report, content-addressed cache smoke, and policy fallbacks exist; historical migration, shader/device conformance, sample release, device loss/reset, retained backends, and renderer gates remain |
+| 14 — production hardening | partially proven | portable CI, fuzz/malformed checks, v1 golden/migration, deterministic report, content-addressed cache smoke, and explicit runtime safety outcomes are checked; historical migration, shader/device conformance, sample release, retained backends, and renderer gates remain |
 
 ## Reproduction commands
 

@@ -138,6 +138,7 @@
                 tetcage_asset_migrate \
                 tetcage_method_select \
                 tetcage_tolerance_probe \
+                tetcage_runtime_policy \
                 tetcage_inspect \
                 tetcage_oracle_report \
                 tetcage_vulkan_probe; do

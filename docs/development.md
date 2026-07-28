@@ -139,6 +139,17 @@ The checked-in two-tet evaluation deliberately selects conventional dynamic
 geometry because the direct Metal residual is outside the declared threshold;
 the policy is a fallback decision, not a performance claim.
 
+The neutral runtime safety policy can be exercised against a compiled asset:
+
+```sh
+tetcage_runtime_policy build/nix/one-tet.tetcage \
+  results/runtime/runtime-policy.json
+```
+
+It records explicit cancellation, allocation-limit, unsupported-update,
+device-loss, and reset fallbacks. This does not claim that a real GPU driver
+has been reset successfully.
+
 For deterministic offline builds with a content-addressed cache:
 
 ```sh

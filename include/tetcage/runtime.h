@@ -129,6 +129,12 @@ struct FrameBuildInput {
   std::vector<VisibleObject> objects;
   std::vector<CagePose> poses;
   BuildPolicy policy{};
+  struct Control {
+    bool cancellation_requested{};
+    bool device_lost{};
+    bool reset_requested{};
+    std::optional<std::uint64_t> max_allocation_bytes;
+  } control{};
 };
 
 struct BackendCapabilities {
@@ -139,9 +145,31 @@ struct BackendCapabilities {
   std::optional<std::uint64_t> max_instances;
 };
 
+enum class FrameBuildStatus : std::uint8_t {
+  built,
+  invalid_input,
+  unsupported,
+  resource_limit,
+  cancelled,
+  device_lost,
+  reset_required,
+};
+
+enum class FrameFallback : std::uint8_t {
+  none,
+  conventional_dynamic,
+  retain_last_valid_frame,
+};
+
+[[nodiscard]] const char *frame_build_status_name(FrameBuildStatus status);
+[[nodiscard]] const char *frame_fallback_name(FrameFallback fallback);
+
 struct BackendFrameResult {
+  FrameBuildStatus status{FrameBuildStatus::built};
+  FrameFallback fallback{FrameFallback::none};
   std::uint64_t visible_instances{};
   std::uint64_t transforms{};
+  std::uint64_t allocation_bytes{};
   std::string error;
 };
 
@@ -165,6 +193,7 @@ public:
 private:
   std::shared_ptr<const CompiledAsset> asset_;
   std::vector<Vec3> active_pose_;
+  bool has_valid_frame_{};
 };
 
 struct BenchmarkScene {

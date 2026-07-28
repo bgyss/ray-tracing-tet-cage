@@ -13,6 +13,10 @@ first_output="$4"
 second_output="$5"
 cache_dir="$6"
 report_dir="$7"
+# CTest reuses a build directory across invocations. Reset only the explicit
+# test-owned paths so the first invocation is always a cache miss.
+rm -rf -- "$cache_dir" "$report_dir"
+rm -f -- "$first_output" "$second_output"
 mkdir -p "$report_dir"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TETCAGE_ASSET_COMPILER_BIN="$compiler" bash "$script_dir/../scripts/asset_cache.sh" \

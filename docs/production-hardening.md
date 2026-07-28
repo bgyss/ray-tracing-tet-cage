@@ -26,11 +26,24 @@ without hand-editing benchmark claims.
 Portable CI regenerates both summary files and fails if the checked-in copies
 would change, making report drift visible during review.
 
-This is a parser safety gate, not a substitute for coverage-guided fuzzing or
-device-loss testing. The remaining M14 work is explicitly platform-specific:
-allocation/cancellation/device-reset behavior on retained GPU backends,
-cross-device shader conformance, historical format migration beyond v1, and
-release charts must follow the hardware and renderer gates.
+This is a parser safety gate, not a substitute for coverage-guided fuzzing.
+The neutral runtime frame contract now has explicit portable outcomes for
+allocation limits, cancellation, unsupported update strategies, device loss,
+and reset requests. Re-run the policy manifest with:
+
+```sh
+tetcage_runtime_policy build/nix/one-tet.tetcage \
+  results/runtime/2026-07-28-safe-frame-policy.json
+jq . results/runtime/2026-07-28-safe-frame-policy.json
+```
+
+The result is a CPU/stub contract proof: cancellation retains the last valid
+frame when possible, while resource exhaustion, device loss, reset, and
+unsupported updates choose conventional dynamic fallback. Hardware adapters
+must map their API errors and queried allocation limits to the same statuses.
+Cross-device shader conformance, historical format migration beyond v1,
+licensed renderer gates, and actual GPU device-reset recovery remain
+platform-specific M14 work.
 
 The optional CUDA/Vulkan interop experiment has its own host gate. The
 `interop-probe` task records tool/device prerequisites and defaults to

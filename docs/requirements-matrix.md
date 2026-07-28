@@ -39,7 +39,7 @@ Compilation alone never promotes a row to measured.
 | Unreal Engine | importer, RDG proof, material bridge, source changes if needed | pinned Windows/NVIDIA sample and million-instance report | blocked: no UE source/install |
 | Cycles | canonical loader, MetalRT and OptiX device integration | pinned source build and same-scene device comparison | blocked: Blender binary exists, Cycles source checkout absent |
 | RenderMan | public-API procedural and capability matrix | licensed pinned-runtime prototype plus go/no-go | RenderMan 26.2 headers/runtime present; M13 study pending |
-| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | portable CI, parser/fuzz/golden foundation, explicit v1 migration harness, deterministic result-summary generation, and measured-input representation fallback policy implemented; historical migration, hardware conformance, samples, and retained-backend/integration gates remain |
+| Production release | fuzzing, CI, migration, samples, reproducibility report | every supported claim linked to exact manifest | portable CI, parser/fuzz/golden foundation, explicit v1 migration harness, deterministic result-summary generation, measured-input representation fallback policy, and neutral runtime safety outcomes implemented; historical migration, hardware conformance, samples, and retained-backend/integration gates remain |
 
 ## Overall roadmap success criteria
 
