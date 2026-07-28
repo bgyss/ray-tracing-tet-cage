@@ -113,3 +113,15 @@ The checked-in `.github/workflows/portable.yml` runs the same portable check
 on Ubuntu using the flake as the authoritative environment. That CI job proves
 portable build/test reproducibility only; device-specific Metal, NVIDIA, and
 renderer gates still require their documented hosts.
+
+The optional CUDA/Vulkan interop gate is recorded without treating tool
+presence as a performance result:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" mise run interop-probe
+jq . results/capabilities/2026-07-28-cuda-vulkan-interop.json
+```
+
+The probe keeps the M7 decision at `remove_from_production_path` until matched
+device UUIDs, external memory/semaphore ownership, equivalent kernels, and
+end-to-end timings are measured on NVIDIA hardware.

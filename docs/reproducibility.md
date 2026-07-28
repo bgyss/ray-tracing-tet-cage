@@ -41,6 +41,7 @@ promoted by that job.
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
 | Vulkan capability | `results/capabilities/2026-07-27-vulkan.json` | unverified/host-limited |
+| CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |
 | Unreal/Cycles gates | `results/integrations/2026-07-28-host-gates.json` | blocked host inspection |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 

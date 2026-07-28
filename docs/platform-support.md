@@ -12,6 +12,7 @@ Checked on 2026-07-27:
 | Metal shader compiler | `xcrun metal` reports the Metal Toolchain component is missing | unavailable for shader-backed M5 work |
 | Vulkan SDK/loader | not found at configure time | unavailable |
 | NVIDIA GPU/CUDA | no `nvidia-smi` or `nvcc`; no Vulkan device probe possible | unavailable |
+| CUDA/Vulkan interop | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` records no Vulkan/CUDA/NVIDIA tools | blocked; remove from production path until matched-device end-to-end evidence |
 | Unreal Engine | no installation or source checkout found | unavailable |
 | Blender | Blender 5.2.0 LTS binary installed | importer testing possible; Cycles source integration unavailable |
 | RenderMan | RenderManProServer 26.2 headers and runtime installed | conditional for a 26.2 public-API study; not proof for the roadmap's later version |
@@ -34,4 +35,3 @@ execution boundary and use an unsandboxed, read-only probe when policy permits.
 5. API availability and header compilation do not establish device support.
 6. Renderer import/procedural bridges are reported separately from native
    participation in production ray-tracing pipelines.
-

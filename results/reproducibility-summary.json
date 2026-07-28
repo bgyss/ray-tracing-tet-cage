@@ -7,7 +7,7 @@
     "direct": 8,
     "synthetic": 2
   },
-  "file_count": 17,
+  "file_count": 18,
   "files": [
     {
       "documents": 1,
@@ -55,6 +55,14 @@
         "capability"
       ],
       "path": "capabilities/2026-07-27-vulkan.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "feasibility"
+      ],
+      "path": "capabilities/2026-07-28-cuda-vulkan-interop.json",
       "shared_records": 0
     },
     {

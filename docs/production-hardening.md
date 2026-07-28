@@ -24,6 +24,11 @@ allocation/cancellation/device-reset behavior on retained GPU backends,
 cross-device shader conformance, historical format migration beyond v1, and
 release charts must follow the hardware and renderer gates.
 
+The optional CUDA/Vulkan interop experiment has its own host gate. The
+`interop-probe` task records tool/device prerequisites and defaults to
+`remove_from_production_path`; importing a buffer or finding `nvcc` is not
+treated as evidence of a useful end-to-end interop path.
+
 The v1 parser now rejects assets over the 256 MiB safety limit, non-finite
 floating-point payloads, impossible stream counts, out-of-range stream indices,
 contradictory primitive provenance, and unsupported format versions before
