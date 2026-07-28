@@ -36,3 +36,7 @@ run = "nix develop path:. --command bash scripts/check.sh nix"
 [tasks.nix-check]
 description = "Build and test the pure portable Nix package and tooling contract"
 run = "nix flake check path:. --print-build-logs"
+
+[tasks.renderman-probe]
+description = "Inspect the installed RenderMan public headers and write a feasibility result"
+run = "nix develop path:. --command bash -lc 'mkdir -p results && bash scripts/renderman_feasibility.sh > results/renderman-feasibility.json'"
