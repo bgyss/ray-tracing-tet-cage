@@ -104,6 +104,17 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.asset_compiler_cli PROPERTIES
       FIXTURES_SETUP compiled_asset
       PASS_REGULAR_EXPRESSION "\"generated_triangles\": 1")
+    add_test(NAME tetcage.asset_cache_smoke
+      COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/asset_cache_smoke.sh"
+        "$<TARGET_FILE:tetcage_asset_compiler>"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.obj"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/assets/one-tet.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cache-first.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cache-second.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/asset-cache"
+        "${CMAKE_CURRENT_BINARY_DIR}/asset-cache-reports")
+    set_tests_properties(tetcage.asset_cache_smoke PROPERTIES
+      PASS_REGULAR_EXPRESSION "\"byte_identical\":true")
     add_test(NAME tetcage.asset_inspector_cli
       COMMAND tetcage_inspect "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage")
     set_tests_properties(tetcage.asset_inspector_cli PROPERTIES

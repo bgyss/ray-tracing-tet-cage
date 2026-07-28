@@ -138,3 +138,11 @@ tetcage_method_select out.json 1000 16 64 1000 0.0001 0.001 0.05 1 1 1
 The checked-in two-tet evaluation deliberately selects conventional dynamic
 geometry because the direct Metal residual is outside the declared threshold;
 the policy is a fallback decision, not a performance claim.
+
+For deterministic offline builds with a content-addressed cache:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" nix develop path:. --command bash \
+  scripts/asset_cache.sh tests/assets/one-tet.obj tests/assets/one-tet.cage \
+  /tmp/one-tet.tetcage .cache/asset-cache /tmp/one-tet-cache-report.json
+```

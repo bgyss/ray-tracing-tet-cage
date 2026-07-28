@@ -10,6 +10,11 @@ XDG_CACHE_HOME="$PWD/.cache" mise run check
 jq . build/nix/asset-fuzz-report.json
 ```
 
+`tests/asset_cache_smoke.sh` also proves the content-addressed compiler cache:
+the first build records a miss, the second records a hit, and both canonical
+asset outputs are byte-identical. The cache key includes the input bytes and
+compiler tolerance policy; it does not imply runtime performance.
+
 The CTest `tetcage.result_manifest_smoke` check also parses every checked-in
 shared result manifest, including nested runs in the Metal and portable scale
 sweeps, and requires the common timing, memory, correctness, evidence, and
