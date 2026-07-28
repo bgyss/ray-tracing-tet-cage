@@ -111,6 +111,8 @@ struct RunMeasurements {
   std::uint64_t rays{};
   std::uint64_t misses{};
   std::uint64_t wrong_ownership{};
+  std::uint64_t boundary_sensitive_rays{};
+  std::uint64_t gpu_eligible_rays{};
   double position_error_max{};
   double normal_error_max{};
   double attribute_error_max{};
@@ -255,6 +257,9 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "    \"motion_amplitude\": " << options.motion_amplitude << ",\n"
          << "    \"compact_blas\": " << (options.compact_blas ? "true" : "false") << ",\n"
          << "    \"extended_limits\": " << (options.extended_limits ? "true" : "false") << ",\n"
+         << "    \"boundary_policy\": \""
+         << (options.boundary_fallback ? "cpu_fallback_experimental" : "hardware_all_rays")
+         << "\",\n"
          << "    \"instance_generation\": \"cpu_direct_baseline\",\n"
          << "    \"blas_usage\": \"static_prefer_fast_intersection_when_available\",\n"
          << "    \"triangle_culling\": \"disabled_for_mirror_safe_baseline\"\n"
@@ -311,6 +316,10 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   output << ",\n    \"duplicate_hits\": 0,\n"
          << "    \"wrong_ownership\": ";
   emit_integer_or_null(output, measured, run.wrong_ownership);
+  output << ",\n    \"boundary_sensitive_rays\": ";
+  emit_integer_or_null(output, measured, run.boundary_sensitive_rays);
+  output << ",\n    \"gpu_eligible_rays\": ";
+  emit_integer_or_null(output, measured, run.gpu_eligible_rays);
   output << ",\n    \"position_error_max\": ";
   emit_number_or_null(output, measured, run.position_error_max);
   output << ",\n    \"normal_error_max\": ";
@@ -623,6 +632,14 @@ void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
   sample << ",\"gpu_source_bary\":[" << actual.source_barycentric.x << ','
          << actual.source_barycentric.y << ',' << actual.source_barycentric.z << "]}";
   run.mismatch_samples.push_back(sample.str());
+}
+
+bool boundary_sensitive_ray(const Ray &ray, const TraceHit &expected) {
+  const double source_edge = std::min({expected.source_barycentric.x, expected.source_barycentric.y,
+                                       expected.source_barycentric.z});
+  const auto direction = normalized(ray.direction);
+  const double normal_alignment = direction ? std::abs(dot(*direction, expected.normal)) : 0.0;
+  return source_edge <= 1.0e-6 || normal_alignment <= 1.0e-5;
 }
 
 MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOptions &options,
@@ -1040,8 +1057,16 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
 
   const auto *gpu_hits = static_cast<const GpuHit *>(hit_buffer.contents);
   run.rays = rays.size();
+  run.gpu_eligible_rays = rays.size();
   for (std::size_t index = 0; index < rays.size(); ++index) {
     const auto cpu = trace_fast(asset, poses.front(), rays[index]);
+    if (cpu.closest && boundary_sensitive_ray(rays[index], *cpu.closest)) {
+      ++run.boundary_sensitive_rays;
+      if (options.boundary_fallback) {
+        --run.gpu_eligible_rays;
+        continue;
+      }
+    }
     const bool cpu_hit = cpu.closest.has_value();
     const bool gpu_hit = gpu_hits[index].hit != 0U;
     if (cpu_hit != gpu_hit) {

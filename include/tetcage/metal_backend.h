@@ -13,6 +13,7 @@ struct MetalFastPathOptions {
   double motion_amplitude{0.05};
   bool compact_blas{true};
   bool extended_limits{};
+  bool boundary_fallback{};
   bool allow_unverified{};
 };
 

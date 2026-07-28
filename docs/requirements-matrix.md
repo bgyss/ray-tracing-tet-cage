@@ -21,7 +21,7 @@ Compilation alone never promotes a row to measured.
 | Shared-boundary identity and ownership | stable cage/source feature IDs and lowest-owner rule | two-tet fixtures plus watertight boundary corpus | implemented for coplanar ownership; full corpus pending |
 | Portable canonical asset | versioned little-endian `.tetcage` stream | byte-identical repeated builds, migration/golden and malformed-input tests | format v1 implemented; golden corpus pending |
 | Hit provenance | source primitive/material plus source barycentrics | position, UV, normal, material and custom-attribute differential | position/material implemented; full renderer attributes pending |
-| Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | baseline policy implemented; GPU proof blocked |
+| Fast-path crack policy | versioned expanded clipping tolerance, later scale/ULP/conditioning policy | Metal/Vulkan boundary ray corpus with miss/duplicate rates | Metal boundary-policy experiment measured: 7/128 rays classified boundary-sensitive and excluded by explicit experimental CPU fallback; default hardware-all-rays still fails |
 | Exact 4D oracle | globally ordered barycentrics, feature snapping, 4D BVH/manual traversal | zero unexplained misses/duplicates on adversarial corpus | implemented and seeded corpus-tested |
 | Tight bounded-simplex projection | four-variable greedy min/max solver | exhaustive vertex enumeration plus randomized conservativeness test | implemented and property-tested |
 | Runtime contracts | backend-neutral pose/transform/build/hit/cache interfaces | identical scene through CPU oracle and corruptible stub | implemented and benchmark-tested |
@@ -30,7 +30,7 @@ Compilation alone never promotes a row to measured.
 | Instance scaling | per-device query/probe and scale sweep | actual build/update/trace at increasing counts with full memory/time | Metal descriptor sizing measured; builds pending |
 | Metal device capability | Objective-C++ device probe | real `MTLDevice` query output | implemented; requires unsandboxed execution |
 | Vulkan/NVIDIA capability | Vulkan physical-device probe | KHR/NV features, limits, driver/device from real NVIDIA loader | implementation present; host has no Vulkan SDK/device |
-| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; boundary/grazing corpus has 1 miss and 0.05 position error on one-tet probe |
+| Metal fast backend | immutable micro-BLAS, GPU transforms/descriptors, TLAS, tracing | M5 correctness and scale sweep | measured partial: direct BLAS/TLAS/tracing works; hardware-all-rays has 1 miss and 0.05 position error, while explicit boundary fallback makes 121/128 rays GPU-eligible with zero residuals |
 | Vulkan fast backend | KHR AS/ray tracing and Vulkan compute | validation-clean NVIDIA results | blocked by absent SDK/NVIDIA hardware |
 | CUDA interop | UUID-matched memory/semaphore experiment | end-to-end retain/remove measurement | blocked until M6 exists |
 | GPU watertight/hybrid experiments | procedural/manual 4D path | equal-work correctness/time/memory comparison | blocked until M5/M6 and M3 exist |
