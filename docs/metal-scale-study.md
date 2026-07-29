@@ -17,12 +17,15 @@ intersection-query/fallback kernel. Each embedded manifest retains
 BLAS/TLAS/scratch/instance memory and stage timings.
 `evidence_class: direct_synthetic_scale_subset` is deliberate.
 
-The newer procedural-AABB/compensated kernel passes the declared 1,408-ray
-corpus without CPU fallback and exposes `--gpu-only`, but its one-shot worktree
-timings do not retroactively update this sweep. Regenerate the scale study with
-the new kernel before making throughput or crossover claims. A meaningful M9
-crossover still requires repeated runs, a production-style animated asset,
-dense-deformation baseline, and NVIDIA comparison.
+The clean committed procedural-AABB/compensated kernel now has a retained
+scale artifact at
+`results/metal/2026-07-29-m5-clean-rerun.json`. It runs five GPU-only
+repetitions at 1, 4, 16, and 64 copies with 256 rays per run. Traversal GPU
+time remains approximately 0.765–0.786 ms across this small fixture while
+reported peak memory grows from 100,292 to 160,632 bytes. These are real
+measurements of the retained kernel, not descriptor-size estimates. A
+production-scale crossover still requires broader animated content and an
+NVIDIA/Vulkan comparison.
 
 The portable control matrix can be regenerated with:
 

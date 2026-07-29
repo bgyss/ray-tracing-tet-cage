@@ -18,9 +18,11 @@ the portable contract. GPU-only mode proves that production execution does not
 depend on that oracle; oracle-derived error fields are `null` in its manifest
 rather than being represented as measured.
 
-The direct worktree result is retained in
+The earlier direct worktree result is retained in
 `results/metal/2026-07-29-procedural-gpu-only-study.json`. It must be rerun from
-a clean commit before it can replace the checked-in release evidence.
+a clean commit before it can replace the checked-in release evidence. That
+clean rerun is now recorded in
+`results/metal/2026-07-29-m5-clean-rerun.json`.
 
 ## Why the original path had 672 mismatches
 
@@ -156,6 +158,6 @@ This closes the declared corpus defect, not every Metal acceptance question:
   rays. `--gpu-only` means no CPU intersection oracle or final-hit fallback; it
   does not claim an entirely CPU-free renderer.
 
-M5 correctness can be marked implemented for the declared corpus after a clean
-reproducible evidence run. Broader content and performance acceptance remain
-open.
+M5 is closed for the declared Apple M1 Max/corpus gate at clean commit
+`32af558`. Broader production content and cross-platform performance acceptance
+remain outside this milestone.
