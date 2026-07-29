@@ -684,7 +684,11 @@ MTLAccelerationStructureUsage static_blas_usage() {
 }
 
 NSString *trace_kernel_source(bool extended_limits) {
-  const std::string tags = extended_limits ? "instancing, extended_limits" : "instancing";
+  // Metal's intersection_query tag sequence accepts instancing/triangle_data,
+  // but not extended_limits. Extended limits are selected on the acceleration
+  // structure descriptor and do not need a query template tag.
+  (void)extended_limits;
+  const std::string tags = "instancing";
   std::string source = R"METAL(
 #include <metal_stdlib>
 #include <metal_raytracing>
