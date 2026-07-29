@@ -20,10 +20,11 @@ BLAS/TLAS/scratch/instance memory and stage timings.
 The clean committed procedural-AABB/compensated kernel now has a retained
 scale artifact at
 `results/metal/2026-07-29-m5-clean-rerun.json`. It runs five GPU-only
-repetitions at 1, 4, 16, and 64 copies with 256 rays per run. Traversal GPU
-time remains approximately 0.765–0.786 ms across this small fixture while
-reported peak memory grows from 100,292 to 160,632 bytes. These are real
-measurements of the retained kernel, not descriptor-size estimates. A
+repetitions at 1, 4, 16, and 64 copies with 256 rays per run. Median traversal
+GPU time stays between approximately 0.766 and 0.777 ms across this small
+fixture (the five-run range is 0.765–0.936 ms), while reported peak memory
+grows from 100,292 to 160,632 bytes. These are real measurements of the
+retained kernel, not descriptor-size estimates. A
 production-scale crossover still requires broader animated content and an
 NVIDIA/Vulkan comparison.
 
