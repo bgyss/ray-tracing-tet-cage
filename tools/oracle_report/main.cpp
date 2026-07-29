@@ -165,7 +165,9 @@ int main(int argc, char **argv) {
     std::uint64_t rays{};
     std::uint64_t fast_misses{};
     std::uint64_t exact_misses{};
-    std::uint64_t ownership_changes{};
+    std::uint64_t primitive_ownership_mismatches{};
+    std::uint64_t fast_duplicate_ownership{};
+    std::uint64_t exact_duplicate_ownership{};
   };
   std::vector<FrameResult> frames;
   for (std::uint32_t frame = 0; frame < frame_count; ++frame) {
@@ -178,7 +180,8 @@ int main(int argc, char **argv) {
     const auto current_exact =
         trace_projection(asset, bvh, rays, tetcage::ProjectionMode::bounded_simplex);
     frames.push_back({frame, current.rays, current.fast_misses, current.exact_misses,
-                      current.primitive_mismatches + current.exact_duplicate_ownership});
+                      current.primitive_mismatches, current.fast_duplicate_ownership,
+                      current.exact_duplicate_ownership});
     ray_count += current.rays;
     comparison.rays += current.rays;
     comparison.fast_misses += current.fast_misses;
@@ -278,7 +281,9 @@ int main(int argc, char **argv) {
     json << "    {\"frame\": " << frame.frame << ", \"rays\": " << frame.rays
          << ", \"fast_misses\": " << frame.fast_misses
          << ", \"exact_misses\": " << frame.exact_misses
-         << ", \"ownership_changes\": " << frame.ownership_changes << "}"
+         << ", \"primitive_ownership_mismatches\": " << frame.primitive_ownership_mismatches
+         << ", \"fast_duplicate_ownership\": " << frame.fast_duplicate_ownership
+         << ", \"exact_duplicate_ownership\": " << frame.exact_duplicate_ownership << "}"
          << (index + 1U == frames.size() ? "\n" : ",\n");
   }
   json << "  ],\n"
@@ -315,6 +320,10 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
   std::cout << json.str();
-  return comparison.exact_misses == 0U && comparison.exact_duplicate_ownership == 0U ? EXIT_SUCCESS
-                                                                                     : EXIT_FAILURE;
+  return comparison.fast_misses == 0U && comparison.exact_misses == 0U &&
+                 comparison.primitive_mismatches == 0U &&
+                 comparison.fast_duplicate_ownership == 0U &&
+                 comparison.exact_duplicate_ownership == 0U
+             ? EXIT_SUCCESS
+             : EXIT_FAILURE;
 }

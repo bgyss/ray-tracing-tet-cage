@@ -1,6 +1,6 @@
 {
   "evidence_class": "synthetic",
-  "failure_policy": "any exact miss, duplicate ownership, or primitive ownership change fails",
+  "failure_policy": "any fast/exact miss, primitive ownership mismatch, or fast/exact duplicate ownership fails",
   "fixed_adversarial_seed": 81002718,
   "manifest_version": "wp0-corpus-v1",
   "report_kind": "cpu_oracle_asset_corpus",
@@ -10,12 +10,12 @@
       "report": {
         "asset_hash_fnv1a64": "27ee73ddc7d21d98",
         "bvh": {
-          "build_ms": 0.019583,
+          "build_ms": 0.124875,
           "leaf_size": 4,
           "node_count": 1,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-results/artifacts/smooth_closed.tetcage /tmp/tetcage-corpus-results/oracle/smooth_closed.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/smooth_closed.tetcage /tmp/tetcage-corpus-review/oracle/smooth_closed.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -31,10 +31,12 @@
         "evidence_class": "synthetic",
         "frame_correctness": [
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 0,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 288
           }
         ],
@@ -42,21 +44,21 @@
         "motion": 0,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.001709,
+            "bounds_build_ms": 0.00175,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 0.125,
-            "trace_ms": 1.668209,
+            "trace_ms": 1.683625,
             "visited_nodes": 288
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.000708,
+            "bounds_build_ms": 0.000584,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 0.125,
-            "trace_ms": 1.30625,
+            "trace_ms": 1.328625,
             "visited_nodes": 288
           }
         },
@@ -64,7 +66,7 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 10.404291999293491
+        "wall_clock_ms": 314.00549999671057
       }
     },
     {
@@ -72,12 +74,12 @@
       "report": {
         "asset_hash_fnv1a64": "2230fd170fcce77e",
         "bvh": {
-          "build_ms": 0.016958,
+          "build_ms": 0.022416,
           "leaf_size": 4,
           "node_count": 1,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-results/artifacts/sharp_material_uv_seam.tetcage /tmp/tetcage-corpus-results/oracle/sharp_material_uv_seam.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/sharp_material_uv_seam.tetcage /tmp/tetcage-corpus-review/oracle/sharp_material_uv_seam.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -93,10 +95,12 @@
         "evidence_class": "synthetic",
         "frame_correctness": [
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 0,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 288
           }
         ],
@@ -109,16 +113,16 @@
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 14,
             "summed_node_volume": 0,
-            "trace_ms": 1.524541,
+            "trace_ms": 1.572083,
             "visited_nodes": 288
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.000583,
+            "bounds_build_ms": 0.000542,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 14,
             "summed_node_volume": 0,
-            "trace_ms": 1.177541,
+            "trace_ms": 1.456709,
             "visited_nodes": 288
           }
         },
@@ -126,28 +130,28 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 9.45833302102983
+        "wall_clock_ms": 10.527458012802526
       }
     },
     {
       "id": "face_edge_vertex_sharing",
       "report": {
-        "asset_hash_fnv1a64": "1868509a6e704d46",
+        "asset_hash_fnv1a64": "961a7562439dc7f0",
         "bvh": {
-          "build_ms": 0.019541,
+          "build_ms": 0.024292,
           "leaf_size": 4,
-          "node_count": 1,
-          "tree_count": 1
+          "node_count": 2,
+          "tree_count": 2
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-results/artifacts/face_edge_vertex_sharing.tetcage /tmp/tetcage-corpus-results/oracle/face_edge_vertex_sharing.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/face_edge_vertex_sharing.tetcage /tmp/tetcage-corpus-review/oracle/face_edge_vertex_sharing.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
-          "exact_raw_duplicate_candidates": 0,
+          "exact_raw_duplicate_candidates": 6,
           "failures": [],
           "fast_duplicate_ownership": 0,
           "fast_misses": 0,
-          "fast_raw_duplicate_candidates": 0,
+          "fast_raw_duplicate_candidates": 6,
           "max_attribute_error": 0,
           "max_position_error": 0,
           "primitive_mismatches": 0
@@ -155,10 +159,12 @@
         "evidence_class": "synthetic",
         "frame_correctness": [
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 0,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 288
           }
         ],
@@ -166,29 +172,29 @@
         "motion": 0,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.001917,
+            "bounds_build_ms": 0.003291,
             "hits": 288,
             "invalid_bounds": 0,
-            "raw_duplicate_candidates": 0,
-            "summed_node_volume": 0.125,
-            "trace_ms": 1.844875,
-            "visited_nodes": 288
+            "raw_duplicate_candidates": 6,
+            "summed_node_volume": 0.1875,
+            "trace_ms": 2.612458,
+            "visited_nodes": 576
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.001,
+            "bounds_build_ms": 0.001666,
             "hits": 288,
             "invalid_bounds": 0,
-            "raw_duplicate_candidates": 0,
-            "summed_node_volume": 0.125,
-            "trace_ms": 1.376541,
-            "visited_nodes": 288
+            "raw_duplicate_candidates": 6,
+            "summed_node_volume": 0.1875,
+            "trace_ms": 1.709625,
+            "visited_nodes": 576
           }
         },
         "ray_count": 288,
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 11.172666010679677
+        "wall_clock_ms": 15.487666008993983
       }
     },
     {
@@ -196,12 +202,12 @@
       "report": {
         "asset_hash_fnv1a64": "92944d564639b50f",
         "bvh": {
-          "build_ms": 0.105208,
+          "build_ms": 0.10425,
           "leaf_size": 4,
           "node_count": 11,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-results/artifacts/dense_animated_embedded_surface.tetcage /tmp/tetcage-corpus-results/oracle/dense_animated_embedded_surface.json --seed 81002718 --random-rays 256 --frames 8 --motion 0.025",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/dense_animated_embedded_surface.tetcage /tmp/tetcage-corpus-review/oracle/dense_animated_embedded_surface.json --seed 81002718 --random-rays 256 --frames 8 --motion 0.025",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -217,59 +223,75 @@
         "evidence_class": "synthetic",
         "frame_correctness": [
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 0,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 1,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 2,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 3,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 4,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 5,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 6,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           },
           {
+            "exact_duplicate_ownership": 0,
             "exact_misses": 0,
+            "fast_duplicate_ownership": 0,
             "fast_misses": 0,
             "frame": 7,
-            "ownership_changes": 0,
+            "primitive_ownership_mismatches": 0,
             "rays": 400
           }
         ],
@@ -277,21 +299,21 @@
         "motion": 0.025,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.015625,
+            "bounds_build_ms": 0.016375,
             "hits": 2795,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 1.332267629550188e-17,
-            "trace_ms": 59.35425,
+            "trace_ms": 69.805125,
             "visited_nodes": 21242
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.003083,
+            "bounds_build_ms": 0.00375,
             "hits": 2795,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 1.332267629550188e-17,
-            "trace_ms": 33.712334,
+            "trace_ms": 37.93804299999999,
             "visited_nodes": 21242
           }
         },
@@ -299,7 +321,7 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 202.83466600812972
+        "wall_clock_ms": 233.7648750108201
       }
     }
   ],

@@ -2,7 +2,8 @@
   "accepted": [
     {
       "artifact_sha256": "e00b036e370f4a7613fd65a39f6a6044ed92635b99a9928bb054b0d340e161af",
-      "compiler_ms": 4.695833020377904,
+      "boundary_coverage": [],
+      "compiler_ms": 5.149125005118549,
       "golden": "assets/golden/smooth_closed.tetcage",
       "id": "smooth_closed",
       "statistics": {
@@ -23,7 +24,8 @@
     },
     {
       "artifact_sha256": "6204111f1e07df0f6ac7353b1a26a02f5c7964e8a9ccacfca186845f4bc50b82",
-      "compiler_ms": 4.4086249836254865,
+      "boundary_coverage": [],
+      "compiler_ms": 4.914165998343378,
       "golden": "assets/golden/sharp_material_uv_seam.tetcage",
       "id": "sharp_material_uv_seam",
       "statistics": {
@@ -43,19 +45,25 @@
       }
     },
     {
-      "artifact_sha256": "250158d650cc9d716043ae215bd5ca2fc0ee83cf82fc33504c2adbd43fecebaf",
-      "compiler_ms": 5.215249984757975,
+      "artifact_sha256": "8dcc950099dd183e85a114662bcf242f74da3174a6444d7bff004b01b0ae90f9",
+      "boundary_coverage": [
+        "cross_shared_face",
+        "on_shared_face",
+        "on_shared_edge",
+        "at_shared_vertex"
+      ],
+      "compiler_ms": 4.923250002320856,
       "golden": "assets/golden/face_edge_vertex_sharing.tetcage",
       "id": "face_edge_vertex_sharing",
       "statistics": {
         "asset_format_version": 1,
-        "boundary_fragments": 0,
+        "boundary_fragments": 1,
         "cage_tetrahedra": 4,
         "generated_triangles": 4,
         "generated_vertices": 12,
-        "occupied_tetrahedra": 1,
+        "occupied_tetrahedra": 2,
         "schema_version": 1,
-        "source_triangles": 4,
+        "source_triangles": 3,
         "tolerance_policy": {
           "expanded_barycentric_epsilon": 0,
           "feature_snap_epsilon": 1e-12,
@@ -65,7 +73,8 @@
     },
     {
       "artifact_sha256": "9268e24741c9366768aaea71328d9df925d014aaec959ed8beaeae962b8221e6",
-      "compiler_ms": 6.979166995733976,
+      "boundary_coverage": [],
+      "compiler_ms": 5.343833996448666,
       "golden": "assets/golden/dense_animated_embedded_surface.tetcage",
       "id": "dense_animated_embedded_surface",
       "statistics": {
@@ -90,19 +99,19 @@
   "manifest_version": "wp0-corpus-v1",
   "rejected": [
     {
-      "compiler_ms": 4.239292000420392,
+      "compiler_ms": 4.427125008078292,
       "diagnostic": "degenerate_cage_tet: A cage tetrahedron is singular or too poorly conditioned.",
       "expected": "rejected:degenerate_cage_tet",
       "id": "near_degenerate"
     },
     {
-      "compiler_ms": 3.890207997756079,
+      "compiler_ms": 5.7945829757954925,
       "diagnostic": "duplicate_cage_tet: Two cage tetrahedra reference the same four stable vertices.",
       "expected": "rejected:duplicate_cage_tet",
       "id": "duplicate_topology"
     },
     {
-      "compiler_ms": 4.257916996721178,
+      "compiler_ms": 4.9016250122804195,
       "diagnostic": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/tests/assets/invalid.cage: line 3: tet references an unknown stable vertex ID",
       "expected": "rejected:parse_error",
       "id": "malformed_cage"

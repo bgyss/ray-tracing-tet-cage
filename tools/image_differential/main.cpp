@@ -47,9 +47,8 @@ struct ImageSet {
   std::vector<Pixel> ownership;
   std::vector<Pixel> miss_classification;
   std::uint64_t hit_mismatches{};
-  std::uint64_t primitive_mismatches{};
+  std::uint64_t source_primitive_ownership_mismatches{};
   std::uint64_t material_mismatches{};
-  std::uint64_t ownership_changes{};
   double max_position_error{};
   double max_normal_error{};
   double max_uv_error{};
@@ -135,7 +134,7 @@ ImageSet render(const tetcage::CompiledAsset &asset, const tetcage::Bvh4D &bvh, 
         result.material.push_back({0, 180, 0});
       }
       if (expected.source_primitive != actual.source_primitive) {
-        ++result.primitive_mismatches;
+        ++result.source_primitive_ownership_mismatches;
         result.ownership.push_back({255, 0, 0});
       } else {
         result.ownership.push_back({0, byte(48.0 + 31.0 * (actual.tet_id % 7U)),
@@ -189,23 +188,23 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
   }
-  std::cout
-      << "{\n"
-      << "  \"schema_version\": 1,\n"
-      << "  \"report_kind\": \"image_space_differential\",\n"
-      << "  \"width\": " << width << ",\n"
-      << "  \"height\": " << height << ",\n"
-      << "  \"channels\": [\"position\", \"normal\", \"uv\", \"material\", "
-         "\"ownership\", \"miss_classification\"],\n"
-      << "  \"comparison_policy\": \"Per-pixel edge disagreements are retained as a "
-         "visualization classification; the adversarial ray oracle is the ownership gate.\",\n"
-      << "  \"correctness\": {\"hit_mismatches\": " << images.hit_mismatches
-      << ", \"primitive_mismatches\": " << images.primitive_mismatches
-      << ", \"material_mismatches\": " << images.material_mismatches
-      << ", \"ownership_changes\": " << images.ownership_changes
-      << ", \"max_position_error\": " << images.max_position_error
-      << ", \"max_normal_error\": " << images.max_normal_error
-      << ", \"max_uv_error\": " << images.max_uv_error << "}\n"
-      << "}\n";
+  std::cout << "{\n"
+            << "  \"schema_version\": 1,\n"
+            << "  \"report_kind\": \"image_space_differential\",\n"
+            << "  \"width\": " << width << ",\n"
+            << "  \"height\": " << height << ",\n"
+            << "  \"channels\": [\"position\", \"normal\", \"uv\", \"material\", "
+               "\"ownership\", \"miss_classification\"],\n"
+            << "  \"comparison_policy\": \"Per-pixel edge disagreements are retained as a "
+               "visualization classification. Ownership is source-primitive agreement; the "
+               "adversarial ray oracle is the gate.\",\n"
+            << "  \"correctness\": {\"hit_mismatches\": " << images.hit_mismatches
+            << ", \"source_primitive_ownership_mismatches\": "
+            << images.source_primitive_ownership_mismatches
+            << ", \"material_mismatches\": " << images.material_mismatches
+            << ", \"max_position_error\": " << images.max_position_error
+            << ", \"max_normal_error\": " << images.max_normal_error
+            << ", \"max_uv_error\": " << images.max_uv_error << "}\n"
+            << "}\n";
   return EXIT_SUCCESS;
 }

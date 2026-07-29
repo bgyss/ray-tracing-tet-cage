@@ -27,6 +27,30 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def require_clean_oracle(case_id: str, report: dict[str, object]) -> None:
+    correctness = report["correctness"]
+    blockers = (
+        "fast_misses",
+        "exact_misses",
+        "primitive_mismatches",
+        "fast_duplicate_ownership",
+        "exact_duplicate_ownership",
+    )
+    failures = {name: correctness[name] for name in blockers if correctness[name] != 0}
+    for frame in report["frame_correctness"]:
+        for name in (
+            "fast_misses",
+            "exact_misses",
+            "primitive_ownership_mismatches",
+            "fast_duplicate_ownership",
+            "exact_duplicate_ownership",
+        ):
+            if frame[name] != 0:
+                failures[f"frame_{frame['frame']}_{name}"] = frame[name]
+    if failures:
+        raise RuntimeError(f"{case_id}: CPU oracle correctness gate failed: {failures}")
+
+
 def main() -> int:
     if len(sys.argv) not in {6, 12}:
         print(
@@ -65,6 +89,10 @@ def main() -> int:
         if case["expected_compiler_outcome"] == "accepted":
             completed, elapsed_ms = run(command)
             inspection = json.loads(completed.stdout)
+            if inspection["occupied_tetrahedra"] < case.get("minimum_occupied_tetrahedra", 0):
+                raise RuntimeError(f"{case_id}: insufficient occupied tetrahedra: {inspection}")
+            if inspection["boundary_fragments"] < case.get("minimum_boundary_fragments", 0):
+                raise RuntimeError(f"{case_id}: missing required boundary fragments: {inspection}")
             golden = source / case["golden"]
             if not golden.exists() or artifact.read_bytes() != golden.read_bytes():
                 raise RuntimeError(f"{case_id}: compiler output differs from {golden}")
@@ -75,6 +103,7 @@ def main() -> int:
                     "artifact_sha256": digest(artifact),
                     "golden": case["golden"],
                     "statistics": inspection.get("statistics", inspection),
+                    "boundary_coverage": case.get("required_boundary_cases", []),
                 }
             )
             frames = int(case.get("animation_frames", 1))
@@ -96,6 +125,7 @@ def main() -> int:
             ]
             _, oracle_ms = run(oracle_command)
             oracle_report = json.loads(oracle_path.read_text(encoding="utf-8"))
+            require_clean_oracle(case_id, oracle_report)
             oracle_report["wall_clock_ms"] = oracle_ms
             oracle_reports.append({"id": case_id, "report": oracle_report})
             image_dir = images_root / case_id
@@ -135,7 +165,7 @@ def main() -> int:
         "manifest_version": manifest["version"],
         "fixed_adversarial_seed": 81002718,
         "reports": oracle_reports,
-        "failure_policy": "any exact miss, duplicate ownership, or primitive ownership change fails",
+        "failure_policy": "any fast/exact miss, primitive ownership mismatch, or fast/exact duplicate ownership fails",
     }
     compiler_report_path.parent.mkdir(parents=True, exist_ok=True)
     oracle_report_path.parent.mkdir(parents=True, exist_ok=True)
