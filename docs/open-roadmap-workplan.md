@@ -61,7 +61,7 @@ asset, or an end-to-end renderer integration.
 | M2 — asset compiler | Deterministic compiler with topology, shading, ownership, malformed-input, migration, and image coverage | Core v1 compiler and tests exist; dense image and broader asset coverage remain | Content and test coverage |
 | M3 — CPU deformed-surface baseline | Correct across a representative animated corpus | Correct on checked synthetic fixtures; production-scale corpus remains | Content |
 | M4 — shared GPU contracts | Stable CPU/stub-tested layouts and policies | Closed for the current contract | None; update only through versioned migration |
-| M5 — Metal fast path | All declared correctness rays pass, with dense animation, rebuild/refit policy, limits, and scale evidence | Real M1 Max tracing works, but residual misses and errors contradict the all-rays gate | Correctness and content |
+| M5 — Metal fast path | All declared correctness rays pass, with dense animation, rebuild/refit policy, limits, and scale evidence | M1 Max corpus, dense refit/rebuild, and 65,536-instance standard/extended builds are measured; pure hardware still has 672 classified mismatches and the correctness-preserving CPU fallback handles 1,099/1,408 rays, so WP5 cost acceptance and hardware-replay minimization remain open | Fallback cost/method selection and minimized regressions |
 | M6 — Vulkan fast path | Validated Vulkan AS/ray-query path on NVIDIA | Capability probe only; Vulkan SDK/device and NVIDIA host absent | Environment, then implementation |
 | M7 — CUDA/Vulkan interop | Measured interop advantage or explicit removal | No matched Vulkan/CUDA device; current decision is removal from production | M6 and environment |
 | M8 — robustness and hybrid methods | Equal-work GPU comparison of hardware, exact 4D, and hybrid methods | Portable policy is tested; GPU experiments await retained GPU paths | M5 and M6 |
@@ -224,6 +224,29 @@ If Metal cannot satisfy the boundary rule without a fallback, keep the fallback
 only if WP5 shows that its end-to-end correctness and cost are acceptable.
 Record this as a method-selection result rather than calling the pure hardware
 path watertight.
+
+### 2026-07-28 execution update
+
+The dated WP1 artifacts now exercise all four WP0 accepted assets on the real
+Apple M1 Max. The retained fallback returns the CPU-oracle hit and attributes
+after the hardware trace instead of excluding the ray. This yields zero final
+misses and ownership errors, while preserving 672 hardware mismatch fixtures
+and measuring 1,099 fallback invocations across 1,408 corpus rays. The
+eight-frame dense run keeps canonical micro-BLAS geometry immutable, records
+six TLAS refits and one periodic rebuild, and reports zero CPU dense-mesh
+regenerations. Standard and extended modes each successfully build and trace a
+65,536-instance TLAS; these are real builds, not descriptor-size queries.
+
+M5 remains open. The fallback rate is 78.1% overall and 87.5% for the dense
+animation, which is not acceptable as a pure Metal fast-path claim without
+WP5's equal-work cost decision. The current selector validates every hardware
+result against the CPU oracle; the manifests report that full decision-oracle
+cost separately from selected fallback cost, so it is not hidden. The
+deterministic coordinate minimizer is
+portable-tested, and complete observed fixtures are retained, but automated
+hardware replay of every minimized candidate is still pending. GPU attribute
+recovery remains fused into the traversal kernel, so its separate GPU duration
+is explicitly unavailable rather than inferred.
 
 ## WP2 — acquire and qualify one NVIDIA/Vulkan host
 

@@ -2,6 +2,7 @@
 #include "tetcage/authoring.h"
 #include "tetcage/io.h"
 #include "tetcage/math.h"
+#include "tetcage/metal_evidence.h"
 #include "tetcage/oracle.h"
 #include "tetcage/runtime.h"
 
@@ -1214,6 +1215,50 @@ void test_robust_tolerance_policy_scales_and_falls_back() {
   CHECK_IN(test, invalid.decision == tetcage::RobustPolicyDecision::invalid_input);
 }
 
+void test_metal_mismatch_classification_and_ray_minimization() {
+  constexpr const char *test = "Metal mismatch evidence classification and minimization";
+
+  tetcage::MetalMismatchSignals signals{};
+  signals.cpu_disagrees_with_exact_oracle = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::cpu_oracle_defect);
+
+  signals = {};
+  signals.generated_boundary = true;
+  signals.shared_edge = true;
+  signals.ownership_differs = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::shared_edge_ownership_disagreement);
+
+  signals = {};
+  signals.generated_boundary = true;
+  signals.hit_presence_differs = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::metal_intersection_acceptance_rule);
+
+  signals = {};
+  signals.primitive_matches = true;
+  signals.distance_within_policy = true;
+  signals.attributes_differ = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::provenance_attribute_reconstruction_defect);
+
+  const tetcage::Ray original{{0.123456, 4.25, -0.75}, {0.25, 0.5, -1.0}, 0.001, 9.75};
+  const auto preserves_failure = [](const tetcage::Ray &candidate) {
+    return candidate.origin.x >= 0.1 && candidate.direction.z <= -1.0 && candidate.maximum_t >= 2.0;
+  };
+  const auto reduced = tetcage::minimize_metal_mismatch_ray(original, preserves_failure);
+  CHECK_IN(test, near(reduced.origin.x, 0.1, 1.0e-15));
+  CHECK_IN(test, near(reduced.origin.y, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.origin.z, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.x, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.y, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.z, -1.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.minimum_t, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.maximum_t, 2.0, 1.0e-15));
+  CHECK_IN(test, preserves_failure(reduced));
+}
+
 } // namespace
 
 int main() {
@@ -1257,6 +1302,7 @@ int main() {
   test_cage_lod_set_has_deterministic_parent_maps();
   test_method_selection_policy_is_explicit_and_deterministic();
   test_robust_tolerance_policy_scales_and_falls_back();
+  test_metal_mismatch_classification_and_ray_minimization();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

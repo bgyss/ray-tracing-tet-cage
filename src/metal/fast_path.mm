@@ -3,6 +3,7 @@
 
 #include "tetcage/metal_backend.h"
 
+#include "tetcage/metal_evidence.h"
 #include "tetcage/oracle.h"
 #include "tetcage/runtime.h"
 
@@ -12,6 +13,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 #include <iomanip>
 #include <limits>
@@ -113,6 +115,14 @@ struct InstanceInfo {
   std::uint32_t tet_id{};
 };
 
+struct InstanceRecords {
+  std::vector<MTLAccelerationStructureUserIDInstanceDescriptor> descriptors;
+  std::vector<GpuInstanceInput> gpu_inputs;
+  std::vector<InstanceInfo> info;
+  std::vector<std::uint32_t> instance_to_blas;
+  bool mirrored{};
+};
+
 struct RunMeasurements {
   std::string status{"error"};
   std::string evidence_class{"partial"};
@@ -128,6 +138,11 @@ struct RunMeasurements {
   std::uint64_t boundary_sensitive_rays{};
   std::uint64_t gpu_eligible_rays{};
   std::uint64_t cpu_fallback_rays{};
+  std::uint64_t cpu_fallback_hits{};
+  std::uint64_t hardware_mismatches{};
+  std::uint64_t completed_frames{};
+  std::uint64_t tlas_refit_frames{};
+  std::uint64_t tlas_rebuild_frames{};
   double position_error_max{};
   double normal_error_max{};
   double attribute_error_max{};
@@ -154,12 +169,19 @@ struct RunMeasurements {
   double synchronization_ms{};
   double traversal_ms{};
   double traversal_gpu_ms{};
+  double tlas_refit_ms{};
+  double tlas_rebuild_ms{};
+  double fallback_ms{};
+  double fallback_decision_oracle_ms{};
+  double attribute_validation_ms{};
+  double transfer_ms{};
   double total_ms{};
   bool runtime_shader_compiled{};
   bool gpu_instance_generation{};
   bool gpu_attribute_reconstruction{};
   bool mirrored_instances{};
   std::vector<std::string> mismatch_samples;
+  std::vector<std::string> fallback_samples;
 };
 
 double milliseconds(Clock::time_point begin, Clock::time_point end) {
@@ -270,6 +292,8 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "  \"configuration\": {\n"
          << "    \"copies\": " << options.copies << ",\n"
          << "    \"requested_rays\": " << options.ray_count << ",\n"
+         << "    \"frames\": " << options.frames << ",\n"
+         << "    \"rebuild_period\": " << options.rebuild_period << ",\n"
          << "    \"motion_amplitude\": " << options.motion_amplitude << ",\n"
          << "    \"compact_blas\": " << (options.compact_blas ? "true" : "false") << ",\n"
          << "    \"extended_limits\": " << (options.extended_limits ? "true" : "false") << ",\n"
@@ -297,7 +321,7 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   output << ",\n    \"traversal\": ";
   emit_number_or_null(output, measured, run.traversal_ms);
   output << ",\n    \"shading\": ";
-  emit_number_or_null(output, measured, 0.0);
+  emit_number_or_null(output, measured, run.attribute_validation_ms);
   output << ",\n    \"total\": ";
   emit_number_or_null(output, measured, run.total_ms);
   output << ",\n    \"warmup_iterations\": 0,\n"
@@ -339,6 +363,10 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   emit_integer_or_null(output, measured, run.gpu_eligible_rays);
   output << ",\n    \"cpu_fallback_rays\": ";
   emit_integer_or_null(output, measured, run.cpu_fallback_rays);
+  output << ",\n    \"cpu_fallback_hits\": ";
+  emit_integer_or_null(output, measured, run.cpu_fallback_hits);
+  output << ",\n    \"hardware_mismatches\": ";
+  emit_integer_or_null(output, measured, run.hardware_mismatches);
   output << ",\n    \"position_error_max\": ";
   emit_number_or_null(output, measured, run.position_error_max);
   output << ",\n    \"normal_error_max\": ";
@@ -356,6 +384,21 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "    \"blas_compaction_gpu_ms\": " << run.compaction_gpu_ms << ",\n"
          << "    \"tlas_build_gpu_ms\": " << run.tlas_gpu_ms << ",\n"
          << "    \"traversal_gpu_ms\": " << run.traversal_gpu_ms << ",\n"
+         << "    \"frames_completed\": " << run.completed_frames << ",\n"
+         << "    \"static_blas_update_frames\": 0,\n"
+         << "    \"static_blas_update_policy\": "
+            "\"not_applicable_canonical_geometry_is_immutable\",\n"
+         << "    \"tlas_refit_frames\": " << run.tlas_refit_frames << ",\n"
+         << "    \"tlas_rebuild_frames\": " << run.tlas_rebuild_frames << ",\n"
+         << "    \"tlas_refit_ms\": " << run.tlas_refit_ms << ",\n"
+         << "    \"periodic_tlas_rebuild_ms\": " << run.tlas_rebuild_ms << ",\n"
+         << "    \"fallback_ms\": " << run.fallback_ms << ",\n"
+         << "    \"fallback_decision_oracle_ms\": " << run.fallback_decision_oracle_ms << ",\n"
+         << "    \"fallback_selection_requires_cpu_oracle_for_all_rays\": true,\n"
+         << "    \"transfer_ms\": " << run.transfer_ms << ",\n"
+         << "    \"transfer_model\": \"shared_unified_memory_no_explicit_dense_mesh_copy\",\n"
+         << "    \"dense_cpu_mesh_regenerations\": 0,\n"
+         << "    \"attribute_recovery_gpu_measurement\": \"fused_with_traversal_kernel\",\n"
          << "    \"runtime_shader_compiled\": " << (run.runtime_shader_compiled ? "true" : "false")
          << ",\n"
          << "    \"gpu_attribute_reconstruction\": "
@@ -367,6 +410,14 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   for (std::size_t index = 0; index < run.mismatch_samples.size(); ++index) {
     output << run.mismatch_samples[index];
     if (index + 1U != run.mismatch_samples.size()) {
+      output << ", ";
+    }
+  }
+  output << "],\n"
+         << "    \"fallback_samples\": [";
+  for (std::size_t index = 0; index < run.fallback_samples.size(); ++index) {
+    output << run.fallback_samples[index];
+    if (index + 1U != run.fallback_samples.size()) {
       output << ", ";
     }
   }
@@ -450,10 +501,11 @@ std::vector<GpuProvenance> make_provenance(const CompiledAsset &asset,
   return provenance;
 }
 
-std::vector<Vec3> animated_pose(const CompiledAsset &asset, double amplitude, std::uint32_t copy) {
+std::vector<Vec3> animated_pose(const CompiledAsset &asset, double amplitude, std::uint32_t copy,
+                                std::uint32_t frame) {
   std::vector<Vec3> pose = asset.cage.vertices;
   for (std::size_t index = 0; index < pose.size(); ++index) {
-    const double phase = static_cast<double>(index + 1U);
+    const double phase = static_cast<double>(index + 1U) + static_cast<double>(frame) * 0.375;
     pose[index].x += amplitude * 0.25 * std::cos(phase * 0.5);
     pose[index].y += amplitude * 0.5 * std::sin(phase * 0.7);
     pose[index].z += amplitude * std::sin(phase);
@@ -646,17 +698,77 @@ double vec2_error(Vec2 a, PackedFloat2 b) {
                   std::abs(a.y - static_cast<double>(b.y)));
 }
 
-void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
-                     const std::optional<TraceHit> &expected, const GpuHit &actual,
-                     const std::optional<Vec4> &expected_cage_bary, const std::string &kind) {
-  if (run.mismatch_samples.size() >= 8U) {
-    return;
-  }
+void record_mismatch(RunMeasurements &run, const CompiledAsset &asset,
+                     const std::vector<Vec3> &pose, std::size_t index, const Ray &ray,
+                     const TraceResult &expected_result, const TraceResult &exact_result,
+                     const GpuHit &actual, const std::optional<Vec4> &expected_cage_bary,
+                     const std::string &kind) {
+  const auto &expected = expected_result.closest;
+  MetalMismatchSignals signals{};
+  signals.cpu_disagrees_with_exact_oracle =
+      expected.has_value() != exact_result.closest.has_value() ||
+      (expected && exact_result.closest &&
+       expected->source_primitive != exact_result.closest->source_primitive);
+  signals.hit_presence_differs = expected.has_value() != (actual.hit != 0U);
+  signals.ownership_differs = kind == "ownership";
+  signals.primitive_matches =
+      expected && actual.hit != 0U && expected->source_primitive == actual.source_primitive;
+  signals.attributes_differ = kind == "value";
+  signals.distance_within_policy =
+      expected && actual.hit != 0U &&
+      std::abs(expected->t - static_cast<double>(actual.distance)) * length(ray.direction) <=
+          2.5e-5;
+  signals.shared_edge =
+      expected && std::min({expected->source_barycentric.x, expected->source_barycentric.y,
+                            expected->source_barycentric.z}) <= 1.0e-6;
+  signals.generated_boundary =
+      expected_result.raw_hits > 1U || expected_result.raw_duplicate_candidates != 0U ||
+      signals.shared_edge ||
+      (expected_cage_bary && std::min({expected_cage_bary->x, expected_cage_bary->y,
+                                       expected_cage_bary->z, expected_cage_bary->w}) <= 1.0e-5);
+  const auto classification = classify_metal_mismatch(signals);
+
   std::ostringstream sample;
-  sample << std::setprecision(9) << "{\"kind\":\"" << kind << "\",\"ray_index\":" << index
-         << ",\"origin\":[" << ray.origin.x << ',' << ray.origin.y << ',' << ray.origin.z
+  sample << std::setprecision(17) << "{\"kind\":\"" << kind << "\",\"classification\":\""
+         << metal_mismatch_class_name(classification) << "\",\"ray_index\":" << index
+         << ",\"ray\":{\"origin\":[" << ray.origin.x << ',' << ray.origin.y << ',' << ray.origin.z
          << "],\"direction\":[" << ray.direction.x << ',' << ray.direction.y << ','
-         << ray.direction.z << "],\"cpu_hit\":" << (expected ? "true" : "false")
+         << ray.direction.z << "],\"minimum_t\":" << ray.minimum_t
+         << ",\"maximum_t\":" << ray.maximum_t << "},\"cage\":{\"posed_vertices\":[";
+  for (std::size_t vertex = 0; vertex < pose.size(); ++vertex) {
+    sample << '[' << pose[vertex].x << ',' << pose[vertex].y << ',' << pose[vertex].z << ']';
+    if (vertex + 1U != pose.size()) {
+      sample << ',';
+    }
+  }
+  sample << "],\"tetrahedra\":[";
+  for (std::size_t tet = 0; tet < asset.cage.tetrahedra.size(); ++tet) {
+    const auto &indices = asset.cage.tetrahedra[tet].vertex_indices;
+    sample << '[' << indices[0] << ',' << indices[1] << ',' << indices[2] << ',' << indices[3]
+           << ']';
+    if (tet + 1U != asset.cage.tetrahedra.size()) {
+      sample << ',';
+    }
+  }
+  sample << "]},\"embedded_triangle\":";
+  const std::uint32_t source_primitive =
+      expected ? expected->source_primitive : actual.source_primitive;
+  const SourceTriangle *triangle = find_source_triangle(asset, source_primitive);
+  if (triangle == nullptr) {
+    sample << "null";
+  } else {
+    sample << "{\"primitive\":" << triangle->primitive_id
+           << ",\"material\":" << triangle->material_id << ",\"positions\":[";
+    for (std::size_t corner = 0; corner < 3U; ++corner) {
+      const auto &position = asset.source.vertices[triangle->vertex_indices[corner]].position;
+      sample << '[' << position.x << ',' << position.y << ',' << position.z << ']';
+      if (corner != 2U) {
+        sample << ',';
+      }
+    }
+    sample << "]}";
+  }
+  sample << ",\"cpu_hit\":" << (expected ? "true" : "false")
          << ",\"gpu_hit\":" << (actual.hit != 0U ? "true" : "false") << ",\"cpu_t\":";
   if (expected) {
     sample << expected->t;
@@ -684,10 +796,33 @@ void record_mismatch(RunMeasurements &run, std::size_t index, const Ray &ray,
   } else {
     sample << "null";
   }
+  sample << ",\"expected_primitive\":";
+  if (expected) {
+    sample << expected->source_primitive;
+  } else {
+    sample << "null";
+  }
+  sample << ",\"expected_owner_tet\":";
+  if (expected) {
+    sample << expected->tet_id;
+  } else {
+    sample << "null";
+  }
+  sample << ",\"expected_micro_triangle\":";
+  if (expected) {
+    sample << expected->micro_triangle;
+  } else {
+    sample << "null";
+  }
   sample << ",\"gpu_source_bary\":[" << actual.source_barycentric.x << ','
          << actual.source_barycentric.y << ',' << actual.source_barycentric.z
          << "],\"gpu_user_instance_id\":" << actual.user_instance_id
-         << ",\"gpu_primitive_id\":" << actual.primitive_id << "}";
+         << ",\"gpu_primitive_id\":" << actual.primitive_id
+         << ",\"gpu_source_primitive\":" << actual.source_primitive
+         << ",\"gpu_material\":" << actual.material
+         << ",\"synchronization_proof\":\"completed_command_buffer_before_shared_read\""
+         << ",\"minimization\":{\"algorithm\":\"deterministic_coordinate_ddmin\","
+            "\"status\":\"original_retained_pending_hardware_replay\"}}";
   run.mismatch_samples.push_back(sample.str());
 }
 
@@ -700,6 +835,63 @@ Tetrahedron posed_tet(const CompiledAsset &asset, const std::vector<Vec3> &pose,
     tet.vertex_ids[corner] = asset.cage.vertex_ids[source.vertex_indices[corner]];
   }
   return tet;
+}
+
+InstanceRecords make_instance_records(const CompiledAsset &asset,
+                                      const std::vector<BlasGroup> &groups,
+                                      const std::vector<std::vector<Vec3>> &poses) {
+  InstanceRecords records;
+  const std::size_t count = poses.size() * groups.size();
+  records.descriptors.reserve(count);
+  records.gpu_inputs.reserve(count);
+  records.info.reserve(count);
+  records.instance_to_blas.reserve(count);
+  for (std::uint32_t copy = 0; copy < poses.size(); ++copy) {
+    const auto transforms = build_tet_transforms(asset, CagePose{poses[copy]}, copy, 0U);
+    if (!transforms.error.empty()) {
+      throw std::runtime_error(transforms.error);
+    }
+    for (std::uint32_t blas_index = 0; blas_index < groups.size(); ++blas_index) {
+      const auto tet_id = groups[blas_index].tet_id;
+      const auto &transform = transforms.transforms[tet_id];
+      const PackedFloat3 c0{
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[0].z)};
+      const PackedFloat3 c1{
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[1].z)};
+      const PackedFloat3 c2{
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].x),
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].y),
+          static_cast<float>(transform.object_from_canonical.linear.columns[2].z)};
+      const PackedFloat3 translation{
+          static_cast<float>(transform.object_from_canonical.translation.x),
+          static_cast<float>(transform.object_from_canonical.translation.y),
+          static_cast<float>(transform.object_from_canonical.translation.z)};
+      MTLAccelerationStructureUserIDInstanceDescriptor descriptor{};
+      descriptor.transformationMatrix =
+          MTLPackedFloat4x3(MTLPackedFloat3(c0.x, c0.y, c0.z), MTLPackedFloat3(c1.x, c1.y, c1.z),
+                            MTLPackedFloat3(c2.x, c2.y, c2.z),
+                            MTLPackedFloat3(translation.x, translation.y, translation.z));
+      descriptor.options = MTLAccelerationStructureInstanceOptionOpaque |
+                           MTLAccelerationStructureInstanceOptionDisableTriangleCulling;
+      descriptor.mask = std::numeric_limits<std::uint32_t>::max();
+      descriptor.intersectionFunctionTableOffset = 0U;
+      descriptor.accelerationStructureIndex = blas_index;
+      descriptor.userID = static_cast<std::uint32_t>(records.descriptors.size());
+      records.gpu_inputs.push_back({c0, c1, c2, translation,
+                                    static_cast<std::uint32_t>(descriptor.options), descriptor.mask,
+                                    descriptor.intersectionFunctionTableOffset,
+                                    descriptor.accelerationStructureIndex, descriptor.userID});
+      records.mirrored = records.mirrored || (transform.flags & tet_transform_mirrored) != 0U;
+      records.descriptors.push_back(descriptor);
+      records.info.push_back({copy, blas_index, tet_id});
+      records.instance_to_blas.push_back(blas_index);
+    }
+  }
+  return records;
 }
 
 bool boundary_sensitive_ray(const CompiledAsset &asset, const std::vector<Vec3> &pose,
@@ -721,6 +913,30 @@ bool boundary_sensitive_ray(const CompiledAsset &asset, const std::vector<Vec3> 
                                             : 1.0;
   return expected_result.raw_hits > 1U || expected_result.raw_duplicate_candidates != 0U ||
          source_edge <= 1.0e-6 || cage_edge <= 1.0e-5 || normal_alignment <= 1.0e-5;
+}
+
+void record_fallback_sample(RunMeasurements &run, std::size_t index, const Ray &ray,
+                            const TraceResult &result) {
+  if (run.fallback_samples.size() >= 8U) {
+    return;
+  }
+  std::ostringstream sample;
+  sample << std::setprecision(17) << "{\"ray_index\":" << index
+         << ",\"result_source\":\"cpu_oracle_final\",\"origin\":[" << ray.origin.x << ','
+         << ray.origin.y << ',' << ray.origin.z << "],\"direction\":[" << ray.direction.x << ','
+         << ray.direction.y << ',' << ray.direction.z
+         << "],\"hit\":" << (result.closest ? "true" : "false");
+  if (result.closest) {
+    const auto &hit = *result.closest;
+    sample << ",\"t\":" << hit.t << ",\"position\":[" << hit.position.x << ',' << hit.position.y
+           << ',' << hit.position.z << "],\"source_barycentric\":[" << hit.source_barycentric.x
+           << ',' << hit.source_barycentric.y << ',' << hit.source_barycentric.z << "],\"normal\":["
+           << hit.normal.x << ',' << hit.normal.y << ',' << hit.normal.z << "],\"uv\":[" << hit.uv.x
+           << ',' << hit.uv.y << "],\"source_primitive\":" << hit.source_primitive
+           << ",\"material\":" << hit.material << ",\"owner_tet\":" << hit.tet_id;
+  }
+  sample << '}';
+  run.fallback_samples.push_back(sample.str());
 }
 
 MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOptions &options,
@@ -932,67 +1148,18 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   std::vector<std::vector<Vec3>> poses;
   poses.reserve(options.copies);
   for (std::uint32_t copy = 0; copy < options.copies; ++copy) {
-    poses.push_back(animated_pose(asset, options.motion_amplitude, copy));
+    poses.push_back(animated_pose(asset, options.motion_amplitude, copy, 0U));
   }
   const auto cage_end = Clock::now();
   run.cage_deformation_ms = milliseconds(cage_begin, cage_end);
 
   const auto transform_begin = Clock::now();
-  std::vector<MTLAccelerationStructureUserIDInstanceDescriptor> descriptors;
-  std::vector<GpuInstanceInput> gpu_instance_inputs;
-  std::vector<InstanceInfo> instance_info;
-  std::vector<std::uint32_t> instance_to_blas;
-  descriptors.reserve(options.copies * groups.size());
-  gpu_instance_inputs.reserve(options.copies * groups.size());
-  instance_info.reserve(options.copies * groups.size());
-  instance_to_blas.reserve(options.copies * groups.size());
-  for (std::uint32_t copy = 0; copy < options.copies; ++copy) {
-    CagePose pose{poses[copy]};
-    const auto transforms = build_tet_transforms(asset, pose, copy, 0U);
-    if (!transforms.error.empty()) {
-      throw std::runtime_error(transforms.error);
-    }
-    for (std::uint32_t blas_index = 0; blas_index < groups.size(); ++blas_index) {
-      const auto tet_id = groups[blas_index].tet_id;
-      const auto &transform = transforms.transforms[tet_id];
-      const PackedFloat3 c0{
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].z)};
-      const PackedFloat3 c1{
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].z)};
-      const PackedFloat3 c2{
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].z)};
-      const PackedFloat3 translation{
-          static_cast<float>(transform.object_from_canonical.translation.x),
-          static_cast<float>(transform.object_from_canonical.translation.y),
-          static_cast<float>(transform.object_from_canonical.translation.z)};
-      MTLAccelerationStructureUserIDInstanceDescriptor descriptor{};
-      descriptor.transformationMatrix =
-          MTLPackedFloat4x3(MTLPackedFloat3(c0.x, c0.y, c0.z), MTLPackedFloat3(c1.x, c1.y, c1.z),
-                            MTLPackedFloat3(c2.x, c2.y, c2.z),
-                            MTLPackedFloat3(translation.x, translation.y, translation.z));
-      descriptor.options = MTLAccelerationStructureInstanceOptionOpaque |
-                           MTLAccelerationStructureInstanceOptionDisableTriangleCulling;
-      descriptor.mask = std::numeric_limits<std::uint32_t>::max();
-      descriptor.intersectionFunctionTableOffset = 0U;
-      descriptor.accelerationStructureIndex = blas_index;
-      descriptor.userID = static_cast<std::uint32_t>(descriptors.size());
-      gpu_instance_inputs.push_back({c0, c1, c2, translation,
-                                     static_cast<std::uint32_t>(descriptor.options),
-                                     descriptor.mask, descriptor.intersectionFunctionTableOffset,
-                                     descriptor.accelerationStructureIndex, descriptor.userID});
-      run.mirrored_instances =
-          run.mirrored_instances || (transform.flags & tet_transform_mirrored) != 0U;
-      descriptors.push_back(descriptor);
-      instance_info.push_back({copy, blas_index, tet_id});
-      instance_to_blas.push_back(blas_index);
-    }
-  }
+  auto instance_records = make_instance_records(asset, groups, poses);
+  auto &descriptors = instance_records.descriptors;
+  auto &gpu_instance_inputs = instance_records.gpu_inputs;
+  auto &instance_info = instance_records.info;
+  auto &instance_to_blas = instance_records.instance_to_blas;
+  run.mirrored_instances = instance_records.mirrored;
   const auto transform_end = Clock::now();
   run.transform_generation_ms = milliseconds(transform_begin, transform_end);
   run.total_instances = descriptors.size();
@@ -1000,6 +1167,8 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   const auto instance_begin = Clock::now();
   id<MTLBuffer> instance_input_buffer = nil;
   id<MTLBuffer> instance_buffer = nil;
+  id<MTLComputePipelineState> instance_pipeline = nil;
+  NSUInteger instance_threads = 0U;
   if (options.gpu_instances) {
     instance_input_buffer =
         [device newBufferWithBytes:gpu_instance_inputs.data()
@@ -1021,9 +1190,8 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     id<MTLFunction> instance_function =
         [instance_library newFunctionWithName:@"write_instance_descriptors"];
     NSError *instance_pipeline_error = nil;
-    id<MTLComputePipelineState> instance_pipeline =
-        [device newComputePipelineStateWithFunction:instance_function
-                                              error:&instance_pipeline_error];
+    instance_pipeline = [device newComputePipelineStateWithFunction:instance_function
+                                                              error:&instance_pipeline_error];
     if (instance_pipeline == nil) {
       throw std::runtime_error("Metal instance descriptor pipeline creation failed: " +
                                string_from_ns(instance_pipeline_error.localizedDescription));
@@ -1033,7 +1201,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     [instance_encoder setComputePipelineState:instance_pipeline];
     [instance_encoder setBuffer:instance_input_buffer offset:0U atIndex:0U];
     [instance_encoder setBuffer:instance_buffer offset:0U atIndex:1U];
-    const NSUInteger instance_threads =
+    instance_threads =
         std::min<NSUInteger>(instance_pipeline.maxTotalThreadsPerThreadgroup,
                              std::max<NSUInteger>(instance_pipeline.threadExecutionWidth, 1U));
     [instance_encoder dispatchThreads:MTLSizeMake(descriptors.size(), 1U, 1U)
@@ -1131,27 +1299,38 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   }
   run.runtime_shader_compiled = true;
 
-  auto rays = generate_adversarial_rays(asset, poses.front(), 81002718ULL, options.ray_count);
-  if (rays.empty()) {
-    throw std::runtime_error("ray generator returned no correctness rays");
-  }
-  if (rays.size() > options.ray_count) {
-    rays.resize(options.ray_count);
-  }
-  while (rays.size() < options.ray_count) {
-    rays.push_back(rays[rays.size() % std::max<std::size_t>(rays.size(), 1U)]);
-  }
-  std::vector<GpuRay> gpu_rays;
-  gpu_rays.reserve(rays.size());
-  for (const auto &ray : rays) {
-    gpu_rays.push_back({{static_cast<float>(ray.origin.x), static_cast<float>(ray.origin.y),
+  const Bvh4D exact_bvh = build_bvh4d(asset, 4U);
+  auto make_rays = [&](const std::vector<Vec3> &pose) {
+    auto frame_rays = generate_adversarial_rays(asset, pose, 81002718ULL, options.ray_count);
+    if (frame_rays.empty()) {
+      throw std::runtime_error("ray generator returned no correctness rays");
+    }
+    if (frame_rays.size() > options.ray_count) {
+      frame_rays.resize(options.ray_count);
+    }
+    while (frame_rays.size() < options.ray_count) {
+      frame_rays.push_back(
+          frame_rays[frame_rays.size() % std::max<std::size_t>(frame_rays.size(), 1U)]);
+    }
+    return frame_rays;
+  };
+  auto pack_rays = [](const std::vector<Ray> &frame_rays) {
+    std::vector<GpuRay> packed;
+    packed.reserve(frame_rays.size());
+    for (const auto &ray : frame_rays) {
+      packed.push_back({{static_cast<float>(ray.origin.x), static_cast<float>(ray.origin.y),
                          static_cast<float>(ray.origin.z)},
                         static_cast<float>(ray.minimum_t),
                         {static_cast<float>(ray.direction.x), static_cast<float>(ray.direction.y),
                          static_cast<float>(ray.direction.z)},
                         static_cast<float>(ray.maximum_t)});
-  }
+    }
+    return packed;
+  };
+  auto rays = make_rays(poses.front());
+  auto gpu_rays = pack_rays(rays);
 
+  const auto transfer_begin = Clock::now();
   id<MTLBuffer> ray_buffer = [device newBufferWithBytes:gpu_rays.data()
                                                  length:gpu_rays.size() * sizeof(GpuRay)
                                                 options:MTLResourceStorageModeShared];
@@ -1172,88 +1351,203 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.ray_buffer_bytes = ray_buffer.allocatedSize;
   run.hit_buffer_bytes = hit_buffer.allocatedSize;
   run.provenance_bytes += primitive_offset_buffer.allocatedSize + provenance_buffer.allocatedSize;
+  run.transfer_ms += milliseconds(transfer_begin, Clock::now());
 
-  const auto traversal_begin = Clock::now();
-  id<MTLCommandBuffer> trace_commands = [queue commandBuffer];
-  id<MTLComputeCommandEncoder> trace_encoder = [trace_commands computeCommandEncoder];
-  [trace_encoder setComputePipelineState:pipeline];
-  [trace_encoder setAccelerationStructure:tlas atBufferIndex:0U];
-  [trace_encoder setBuffer:ray_buffer offset:0U atIndex:1U];
-  [trace_encoder setBuffer:hit_buffer offset:0U atIndex:2U];
-  [trace_encoder setBuffer:instance_to_blas_buffer offset:0U atIndex:3U];
-  [trace_encoder setBuffer:primitive_offset_buffer offset:0U atIndex:4U];
-  [trace_encoder setBuffer:provenance_buffer offset:0U atIndex:5U];
-  for (id<MTLAccelerationStructure> micro_blas in blas) {
-    [trace_encoder useResource:micro_blas usage:MTLResourceUsageRead];
-  }
   const NSUInteger thread_width =
       std::min<NSUInteger>(pipeline.maxTotalThreadsPerThreadgroup,
                            std::max<NSUInteger>(pipeline.threadExecutionWidth, 1U));
-  [trace_encoder dispatchThreads:MTLSizeMake(gpu_rays.size(), 1U, 1U)
-           threadsPerThreadgroup:MTLSizeMake(thread_width, 1U, 1U)];
-  [trace_encoder endEncoding];
-  [trace_commands commit];
-  const auto trace_sync_begin = Clock::now();
-  [trace_commands waitUntilCompleted];
-  const auto trace_sync_end = Clock::now();
-  require_completed(trace_commands, "ray traversal");
-  const auto traversal_end = Clock::now();
-  run.traversal_ms = milliseconds(traversal_begin, traversal_end);
-  run.traversal_gpu_ms = command_gpu_ms(trace_commands);
-  run.synchronization_ms += milliseconds(trace_sync_begin, trace_sync_end);
-
-  const auto *gpu_hits = static_cast<const GpuHit *>(hit_buffer.contents);
-  run.rays = rays.size();
-  run.gpu_eligible_rays = rays.size();
-  for (std::size_t index = 0; index < rays.size(); ++index) {
-    const auto cpu = trace_fast(asset, poses.front(), rays[index]);
-    std::optional<Vec4> expected_cage_bary;
-    if (cpu.closest && cpu.closest->tet_id < asset.cage.tetrahedra.size()) {
-      expected_cage_bary = to_barycentric(posed_tet(asset, poses.front(), cpu.closest->tet_id),
-                                          cpu.closest->position);
+  auto trace_frame = [&]() {
+    const auto traversal_begin = Clock::now();
+    id<MTLCommandBuffer> trace_commands = [queue commandBuffer];
+    id<MTLComputeCommandEncoder> trace_encoder = [trace_commands computeCommandEncoder];
+    [trace_encoder setComputePipelineState:pipeline];
+    [trace_encoder setAccelerationStructure:tlas atBufferIndex:0U];
+    [trace_encoder setBuffer:ray_buffer offset:0U atIndex:1U];
+    [trace_encoder setBuffer:hit_buffer offset:0U atIndex:2U];
+    [trace_encoder setBuffer:instance_to_blas_buffer offset:0U atIndex:3U];
+    [trace_encoder setBuffer:primitive_offset_buffer offset:0U atIndex:4U];
+    [trace_encoder setBuffer:provenance_buffer offset:0U atIndex:5U];
+    for (id<MTLAccelerationStructure> micro_blas in blas) {
+      [trace_encoder useResource:micro_blas usage:MTLResourceUsageRead];
     }
-    if (cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], cpu)) {
-      ++run.boundary_sensitive_rays;
-      if (options.boundary_fallback) {
+    [trace_encoder dispatchThreads:MTLSizeMake(gpu_rays.size(), 1U, 1U)
+             threadsPerThreadgroup:MTLSizeMake(thread_width, 1U, 1U)];
+    [trace_encoder endEncoding];
+    [trace_commands commit];
+    const auto trace_sync_begin = Clock::now();
+    [trace_commands waitUntilCompleted];
+    const auto trace_sync_end = Clock::now();
+    require_completed(trace_commands, "ray traversal");
+    run.traversal_ms += milliseconds(traversal_begin, Clock::now());
+    run.traversal_gpu_ms += command_gpu_ms(trace_commands);
+    run.synchronization_ms += milliseconds(trace_sync_begin, trace_sync_end);
+  };
+
+  auto validate_frame = [&](std::uint32_t frame) {
+    const auto validation_begin = Clock::now();
+    const auto *gpu_hits = static_cast<const GpuHit *>(hit_buffer.contents);
+    run.rays += rays.size();
+    run.gpu_eligible_rays += rays.size();
+    for (std::size_t index = 0; index < rays.size(); ++index) {
+      const auto cpu_begin = Clock::now();
+      const auto cpu = trace_fast(asset, poses.front(), rays[index]);
+      const auto cpu_end = Clock::now();
+      run.fallback_decision_oracle_ms += milliseconds(cpu_begin, cpu_end);
+      const auto exact = trace_watertight4d(asset, exact_bvh, poses.front(), rays[index],
+                                            ProjectionMode::bounded_simplex);
+      std::optional<Vec4> expected_cage_bary;
+      if (cpu.closest && cpu.closest->tet_id < asset.cage.tetrahedra.size()) {
+        expected_cage_bary = to_barycentric(posed_tet(asset, poses.front(), cpu.closest->tet_id),
+                                            cpu.closest->position);
+      }
+      const bool boundary =
+          cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], cpu);
+      if (boundary) {
+        ++run.boundary_sensitive_rays;
+      }
+      const auto &actual = gpu_hits[index];
+      const bool cpu_hit = cpu.closest.has_value();
+      const bool gpu_hit = actual.hit != 0U;
+      std::string mismatch_kind;
+      double position_error{};
+      double normal_error{};
+      double attribute_error{};
+      if (cpu_hit != gpu_hit) {
+        mismatch_kind = "hit_presence";
+      } else if (cpu_hit) {
+        const auto &expected = *cpu.closest;
+        if (actual.user_instance_id >= instance_info.size() ||
+            instance_info[actual.user_instance_id].copy != 0U ||
+            actual.source_primitive != expected.source_primitive ||
+            actual.material != expected.material) {
+          mismatch_kind = "ownership";
+        } else {
+          position_error = std::abs(expected.t - static_cast<double>(actual.distance)) *
+                           length(rays[index].direction);
+          normal_error = vec3_error(expected.normal, actual.normal);
+          attribute_error =
+              std::max(vec3_error(expected.source_barycentric, actual.source_barycentric),
+                       vec2_error(expected.uv, actual.uv));
+          if (position_error > 2.5e-5 || normal_error > 2.5e-5 || attribute_error > 2.5e-5) {
+            mismatch_kind = "value";
+          }
+        }
+      }
+      if (!mismatch_kind.empty()) {
+        ++run.hardware_mismatches;
+        record_mismatch(run, asset, poses.front(),
+                        static_cast<std::size_t>(frame) * rays.size() + index, rays[index], cpu,
+                        exact, actual, expected_cage_bary, mismatch_kind);
+      }
+      const bool use_fallback = options.boundary_fallback && (boundary || !mismatch_kind.empty());
+      if (use_fallback) {
         --run.gpu_eligible_rays;
         ++run.cpu_fallback_rays;
+        if (cpu.closest) {
+          ++run.cpu_fallback_hits;
+        }
+        run.fallback_ms += milliseconds(cpu_begin, cpu_end);
+        record_fallback_sample(run, static_cast<std::size_t>(frame) * rays.size() + index,
+                               rays[index], cpu);
         continue;
       }
+      if (mismatch_kind == "hit_presence") {
+        ++run.misses;
+      } else if (mismatch_kind == "ownership") {
+        ++run.wrong_ownership;
+      }
+      run.position_error_max = std::max(run.position_error_max, position_error);
+      run.normal_error_max = std::max(run.normal_error_max, normal_error);
+      run.attribute_error_max = std::max(run.attribute_error_max, attribute_error);
     }
-    const bool cpu_hit = cpu.closest.has_value();
-    const bool gpu_hit = gpu_hits[index].hit != 0U;
-    if (cpu_hit != gpu_hit) {
-      ++run.misses;
-      record_mismatch(run, index, rays[index], cpu.closest, gpu_hits[index], expected_cage_bary,
-                      "hit_presence");
-      continue;
+    run.attribute_validation_ms += milliseconds(validation_begin, Clock::now());
+    ++run.completed_frames;
+  };
+
+  trace_frame();
+  validate_frame(0U);
+
+  for (std::uint32_t frame = 1U; frame < options.frames; ++frame) {
+    const auto frame_pose_begin = Clock::now();
+    poses.clear();
+    for (std::uint32_t copy = 0; copy < options.copies; ++copy) {
+      poses.push_back(animated_pose(asset, options.motion_amplitude, copy, frame));
     }
-    if (!cpu_hit) {
-      continue;
+    run.cage_deformation_ms += milliseconds(frame_pose_begin, Clock::now());
+
+    const auto frame_transform_begin = Clock::now();
+    instance_records = make_instance_records(asset, groups, poses);
+    run.transform_generation_ms += milliseconds(frame_transform_begin, Clock::now());
+    run.mirrored_instances = run.mirrored_instances || instance_records.mirrored;
+    if (instance_records.descriptors.size() != descriptors.size()) {
+      throw std::runtime_error("animation changed the Metal TLAS instance count");
     }
-    const auto &expected = *cpu.closest;
-    const auto &actual = gpu_hits[index];
-    if (actual.user_instance_id >= instance_info.size() ||
-        instance_info[actual.user_instance_id].copy != 0U ||
-        actual.source_primitive != expected.source_primitive ||
-        actual.material != expected.material) {
-      ++run.wrong_ownership;
-      record_mismatch(run, index, rays[index], cpu.closest, actual, expected_cage_bary,
-                      "ownership");
-      continue;
+
+    const auto frame_instance_begin = Clock::now();
+    if (options.gpu_instances) {
+      std::memcpy(instance_input_buffer.contents, instance_records.gpu_inputs.data(),
+                  instance_records.gpu_inputs.size() * sizeof(GpuInstanceInput));
+      id<MTLCommandBuffer> instance_commands = [queue commandBuffer];
+      id<MTLComputeCommandEncoder> instance_encoder = [instance_commands computeCommandEncoder];
+      [instance_encoder setComputePipelineState:instance_pipeline];
+      [instance_encoder setBuffer:instance_input_buffer offset:0U atIndex:0U];
+      [instance_encoder setBuffer:instance_buffer offset:0U atIndex:1U];
+      [instance_encoder dispatchThreads:MTLSizeMake(instance_records.descriptors.size(), 1U, 1U)
+                  threadsPerThreadgroup:MTLSizeMake(instance_threads, 1U, 1U)];
+      [instance_encoder endEncoding];
+      [instance_commands commit];
+      [instance_commands waitUntilCompleted];
+      require_completed(instance_commands, "animated GPU instance descriptor generation");
+    } else {
+      std::memcpy(instance_buffer.contents, instance_records.descriptors.data(),
+                  instance_records.descriptors.size() *
+                      sizeof(MTLAccelerationStructureUserIDInstanceDescriptor));
     }
-    const double position_error =
-        std::abs(expected.t - static_cast<double>(actual.distance)) * length(rays[index].direction);
-    const double normal_error = vec3_error(expected.normal, actual.normal);
-    const double attribute_error =
-        std::max(vec3_error(expected.source_barycentric, actual.source_barycentric),
-                 vec2_error(expected.uv, actual.uv));
-    run.position_error_max = std::max(run.position_error_max, position_error);
-    run.normal_error_max = std::max(run.normal_error_max, normal_error);
-    run.attribute_error_max = std::max(run.attribute_error_max, attribute_error);
-    if (position_error > 2.5e-5 || normal_error > 2.5e-5 || attribute_error > 2.5e-5) {
-      record_mismatch(run, index, rays[index], cpu.closest, actual, expected_cage_bary, "value");
+    run.instance_generation_ms += milliseconds(frame_instance_begin, Clock::now());
+
+    const bool rebuild = options.rebuild_period != 0U && frame % options.rebuild_period == 0U;
+    const auto tlas_update_begin = Clock::now();
+    id<MTLCommandBuffer> update_commands = [queue commandBuffer];
+    id<MTLAccelerationStructureCommandEncoder> update_encoder =
+        [update_commands accelerationStructureCommandEncoder];
+    for (id<MTLAccelerationStructure> micro_blas in blas) {
+      [update_encoder useResource:micro_blas usage:MTLResourceUsageRead];
     }
+    if (rebuild) {
+      [update_encoder buildAccelerationStructure:tlas
+                                      descriptor:tlas_descriptor
+                                   scratchBuffer:tlas_scratch
+                             scratchBufferOffset:0U];
+    } else {
+      [update_encoder refitAccelerationStructure:tlas
+                                      descriptor:tlas_descriptor
+                                     destination:tlas
+                                   scratchBuffer:tlas_scratch
+                             scratchBufferOffset:0U];
+    }
+    [update_encoder endEncoding];
+    [update_commands commit];
+    const auto update_sync_begin = Clock::now();
+    [update_commands waitUntilCompleted];
+    const auto update_sync_end = Clock::now();
+    require_completed(update_commands, rebuild ? "periodic TLAS rebuild" : "TLAS refit");
+    const double update_ms = milliseconds(tlas_update_begin, Clock::now());
+    run.synchronization_ms += milliseconds(update_sync_begin, update_sync_end);
+    if (rebuild) {
+      ++run.tlas_rebuild_frames;
+      run.tlas_rebuild_ms += update_ms;
+    } else {
+      ++run.tlas_refit_frames;
+      run.tlas_refit_ms += update_ms;
+    }
+
+    rays = make_rays(poses.front());
+    gpu_rays = pack_rays(rays);
+    const auto ray_transfer_begin = Clock::now();
+    std::memcpy(ray_buffer.contents, gpu_rays.data(), gpu_rays.size() * sizeof(GpuRay));
+    run.transfer_ms += milliseconds(ray_transfer_begin, Clock::now());
+    trace_frame();
+    validate_frame(frame);
   }
   run.gpu_attribute_reconstruction = true;
   run.status = "measured";

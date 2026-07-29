@@ -31,6 +31,7 @@ add_library(tetcage_core
   src/compiler/asset_compiler.cpp
   src/compiler/io.cpp
   src/cpu_reference/oracle.cpp
+  src/core/metal_evidence.cpp
   src/core/runtime.cpp
   src/core/authoring.cpp)
 target_include_directories(tetcage_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -342,6 +343,14 @@ if(TETCAGE_BUILD_TOOLS)
       set_tests_properties(tetcage.metal_fast_path PROPERTIES
         FIXTURES_REQUIRED compiled_asset
         PASS_REGULAR_EXPRESSION "\"api\": \"metal\"")
+      add_test(NAME tetcage.metal_wp1_evidence_smoke
+        COMMAND "${CMAKE_COMMAND}" -E env
+          "PYTHONDONTWRITEBYTECODE=1"
+          python3 "${CMAKE_CURRENT_SOURCE_DIR}/scripts/metal_wp1_evidence.py"
+          --runner "$<TARGET_FILE:tetcage_metal_fast_path>"
+          --repo-root "${CMAKE_CURRENT_SOURCE_DIR}"
+          --output-root "${CMAKE_CURRENT_BINARY_DIR}/metal-wp1-smoke"
+          --smoke)
     endif()
   endif()
 endif()

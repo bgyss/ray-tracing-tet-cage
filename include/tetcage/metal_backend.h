@@ -10,6 +10,8 @@ namespace tetcage {
 struct MetalFastPathOptions {
   std::uint32_t copies{1U};
   std::uint32_t ray_count{128U};
+  std::uint32_t frames{1U};
+  std::uint32_t rebuild_period{0U};
   double motion_amplitude{0.05};
   bool compact_blas{true};
   bool extended_limits{};

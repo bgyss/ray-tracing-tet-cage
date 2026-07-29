@@ -16,6 +16,7 @@ namespace {
 void usage() {
   std::cerr << "usage: tetcage_metal_fast_path <asset.tetcage> <result.json> "
                "--copies <u32> --rays <u32> --motion <value> "
+               "[--frames <u32>] [--rebuild-period <u32>] "
                "[--compact] [--extended-limits] [--boundary-fallback] [--gpu-instances] "
                "[--allow-unverified]\n";
 }
@@ -50,7 +51,22 @@ int main(int argc, char **argv) {
   }
   for (int index = 9; index < argc; ++index) {
     const std::string flag(argv[index]);
-    if (flag == "--compact") {
+    if (flag == "--frames" || flag == "--rebuild-period") {
+      if (index + 1 >= argc) {
+        usage();
+        return EXIT_FAILURE;
+      }
+      std::uint32_t value{};
+      if (!parse_u32(argv[++index], value) || (flag == "--frames" && value == 0U)) {
+        usage();
+        return EXIT_FAILURE;
+      }
+      if (flag == "--frames") {
+        options.frames = value;
+      } else {
+        options.rebuild_period = value;
+      }
+    } else if (flag == "--compact") {
       options.compact_blas = true;
     } else if (flag == "--extended-limits") {
       options.extended_limits = true;

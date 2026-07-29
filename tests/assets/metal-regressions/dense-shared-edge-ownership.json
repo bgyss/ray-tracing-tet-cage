@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "dense-shared-edge-ownership-frame-0-ray-1",
+  "source_asset": "assets/golden/dense_animated_embedded_surface.tetcage",
+  "classification": "shared_edge_ownership_disagreement",
+  "cage": {
+    "posed_vertices": [
+      [0.00548489101181483, 0.008052721090471138, 0.021036774620197415],
+      [1.003376889411676, 0.012318121624855752, 0.022732435670642044],
+      [0.00044210751042314317, 1.0107901170831108, 0.0035280002014966803],
+      [-0.00260091772841964, 0.004187351876948814, 0.9810799376173018]
+    ],
+    "tetrahedra": [[0, 1, 2, 3]]
+  },
+  "embedded_triangle": {
+    "primitive": 0,
+    "material": 21,
+    "positions": [[0.1, 0.1, 0.15], [0.2, 0.1, 0.15], [0.2, 0.2, 0.15]]
+  },
+  "ray": {
+    "origin": [0.10178337373316267, 0.12562256693807447, 1.1633081128469116],
+    "direction": [0.001773567457463928, -0.017449371576929246, -0.9998461751139742],
+    "minimum_t": 0,
+    "maximum_t": 4
+  },
+  "expected": {
+    "hit": true,
+    "t": 1,
+    "primitive": 0,
+    "owner_tet": 0,
+    "micro_triangle": 0,
+    "source_barycentric": [1, 4.1925529231952433e-17, -4.1925529231952433e-17],
+    "cage_barycentric": [0.6500000000000001, 0.1, 0.1, 0.1499999999999999]
+  },
+  "hardware": {
+    "device": "Apple M1 Max",
+    "hit": true,
+    "t": 1.0000001192092896,
+    "primitive_id": 1,
+    "source_primitive": 1,
+    "user_instance_id": 0,
+    "triangle_barycentric": [0, 0],
+    "source_barycentric": [1, 0, 0]
+  },
+  "minimization": {
+    "algorithm": "deterministic_coordinate_ddmin",
+    "status": "original_retained_pending_hardware_replay"
+  }
+}
