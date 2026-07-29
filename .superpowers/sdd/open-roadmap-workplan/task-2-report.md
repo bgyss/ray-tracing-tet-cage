@@ -118,3 +118,28 @@ M5 remains open: the pure hardware path still produces 672 mismatches and the
 correctness-preserving selector still routes 1,099 of 1,408 rays through the
 CPU result. The review fixes close the evidence-integrity gaps; they do not
 make that fallback frequency or method-selection cost acceptable.
+
+## Selection-timer re-review
+
+The final timing correction was measured from exact clean revision
+`7ffab58d22f6327ce15aabf37497641136b9c052`.
+
+`selection_oracle_ms` now begins before the CPU selector trace and ends only
+after the boundary-sensitive test, CPU-versus-hardware comparison, and
+`MetalFinalPath` choice. Exact-oracle classification, mismatch diagnostics, and
+all hardware-replay minimization work occur after the timer and are excluded.
+Every same-work comparator declares this scope as
+`cpu_trace_boundary_test_hardware_comparison_and_path_choice`, and the strict
+evidence validator rejects runs without that declaration.
+
+All seven direct runs passed again with the clean revision and unchanged
+correctness counts. For the 1,024-ray dense correctness run, the complete
+selection path measured 17.382248 ms; hardware traversal measured 4.224498 ms,
+merge measured 10.317767 ms, and corrected trace-plus-selection-plus-merge
+measured 31.924513 ms. The separate dense-animation run measured 16.658660 ms
+for selection and 28.733967 ms end to end. These are single recorded runs, not
+distribution or production-performance claims.
+
+M5 remains open for the same substantive reason: 672 pure-hardware mismatches
+and 1,099 CPU-selected results across the 1,408-ray correctness corpus still
+require WP5 method-selection acceptance.

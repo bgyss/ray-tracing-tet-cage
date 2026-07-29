@@ -17,7 +17,7 @@
         "compiler": "AppleClang",
         "compiler_version": "21.0.0.21000101"
       },
-      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/smooth_closed.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmp_w4w1epi.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
+      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/smooth_closed.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmpec9okp7z.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
       "configuration": {
         "blas_usage": "static_prefer_fast_intersection_when_available",
         "boundary_policy": "cpu_fallback_experimental",
@@ -75,18 +75,18 @@
       },
       "schema_version": 1,
       "source": {
-        "commit": "15677d0afc107ed171721f3d768b5371033d9fa8",
+        "commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
         "dirty": false
       },
       "statistics": {
-        "blas_build_gpu_ms": 0.6395833333954215,
+        "blas_build_gpu_ms": 0.3533750132191926,
         "blas_compacted_bytes": 1280,
-        "blas_compaction_gpu_ms": 0.0547916570212692,
+        "blas_compaction_gpu_ms": 0.057249999372288585,
         "blas_uncompacted_bytes": 1792,
-        "cpu_validation_ms": 1.6357949999999994,
+        "cpu_validation_ms": 1.6478800000000007,
         "dense_cpu_mesh_regenerations": 0,
-        "fallback_decision_oracle_ms": 0.5029999999999998,
-        "fallback_ms": 0.5029999999999998,
+        "fallback_decision_oracle_ms": 0.659802,
+        "fallback_ms": 0.5533769999999995,
         "fallback_samples": [
           {
             "direction": [
@@ -4108,7 +4108,7 @@
             ]
           }
         ],
-        "final_merge_ms": 0.9869959999999999,
+        "final_merge_ms": 0.9793699999999995,
         "final_stream_errors": 0,
         "final_stream_records": 128,
         "final_stream_validated": true,
@@ -4119,9 +4119,9 @@
         "gpu_instance_generation": true,
         "instances": 1,
         "minimization_failures": 0,
-        "minimization_replay_ms": 177.15950199999992,
+        "minimization_replay_ms": 181.72979999999998,
         "minimization_replays": 521,
-        "minimization_total_ms": 186.97020999999998,
+        "minimization_total_ms": 190.392001,
         "minimized_regressions": 14,
         "mirrored_instances": false,
         "mismatch_samples": [
@@ -5867,38 +5867,39 @@
         "runtime_shader_compiled": true,
         "same_work_comparator": {
           "end_to_end_formula": "hardware_only_trace_ms + selection_oracle_ms + merge_ms",
-          "end_to_end_trace_selection_merge_ms": 1.8464119999999995,
-          "full_run_total_ms": 291.791916,
-          "hardware_only_trace_ms": 0.356416,
-          "merge_ms": 0.9869959999999999,
+          "end_to_end_trace_selection_merge_ms": 1.9717969999999996,
+          "full_run_total_ms": 369.577958,
+          "hardware_only_trace_ms": 0.332625,
+          "merge_ms": 0.9793699999999995,
           "rays": 128,
           "selected_fallback_cost_accounting": "subset_of_selection_oracle_ms_reused_without_retrace",
-          "selected_fallback_ms": 0.5029999999999998,
-          "selection_oracle_ms": 0.5029999999999998
+          "selected_fallback_ms": 0.5533769999999995,
+          "selection_oracle_ms": 0.659802,
+          "selection_oracle_scope": "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
         },
         "static_blas_update_frames": 0,
         "static_blas_update_policy": "not_applicable_canonical_geometry_is_immutable",
         "stderr": null,
-        "tlas_build_gpu_ms": 0.16716666868887842,
+        "tlas_build_gpu_ms": 0.1720000000204891,
         "tlas_rebuild_frames": 0,
         "tlas_refit_frames": 0,
         "tlas_refit_ms": 0,
         "transfer_model": "shared_unified_memory_no_explicit_dense_mesh_copy",
-        "transfer_ms": 0.021875,
-        "traversal_gpu_ms": 0.0444583420176059
+        "transfer_ms": 0.019875,
+        "traversal_gpu_ms": 0.044750020606443286
       },
-      "timestamp_utc": "2026-07-29T00:54:08Z",
+      "timestamp_utc": "2026-07-29T01:06:35Z",
       "timings_ms": {
-        "blas": 42.380167,
-        "cage_deformation": 0.0045,
-        "instance_generation": 0.435417,
+        "blas": 110.541375,
+        "cage_deformation": 0.005709,
+        "instance_generation": 0.460375,
         "measured_iterations": 1,
         "shading": null,
-        "synchronization": 37.56004000000001,
-        "tlas": 2.185666,
-        "total": 291.791916,
-        "transform_generation": 0.044041,
-        "traversal": 0.356416,
+        "synchronization": 92.02287600000001,
+        "tlas": 8.554417,
+        "total": 369.577958,
+        "transform_generation": 0.084625,
+        "traversal": 0.332625,
         "warmup_iterations": 0
       }
     },
@@ -5915,7 +5916,7 @@
         "compiler": "AppleClang",
         "compiler_version": "21.0.0.21000101"
       },
-      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/sharp_material_uv_seam.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmpsbmt12l1.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
+      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/sharp_material_uv_seam.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmp1fl_ct_o.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
       "configuration": {
         "blas_usage": "static_prefer_fast_intersection_when_available",
         "boundary_policy": "cpu_fallback_experimental",
@@ -5973,18 +5974,18 @@
       },
       "schema_version": 1,
       "source": {
-        "commit": "15677d0afc107ed171721f3d768b5371033d9fa8",
+        "commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
         "dirty": false
       },
       "statistics": {
-        "blas_build_gpu_ms": 0.774249987443909,
+        "blas_build_gpu_ms": 0.3264166589360684,
         "blas_compacted_bytes": 1280,
-        "blas_compaction_gpu_ms": 0.046250002924352884,
+        "blas_compaction_gpu_ms": 0.05512498319149017,
         "blas_uncompacted_bytes": 1792,
-        "cpu_validation_ms": 1.5194979999999996,
+        "cpu_validation_ms": 1.4448759999999998,
         "dense_cpu_mesh_regenerations": 0,
-        "fallback_decision_oracle_ms": 0.4404239999999996,
-        "fallback_ms": 0.10821100000000004,
+        "fallback_decision_oracle_ms": 0.579124,
+        "fallback_ms": 0.11820800000000005,
         "fallback_samples": [
           {
             "direction": [
@@ -10006,7 +10007,7 @@
             ]
           }
         ],
-        "final_merge_ms": 0.8480379999999996,
+        "final_merge_ms": 0.7815900000000001,
         "final_stream_errors": 0,
         "final_stream_records": 128,
         "final_stream_validated": true,
@@ -10017,9 +10018,9 @@
         "gpu_instance_generation": true,
         "instances": 1,
         "minimization_failures": 0,
-        "minimization_replay_ms": 90.427591,
+        "minimization_replay_ms": 97.2604559999999,
         "minimization_replays": 271,
-        "minimization_total_ms": 94.78799900000001,
+        "minimization_total_ms": 102.920542,
         "minimized_regressions": 10,
         "mirrored_instances": false,
         "mismatch_samples": [
@@ -11269,38 +11270,39 @@
         "runtime_shader_compiled": true,
         "same_work_comparator": {
           "end_to_end_formula": "hardware_only_trace_ms + selection_oracle_ms + merge_ms",
-          "end_to_end_trace_selection_merge_ms": 1.6467539999999992,
-          "full_run_total_ms": 189.526166,
-          "hardware_only_trace_ms": 0.358292,
-          "merge_ms": 0.8480379999999996,
+          "end_to_end_trace_selection_merge_ms": 2.115673,
+          "full_run_total_ms": 212.531334,
+          "hardware_only_trace_ms": 0.754959,
+          "merge_ms": 0.7815900000000001,
           "rays": 128,
           "selected_fallback_cost_accounting": "subset_of_selection_oracle_ms_reused_without_retrace",
-          "selected_fallback_ms": 0.10821100000000004,
-          "selection_oracle_ms": 0.4404239999999996
+          "selected_fallback_ms": 0.11820800000000005,
+          "selection_oracle_ms": 0.579124,
+          "selection_oracle_scope": "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
         },
         "static_blas_update_frames": 0,
         "static_blas_update_policy": "not_applicable_canonical_geometry_is_immutable",
         "stderr": null,
-        "tlas_build_gpu_ms": 0.17816666513681412,
+        "tlas_build_gpu_ms": 0.16891668201424181,
         "tlas_rebuild_frames": 0,
         "tlas_refit_frames": 0,
         "tlas_refit_ms": 0,
         "transfer_model": "shared_unified_memory_no_explicit_dense_mesh_copy",
-        "transfer_ms": 0.020417,
-        "traversal_gpu_ms": 0.04675000673159957
+        "transfer_ms": 0.023125,
+        "traversal_gpu_ms": 0.10062500950880349
       },
-      "timestamp_utc": "2026-07-29T00:54:08Z",
+      "timestamp_utc": "2026-07-29T01:06:35Z",
       "timings_ms": {
-        "blas": 39.196041,
-        "cage_deformation": 0.004334,
-        "instance_generation": 0.446666,
+        "blas": 45.265792,
+        "cage_deformation": 0.004125,
+        "instance_generation": 0.573667,
         "measured_iterations": 1,
         "shading": null,
-        "synchronization": 35.302626000000004,
-        "tlas": 2.651875,
-        "total": 189.526166,
-        "transform_generation": 0.019125,
-        "traversal": 0.358292,
+        "synchronization": 41.8965,
+        "tlas": 2.070208,
+        "total": 212.531334,
+        "transform_generation": 0.019167,
+        "traversal": 0.754959,
         "warmup_iterations": 0
       }
     },
@@ -11317,7 +11319,7 @@
         "compiler": "AppleClang",
         "compiler_version": "21.0.0.21000101"
       },
-      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/face_edge_vertex_sharing.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmp5gebj3h0.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
+      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/face_edge_vertex_sharing.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmph5yg2bul.json --copies 1 --rays 128 --motion 0.0 --frames 1 --rebuild-period 0 --compact --boundary-fallback --gpu-instances",
       "configuration": {
         "blas_usage": "static_prefer_fast_intersection_when_available",
         "boundary_policy": "cpu_fallback_experimental",
@@ -11375,18 +11377,18 @@
       },
       "schema_version": 1,
       "source": {
-        "commit": "15677d0afc107ed171721f3d768b5371033d9fa8",
+        "commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
         "dirty": false
       },
       "statistics": {
-        "blas_build_gpu_ms": 0.40883332258090377,
+        "blas_build_gpu_ms": 0.3398749977350235,
         "blas_compacted_bytes": 2560,
-        "blas_compaction_gpu_ms": 0.05829165456816554,
+        "blas_compaction_gpu_ms": 0.053499999921768904,
         "blas_uncompacted_bytes": 3328,
-        "cpu_validation_ms": 1.9143769999999996,
+        "cpu_validation_ms": 1.9209169999999998,
         "dense_cpu_mesh_regenerations": 0,
-        "fallback_decision_oracle_ms": 0.5447959999999993,
-        "fallback_ms": 0.17666799999999996,
+        "fallback_decision_oracle_ms": 0.6166610000000002,
+        "fallback_ms": 0.2878319999999998,
         "fallback_samples": [
           {
             "direction": [
@@ -15408,7 +15410,7 @@
             ]
           }
         ],
-        "final_merge_ms": 0.7788299999999997,
+        "final_merge_ms": 0.7786209999999998,
         "final_stream_errors": 0,
         "final_stream_records": 128,
         "final_stream_validated": true,
@@ -15419,9 +15421,9 @@
         "gpu_instance_generation": true,
         "instances": 2,
         "minimization_failures": 0,
-        "minimization_replay_ms": 222.87551399999998,
+        "minimization_replay_ms": 231.84974400000004,
         "minimization_replays": 702,
-        "minimization_total_ms": 236.26950100000002,
+        "minimization_total_ms": 245.205372,
         "minimized_regressions": 12,
         "mirrored_instances": false,
         "mismatch_samples": [
@@ -17495,38 +17497,39 @@
         "runtime_shader_compiled": true,
         "same_work_comparator": {
           "end_to_end_formula": "hardware_only_trace_ms + selection_oracle_ms + merge_ms",
-          "end_to_end_trace_selection_merge_ms": 1.762041999999999,
-          "full_run_total_ms": 329.903833,
-          "hardware_only_trace_ms": 0.438416,
-          "merge_ms": 0.7788299999999997,
+          "end_to_end_trace_selection_merge_ms": 1.759824,
+          "full_run_total_ms": 354.391208,
+          "hardware_only_trace_ms": 0.364542,
+          "merge_ms": 0.7786209999999998,
           "rays": 128,
           "selected_fallback_cost_accounting": "subset_of_selection_oracle_ms_reused_without_retrace",
-          "selected_fallback_ms": 0.17666799999999996,
-          "selection_oracle_ms": 0.5447959999999993
+          "selected_fallback_ms": 0.2878319999999998,
+          "selection_oracle_ms": 0.6166610000000002,
+          "selection_oracle_scope": "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
         },
         "static_blas_update_frames": 0,
         "static_blas_update_policy": "not_applicable_canonical_geometry_is_immutable",
         "stderr": null,
-        "tlas_build_gpu_ms": 0.5812500021420419,
+        "tlas_build_gpu_ms": 0.22687501041218638,
         "tlas_rebuild_frames": 0,
         "tlas_refit_frames": 0,
         "tlas_refit_ms": 0,
         "transfer_model": "shared_unified_memory_no_explicit_dense_mesh_copy",
-        "transfer_ms": 0.022084,
-        "traversal_gpu_ms": 0.051499984692782164
+        "transfer_ms": 0.058,
+        "traversal_gpu_ms": 0.050000002374872565
       },
-      "timestamp_utc": "2026-07-29T00:54:09Z",
+      "timestamp_utc": "2026-07-29T01:06:35Z",
       "timings_ms": {
-        "blas": 37.583208,
-        "cage_deformation": 0.004167,
-        "instance_generation": 0.489792,
+        "blas": 44.208999999999996,
+        "cage_deformation": 0.004375,
+        "instance_generation": 0.57575,
         "measured_iterations": 1,
         "shading": null,
-        "synchronization": 35.09525000000001,
-        "tlas": 2.683875,
-        "total": 329.903833,
-        "transform_generation": 0.0225,
-        "traversal": 0.438416,
+        "synchronization": 40.980334000000006,
+        "tlas": 2.327125,
+        "total": 354.391208,
+        "transform_generation": 0.030458,
+        "traversal": 0.364542,
         "warmup_iterations": 0
       }
     },
@@ -17543,7 +17546,7 @@
         "compiler": "AppleClang",
         "compiler_version": "21.0.0.21000101"
       },
-      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/dense_animated_embedded_surface.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmppe4z4mxa.json --copies 1 --rays 128 --motion 0.025 --frames 8 --rebuild-period 4 --compact --boundary-fallback --gpu-instances",
+      "command": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/build/dev/tetcage_metal_fast_path /Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/assets/golden/dense_animated_embedded_surface.tetcage /var/folders/lj/k5zrrw695p3g_4nlckw0_xq40000gn/T/tmpuwud5_wu.json --copies 1 --rays 128 --motion 0.025 --frames 8 --rebuild-period 4 --compact --boundary-fallback --gpu-instances",
       "configuration": {
         "blas_usage": "static_prefer_fast_intersection_when_available",
         "boundary_policy": "cpu_fallback_experimental",
@@ -17601,18 +17604,18 @@
       },
       "schema_version": 1,
       "source": {
-        "commit": "15677d0afc107ed171721f3d768b5371033d9fa8",
+        "commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
         "dirty": false
       },
       "statistics": {
-        "blas_build_gpu_ms": 0.4272499936632812,
+        "blas_build_gpu_ms": 0.5041249969508499,
         "blas_compacted_bytes": 2304,
-        "blas_compaction_gpu_ms": 0.055166659876704216,
+        "blas_compaction_gpu_ms": 0.05479168612509966,
         "blas_uncompacted_bytes": 4352,
-        "cpu_validation_ms": 52.59044599999998,
+        "cpu_validation_ms": 55.47682099999997,
         "dense_cpu_mesh_regenerations": 0,
-        "fallback_decision_oracle_ms": 15.385159999999981,
-        "fallback_ms": 13.60569699999999,
+        "fallback_decision_oracle_ms": 17.382247999999972,
+        "fallback_ms": 14.084119999999972,
         "fallback_samples": [
           {
             "direction": [
@@ -47618,7 +47621,7 @@
             ]
           }
         ],
-        "final_merge_ms": 9.340527999999992,
+        "final_merge_ms": 10.317767000000018,
         "final_stream_errors": 0,
         "final_stream_records": 1024,
         "final_stream_validated": true,
@@ -47629,9 +47632,9 @@
         "gpu_instance_generation": true,
         "instances": 1,
         "minimization_failures": 0,
-        "minimization_replay_ms": 12927.020460999918,
+        "minimization_replay_ms": 12758.091775000012,
         "minimization_replays": 38528,
-        "minimization_total_ms": 14687.316205000003,
+        "minimization_total_ms": 14593.667672999994,
         "minimized_regressions": 636,
         "mirrored_instances": false,
         "mismatch_samples": [
@@ -126501,47 +126504,48 @@
           }
         ],
         "occupied_micro_blas": 1,
-        "periodic_tlas_rebuild_ms": 0.5055,
+        "periodic_tlas_rebuild_ms": 0.622375,
         "runtime_shader_compiled": true,
         "same_work_comparator": {
           "end_to_end_formula": "hardware_only_trace_ms + selection_oracle_ms + merge_ms",
-          "end_to_end_trace_selection_merge_ms": 27.747311999999972,
-          "full_run_total_ms": 14884.580833,
-          "hardware_only_trace_ms": 3.0216240000000005,
-          "merge_ms": 9.340527999999992,
+          "end_to_end_trace_selection_merge_ms": 31.92451299999999,
+          "full_run_total_ms": 14811.14775,
+          "hardware_only_trace_ms": 4.224498,
+          "merge_ms": 10.317767000000018,
           "rays": 1024,
           "selected_fallback_cost_accounting": "subset_of_selection_oracle_ms_reused_without_retrace",
-          "selected_fallback_ms": 13.60569699999999,
-          "selection_oracle_ms": 15.385159999999981
+          "selected_fallback_ms": 14.084119999999972,
+          "selection_oracle_ms": 17.382247999999972,
+          "selection_oracle_scope": "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
         },
         "static_blas_update_frames": 0,
         "static_blas_update_policy": "not_applicable_canonical_geometry_is_immutable",
         "stderr": null,
-        "tlas_build_gpu_ms": 0.17558335093781352,
+        "tlas_build_gpu_ms": 0.16762499581091106,
         "tlas_rebuild_frames": 1,
         "tlas_refit_frames": 6,
-        "tlas_refit_ms": 4.65975,
+        "tlas_refit_ms": 5.40725,
         "transfer_model": "shared_unified_memory_no_explicit_dense_mesh_copy",
-        "transfer_ms": 0.025584000000000006,
-        "traversal_gpu_ms": 0.3367917088326067
+        "transfer_ms": 0.036543000000000006,
+        "traversal_gpu_ms": 0.306583329802379
       },
-      "timestamp_utc": "2026-07-29T00:54:24Z",
+      "timestamp_utc": "2026-07-29T01:06:50Z",
       "timings_ms": {
-        "blas": 36.650792,
-        "cage_deformation": 0.030792,
-        "instance_generation": 2.7131659999999997,
+        "blas": 48.8255,
+        "cage_deformation": 0.025875999999999996,
+        "instance_generation": 2.257041,
         "measured_iterations": 1,
         "shading": null,
-        "synchronization": 37.89091899999999,
-        "tlas": 2.173125,
-        "total": 14884.580833,
-        "transform_generation": 0.09279299999999999,
-        "traversal": 3.0216240000000005,
+        "synchronization": 51.02904099999999,
+        "tlas": 2.271042,
+        "total": 14811.14775,
+        "transform_generation": 0.10233199999999998,
+        "traversal": 4.224498,
         "warmup_iterations": 0
       }
     }
   ],
   "schema_version": 1,
-  "source_revision": "15677d0afc107ed171721f3d768b5371033d9fa8",
+  "source_revision": "7ffab58d22f6327ce15aabf37497641136b9c052",
   "tolerance_policy": "existing 2.5e-5 absolute validation threshold retained; no tolerance broadening"
 }
