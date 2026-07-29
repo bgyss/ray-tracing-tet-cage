@@ -20,13 +20,13 @@ production claim.
 | `benchmarks/2026-07-28-portable-scale-sweep.json (run 2)` | stub | measured | synthetic | portable-scale-4 | 1536 | 1 | 2.492917 | unavailable |
 | `benchmarks/2026-07-28-portable-scale-sweep.json (run 3)` | stub | measured | synthetic | portable-scale-64 | 1536 | 1 | 2.746416 | unavailable |
 | `metal/2026-07-27-metal-fast-path.json` | metal | measured | direct | metal-fast-path | 512 | 12 | 771.663292 | 92092 |
-| `metal/2026-07-28-correctness-corpus.json (run 0)` | metal | measured | direct | smooth_closed | 128 | 0 | 256.622583 | 36028 |
-| `metal/2026-07-28-correctness-corpus.json (run 1)` | metal | measured | direct | sharp_material_uv_seam | 128 | 0 | 116.847 | 35668 |
-| `metal/2026-07-28-correctness-corpus.json (run 2)` | metal | measured | direct | face_edge_vertex_sharing | 128 | 0 | 98.833959 | 44140 |
-| `metal/2026-07-28-correctness-corpus.json (run 3)` | metal | measured | direct | dense_animated_embedded_surface | 1024 | 0 | 173.867125 | 48436 |
-| `metal/2026-07-28-dense-animation.json` | metal | measured | direct | dense_animated_embedded_surface | 1024 | 0 | 163.258875 | 48436 |
-| `metal/2026-07-28-limit-builds.json (run 0)` | metal | measured | direct | standard_limit_build | 128 | 0 | 282.53075 | 36547120 |
-| `metal/2026-07-28-limit-builds.json (run 1)` | metal | measured | direct | extended_limit_build | 128 | 0 | 273.437 | 36547120 |
+| `metal/2026-07-28-correctness-corpus.json (run 0)` | metal | measured | direct | smooth_closed | 128 | 0 | 291.791916 | 36028 |
+| `metal/2026-07-28-correctness-corpus.json (run 1)` | metal | measured | direct | sharp_material_uv_seam | 128 | 0 | 189.526166 | 35668 |
+| `metal/2026-07-28-correctness-corpus.json (run 2)` | metal | measured | direct | face_edge_vertex_sharing | 128 | 0 | 329.903833 | 44140 |
+| `metal/2026-07-28-correctness-corpus.json (run 3)` | metal | measured | direct | dense_animated_embedded_surface | 1024 | 0 | 14884.580833 | 48436 |
+| `metal/2026-07-28-dense-animation.json` | metal | measured | direct | dense_animated_embedded_surface | 1024 | 0 | 14672.102625 | 48436 |
+| `metal/2026-07-28-limit-builds.json (run 0)` | metal | measured | direct | standard_limit_build | 128 | 0 | 438.591709 | 36547120 |
+| `metal/2026-07-28-limit-builds.json (run 1)` | metal | measured | direct | extended_limit_build | 128 | 0 | 428.273375 | 36547120 |
 | `metal/2026-07-28-metal-boundary-fallback.json` | metal | measured | direct | metal-fast-path | 128 | 0 | 113.86175 | 33804 |
 | `metal/2026-07-28-metal-fast-path.json` | metal | measured | direct | metal-fast-path | 128 | 1 | 103.391625 | 33804 |
 | `metal/2026-07-28-metal-gpu-instances.json` | metal | measured | direct | metal-fast-path | 128 | 0 | 106.380583 | 33872 |

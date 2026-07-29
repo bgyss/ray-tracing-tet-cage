@@ -15,8 +15,9 @@ M5 remains open. Across the four accepted WP0 assets, the hardware path records
 leaves zero final misses or ownership errors, but it runs for 1,099 rays
 (78.1%; 87.5% on the dense animation) and currently validates every hardware
 result with the CPU oracle. WP5 has not accepted that cost. Automated
-hardware-replay minimization for every recorded mismatch and a separately timed
-GPU attribute-recovery stage are also still pending.
+hardware-replay minimization now preserves every recorded mismatch
+classification. GPU attribute recovery remains fused with traversal and is
+therefore explicitly unavailable as a separate duration.
 
 ## Implementation
 
@@ -26,9 +27,8 @@ GPU attribute-recovery stage are also still pending.
   source triangle, ray interval, expected primitive/owner/micro-triangle,
   hardware primitive/instance/material, CPU/GPU source barycentrics, CPU cage
   barycentrics, and GPU triangle barycentrics.
-- Retained an observed dense shared-edge regression under
-  `tests/assets/metal-regressions/`; it is explicitly marked pending hardware
-  replay rather than falsely labeled minimized.
+- Retained all 672 minimized, classification-preserving hardware regressions
+  under `tests/assets/metal-regressions/`.
 - Reworked boundary fallback accounting so the final result is the CPU hit,
   including position, normal, UV, material, ownership, and barycentrics.
   Manifests include final-result samples, fallback frequency, selected fallback
@@ -58,8 +58,9 @@ GPU attribute-recovery stage are also still pending.
 1. Complete mismatch fixtures: implemented for every observed mismatch in the
    dated corpus.
 2. Seven-way classification: implemented and portable-tested.
-3. Deterministic minimizer: implemented and portable-tested; automated
-   hardware replay and verified reduced fixtures remain open.
+3. Deterministic minimizer: implemented and portable-tested; every recorded
+   mismatch was reduced and re-verified by real Metal replay with the same
+   classification.
 4. Declared ownership rule: lowest stable source primitive/owner tet is
    declared; hardware shared-edge disagreements remain and are not hidden by a
    broadened tolerance.
@@ -85,3 +86,35 @@ GPU attribute-recovery stage are also still pending.
   pass; reproducibility summaries regenerated.
 - Known unrelated warning: the Vulkan capability probe emits its pre-existing
   initializer/function-pointer warnings during builds.
+
+## Review-fix round
+
+The review fixes were measured from exact clean revision
+`15677d0afc107ed171721f3d768b5371033d9fa8`.
+
+- The deterministic minimizer now invokes the real Metal tracing pipeline as
+  its predicate. All 672 correctness-corpus hardware mismatches retain their
+  original classification after reduction, with zero minimization failures.
+  The deterministic aggregate is
+  `tests/assets/metal-regressions/2026-07-28-minimized-corpus.json`.
+- Every ray now emits one explicit selected final-hit record. The four-asset
+  corpus contains 1,408 records and the independent evidence validator confirms
+  complete ray-index coverage, selected CPU/GPU path accounting, complete hit
+  attributes, and zero merged-stream errors.
+- The same-work comparator reports hardware traversal, the all-ray CPU
+  selection oracle, selected-fallback attribution, merge work, and actual
+  trace-plus-selection-plus-merge time over identical rays. Selected fallback
+  time is explicitly labeled as a reused subset of the selection-oracle time,
+  so it is not double-counted in the end-to-end duration.
+- `timings_ms.shading` is `null`. CPU validation is reported separately as
+  `statistics.cpu_validation_ms`; separate GPU attribute-recovery time is
+  `null` because recovery is fused into the traversal kernel.
+- The evidence runner has no unverified bypass. It rejects non-zero exits,
+  non-measured/non-direct results, failures, incomplete frame/ray/instance
+  counts, dirty or inexact source revisions, incomplete minimizations, and
+  invalid final streams before accepting the bundle.
+
+M5 remains open: the pure hardware path still produces 672 mismatches and the
+correctness-preserving selector still routes 1,099 of 1,408 rays through the
+CPU result. The review fixes close the evidence-integrity gaps; they do not
+make that fallback frequency or method-selection cost acceptable.
