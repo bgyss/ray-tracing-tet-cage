@@ -17,6 +17,11 @@ enum class MetalMismatchClass : std::uint8_t {
   provenance_attribute_reconstruction_defect,
 };
 
+enum class MetalFinalPath : std::uint8_t {
+  hardware,
+  cpu_fallback,
+};
+
 struct MetalMismatchSignals {
   bool cpu_disagrees_with_exact_oracle{};
   bool distance_within_policy{};
@@ -31,6 +36,9 @@ struct MetalMismatchSignals {
 
 [[nodiscard]] MetalMismatchClass classify_metal_mismatch(const MetalMismatchSignals &signals);
 [[nodiscard]] const char *metal_mismatch_class_name(MetalMismatchClass value);
+[[nodiscard]] MetalFinalPath choose_metal_final_path(bool fallback_enabled, bool boundary_sensitive,
+                                                     bool hardware_mismatch);
+[[nodiscard]] const char *metal_final_path_name(MetalFinalPath value);
 
 [[nodiscard]] Ray
 minimize_metal_mismatch_ray(const Ray &ray,

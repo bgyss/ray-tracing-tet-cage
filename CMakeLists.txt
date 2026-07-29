@@ -347,10 +347,7 @@ if(TETCAGE_BUILD_TOOLS)
         COMMAND "${CMAKE_COMMAND}" -E env
           "PYTHONDONTWRITEBYTECODE=1"
           python3 "${CMAKE_CURRENT_SOURCE_DIR}/scripts/metal_wp1_evidence.py"
-          --runner "$<TARGET_FILE:tetcage_metal_fast_path>"
-          --repo-root "${CMAKE_CURRENT_SOURCE_DIR}"
-          --output-root "${CMAKE_CURRENT_BINARY_DIR}/metal-wp1-smoke"
-          --smoke)
+          --contract-smoke)
     endif()
   endif()
 endif()

@@ -89,6 +89,23 @@ const char *metal_mismatch_class_name(MetalMismatchClass value) {
   return "floating_point_tolerance_policy_error";
 }
 
+MetalFinalPath choose_metal_final_path(bool fallback_enabled, bool boundary_sensitive,
+                                       bool hardware_mismatch) {
+  return fallback_enabled && (boundary_sensitive || hardware_mismatch)
+             ? MetalFinalPath::cpu_fallback
+             : MetalFinalPath::hardware;
+}
+
+const char *metal_final_path_name(MetalFinalPath value) {
+  switch (value) {
+  case MetalFinalPath::hardware:
+    return "hardware";
+  case MetalFinalPath::cpu_fallback:
+    return "cpu_fallback";
+  }
+  return "hardware";
+}
+
 Ray minimize_metal_mismatch_ray(const Ray &ray,
                                 const std::function<bool(const Ray &)> &preserves_mismatch) {
   if (!preserves_mismatch(ray)) {

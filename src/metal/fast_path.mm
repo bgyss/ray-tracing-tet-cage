@@ -140,6 +140,10 @@ struct RunMeasurements {
   std::uint64_t cpu_fallback_rays{};
   std::uint64_t cpu_fallback_hits{};
   std::uint64_t hardware_mismatches{};
+  std::uint64_t minimization_replays{};
+  std::uint64_t minimized_regressions{};
+  std::uint64_t minimization_failures{};
+  std::uint64_t final_stream_errors{};
   std::uint64_t completed_frames{};
   std::uint64_t tlas_refit_frames{};
   std::uint64_t tlas_rebuild_frames{};
@@ -173,7 +177,10 @@ struct RunMeasurements {
   double tlas_rebuild_ms{};
   double fallback_ms{};
   double fallback_decision_oracle_ms{};
-  double attribute_validation_ms{};
+  double cpu_validation_ms{};
+  double final_merge_ms{};
+  double minimization_replay_ms{};
+  double minimization_total_ms{};
   double transfer_ms{};
   double total_ms{};
   bool runtime_shader_compiled{};
@@ -182,6 +189,7 @@ struct RunMeasurements {
   bool mirrored_instances{};
   std::vector<std::string> mismatch_samples;
   std::vector<std::string> fallback_samples;
+  std::vector<std::string> final_hit_records;
 };
 
 double milliseconds(Clock::time_point begin, Clock::time_point end) {
@@ -320,8 +328,7 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   emit_number_or_null(output, measured, run.synchronization_ms);
   output << ",\n    \"traversal\": ";
   emit_number_or_null(output, measured, run.traversal_ms);
-  output << ",\n    \"shading\": ";
-  emit_number_or_null(output, measured, run.attribute_validation_ms);
+  output << ",\n    \"shading\": null";
   output << ",\n    \"total\": ";
   emit_number_or_null(output, measured, run.total_ms);
   output << ",\n    \"warmup_iterations\": 0,\n"
@@ -395,10 +402,38 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "    \"fallback_ms\": " << run.fallback_ms << ",\n"
          << "    \"fallback_decision_oracle_ms\": " << run.fallback_decision_oracle_ms << ",\n"
          << "    \"fallback_selection_requires_cpu_oracle_for_all_rays\": true,\n"
+         << "    \"cpu_validation_ms\": " << run.cpu_validation_ms << ",\n"
+         << "    \"final_merge_ms\": " << run.final_merge_ms << ",\n"
+         << "    \"same_work_comparator\": {\"rays\": " << run.rays
+         << ", \"hardware_only_trace_ms\": " << run.traversal_ms
+         << ", \"selection_oracle_ms\": " << run.fallback_decision_oracle_ms
+         << ", \"selected_fallback_ms\": " << run.fallback_ms
+         << ", \"selected_fallback_cost_accounting\": "
+            "\"subset_of_selection_oracle_ms_reused_without_retrace\""
+         << ", \"merge_ms\": " << run.final_merge_ms
+         << ", \"end_to_end_trace_selection_merge_ms\": "
+         << (run.traversal_ms + run.fallback_decision_oracle_ms + run.final_merge_ms)
+         << ", \"end_to_end_formula\": "
+            "\"hardware_only_trace_ms + selection_oracle_ms + merge_ms\""
+         << ", \"full_run_total_ms\": " << run.total_ms << "},\n"
+         << "    \"minimization_replays\": " << run.minimization_replays << ",\n"
+         << "    \"minimization_replay_ms\": " << run.minimization_replay_ms << ",\n"
+         << "    \"minimization_total_ms\": " << run.minimization_total_ms << ",\n"
+         << "    \"minimized_regressions\": " << run.minimized_regressions << ",\n"
+         << "    \"minimization_failures\": " << run.minimization_failures << ",\n"
+         << "    \"final_stream_records\": " << run.final_hit_records.size() << ",\n"
+         << "    \"final_stream_errors\": " << run.final_stream_errors << ",\n"
+         << "    \"final_stream_validated\": "
+         << (measured && run.final_hit_records.size() == run.rays && run.final_stream_errors == 0U
+                 ? "true"
+                 : "false")
+         << ",\n"
          << "    \"transfer_ms\": " << run.transfer_ms << ",\n"
          << "    \"transfer_model\": \"shared_unified_memory_no_explicit_dense_mesh_copy\",\n"
          << "    \"dense_cpu_mesh_regenerations\": 0,\n"
-         << "    \"attribute_recovery_gpu_measurement\": \"fused_with_traversal_kernel\",\n"
+         << "    \"gpu_attribute_recovery_ms\": null,\n"
+         << "    \"gpu_attribute_recovery_timing\": "
+            "\"unavailable_fused_with_traversal_kernel\",\n"
          << "    \"runtime_shader_compiled\": " << (run.runtime_shader_compiled ? "true" : "false")
          << ",\n"
          << "    \"gpu_attribute_reconstruction\": "
@@ -418,6 +453,14 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
   for (std::size_t index = 0; index < run.fallback_samples.size(); ++index) {
     output << run.fallback_samples[index];
     if (index + 1U != run.fallback_samples.size()) {
+      output << ", ";
+    }
+  }
+  output << "],\n"
+         << "    \"final_hit_records\": [";
+  for (std::size_t index = 0; index < run.final_hit_records.size(); ++index) {
+    output << run.final_hit_records[index];
+    if (index + 1U != run.final_hit_records.size()) {
       output << ", ";
     }
   }
@@ -698,11 +741,51 @@ double vec2_error(Vec2 a, PackedFloat2 b) {
                   std::abs(a.y - static_cast<double>(b.y)));
 }
 
-void record_mismatch(RunMeasurements &run, const CompiledAsset &asset,
-                     const std::vector<Vec3> &pose, std::size_t index, const Ray &ray,
-                     const TraceResult &expected_result, const TraceResult &exact_result,
-                     const GpuHit &actual, const std::optional<Vec4> &expected_cage_bary,
-                     const std::string &kind) {
+struct HardwareComparison {
+  std::string kind;
+  double position_error{};
+  double normal_error{};
+  double attribute_error{};
+};
+
+HardwareComparison compare_hardware_hit(const TraceResult &expected_result, const GpuHit &actual,
+                                        const std::vector<InstanceInfo> &instance_info,
+                                        const Ray &ray) {
+  HardwareComparison comparison;
+  const bool cpu_hit = expected_result.closest.has_value();
+  const bool gpu_hit = actual.hit != 0U;
+  if (cpu_hit != gpu_hit) {
+    comparison.kind = "hit_presence";
+    return comparison;
+  }
+  if (!cpu_hit) {
+    return comparison;
+  }
+  const auto &expected = *expected_result.closest;
+  if (actual.user_instance_id >= instance_info.size() ||
+      instance_info[actual.user_instance_id].copy != 0U ||
+      actual.source_primitive != expected.source_primitive ||
+      actual.material != expected.material) {
+    comparison.kind = "ownership";
+    return comparison;
+  }
+  comparison.position_error =
+      std::abs(expected.t - static_cast<double>(actual.distance)) * length(ray.direction);
+  comparison.normal_error = vec3_error(expected.normal, actual.normal);
+  comparison.attribute_error =
+      std::max(vec3_error(expected.source_barycentric, actual.source_barycentric),
+               vec2_error(expected.uv, actual.uv));
+  if (comparison.position_error > 2.5e-5 || comparison.normal_error > 2.5e-5 ||
+      comparison.attribute_error > 2.5e-5) {
+    comparison.kind = "value";
+  }
+  return comparison;
+}
+
+MetalMismatchClass classify_recorded_mismatch(const Ray &ray, const TraceResult &expected_result,
+                                              const TraceResult &exact_result, const GpuHit &actual,
+                                              const std::optional<Vec4> &expected_cage_bary,
+                                              const std::string &kind) {
   const auto &expected = expected_result.closest;
   MetalMismatchSignals signals{};
   signals.cpu_disagrees_with_exact_oracle =
@@ -726,7 +809,18 @@ void record_mismatch(RunMeasurements &run, const CompiledAsset &asset,
       signals.shared_edge ||
       (expected_cage_bary && std::min({expected_cage_bary->x, expected_cage_bary->y,
                                        expected_cage_bary->z, expected_cage_bary->w}) <= 1.0e-5);
-  const auto classification = classify_metal_mismatch(signals);
+  return classify_metal_mismatch(signals);
+}
+
+void record_mismatch(RunMeasurements &run, const CompiledAsset &asset,
+                     const std::vector<Vec3> &pose, std::size_t index, const Ray &ray,
+                     const Ray &minimized_ray, MetalMismatchClass minimized_class,
+                     bool minimization_verified, const TraceResult &expected_result,
+                     const TraceResult &exact_result, const GpuHit &actual,
+                     const std::optional<Vec4> &expected_cage_bary, const std::string &kind) {
+  const auto &expected = expected_result.closest;
+  const auto classification = classify_recorded_mismatch(ray, expected_result, exact_result, actual,
+                                                         expected_cage_bary, kind);
 
   std::ostringstream sample;
   sample << std::setprecision(17) << "{\"kind\":\"" << kind << "\",\"classification\":\""
@@ -822,7 +916,16 @@ void record_mismatch(RunMeasurements &run, const CompiledAsset &asset,
          << ",\"gpu_material\":" << actual.material
          << ",\"synchronization_proof\":\"completed_command_buffer_before_shared_read\""
          << ",\"minimization\":{\"algorithm\":\"deterministic_coordinate_ddmin\","
-            "\"status\":\"original_retained_pending_hardware_replay\"}}";
+            "\"status\":\""
+         << (minimization_verified && minimized_class == classification
+                 ? "hardware_replay_preserved_classification"
+                 : "hardware_replay_failed")
+         << "\",\"classification\":\"" << metal_mismatch_class_name(minimized_class)
+         << "\",\"ray\":{\"origin\":[" << minimized_ray.origin.x << ',' << minimized_ray.origin.y
+         << ',' << minimized_ray.origin.z << "],\"direction\":[" << minimized_ray.direction.x << ','
+         << minimized_ray.direction.y << ',' << minimized_ray.direction.z
+         << "],\"minimum_t\":" << minimized_ray.minimum_t
+         << ",\"maximum_t\":" << minimized_ray.maximum_t << "}}}";
   run.mismatch_samples.push_back(sample.str());
 }
 
@@ -937,6 +1040,48 @@ void record_fallback_sample(RunMeasurements &run, std::size_t index, const Ray &
   }
   sample << '}';
   run.fallback_samples.push_back(sample.str());
+}
+
+void record_final_hit(RunMeasurements &run, std::size_t index, MetalFinalPath path, const Ray &ray,
+                      const TraceResult &cpu, const GpuHit &hardware,
+                      const std::vector<InstanceInfo> &instance_info) {
+  std::ostringstream record;
+  record << std::setprecision(17) << "{\"ray_index\":" << index << ",\"selected_path\":\""
+         << metal_final_path_name(path) << "\",\"hit\":";
+  if (path == MetalFinalPath::cpu_fallback) {
+    record << (cpu.closest ? "true" : "false");
+    if (cpu.closest) {
+      const auto &hit = *cpu.closest;
+      record << ",\"t\":" << hit.t << ",\"position\":[" << hit.position.x << ',' << hit.position.y
+             << ',' << hit.position.z << "],\"source_barycentric\":[" << hit.source_barycentric.x
+             << ',' << hit.source_barycentric.y << ',' << hit.source_barycentric.z
+             << "],\"normal\":[" << hit.normal.x << ',' << hit.normal.y << ',' << hit.normal.z
+             << "],\"uv\":[" << hit.uv.x << ',' << hit.uv.y
+             << "],\"source_primitive\":" << hit.source_primitive
+             << ",\"material\":" << hit.material << ",\"owner_tet\":" << hit.tet_id
+             << ",\"micro_triangle\":" << hit.micro_triangle;
+    }
+  } else {
+    record << (hardware.hit != 0U ? "true" : "false");
+    if (hardware.hit != 0U) {
+      const Vec3 position = ray.origin + ray.direction * static_cast<double>(hardware.distance);
+      record << ",\"t\":" << hardware.distance << ",\"position\":[" << position.x << ','
+             << position.y << ',' << position.z << "],\"source_barycentric\":["
+             << hardware.source_barycentric.x << ',' << hardware.source_barycentric.y << ','
+             << hardware.source_barycentric.z << "],\"normal\":[" << hardware.normal.x << ','
+             << hardware.normal.y << ',' << hardware.normal.z << "],\"uv\":[" << hardware.uv.x
+             << ',' << hardware.uv.y << "],\"source_primitive\":" << hardware.source_primitive
+             << ",\"material\":" << hardware.material << ",\"owner_tet\":";
+      if (hardware.user_instance_id < instance_info.size()) {
+        record << instance_info[hardware.user_instance_id].tet_id;
+      } else {
+        record << "null";
+      }
+      record << ",\"micro_triangle\":" << hardware.primitive_id;
+    }
+  }
+  record << '}';
+  run.final_hit_records.push_back(record.str());
 }
 
 MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOptions &options,
@@ -1383,12 +1528,47 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     run.synchronization_ms += milliseconds(trace_sync_begin, trace_sync_end);
   };
 
+  auto replay_hardware_ray = [&](const Ray &candidate) {
+    const GpuRay packed{
+        {static_cast<float>(candidate.origin.x), static_cast<float>(candidate.origin.y),
+         static_cast<float>(candidate.origin.z)},
+        static_cast<float>(candidate.minimum_t),
+        {static_cast<float>(candidate.direction.x), static_cast<float>(candidate.direction.y),
+         static_cast<float>(candidate.direction.z)},
+        static_cast<float>(candidate.maximum_t)};
+    std::memcpy(ray_buffer.contents, &packed, sizeof(packed));
+    const auto replay_begin = Clock::now();
+    id<MTLCommandBuffer> replay_commands = [queue commandBuffer];
+    id<MTLComputeCommandEncoder> replay_encoder = [replay_commands computeCommandEncoder];
+    [replay_encoder setComputePipelineState:pipeline];
+    [replay_encoder setAccelerationStructure:tlas atBufferIndex:0U];
+    [replay_encoder setBuffer:ray_buffer offset:0U atIndex:1U];
+    [replay_encoder setBuffer:hit_buffer offset:0U atIndex:2U];
+    [replay_encoder setBuffer:instance_to_blas_buffer offset:0U atIndex:3U];
+    [replay_encoder setBuffer:primitive_offset_buffer offset:0U atIndex:4U];
+    [replay_encoder setBuffer:provenance_buffer offset:0U atIndex:5U];
+    for (id<MTLAccelerationStructure> micro_blas in blas) {
+      [replay_encoder useResource:micro_blas usage:MTLResourceUsageRead];
+    }
+    [replay_encoder dispatchThreads:MTLSizeMake(1U, 1U, 1U)
+              threadsPerThreadgroup:MTLSizeMake(1U, 1U, 1U)];
+    [replay_encoder endEncoding];
+    [replay_commands commit];
+    [replay_commands waitUntilCompleted];
+    require_completed(replay_commands, "mismatch minimization replay");
+    run.minimization_replay_ms += milliseconds(replay_begin, Clock::now());
+    ++run.minimization_replays;
+    return *static_cast<const GpuHit *>(hit_buffer.contents);
+  };
+
   auto validate_frame = [&](std::uint32_t frame) {
-    const auto validation_begin = Clock::now();
     const auto *gpu_hits = static_cast<const GpuHit *>(hit_buffer.contents);
+    const std::vector<GpuHit> frame_hardware_hits(gpu_hits, gpu_hits + rays.size());
     run.rays += rays.size();
     run.gpu_eligible_rays += rays.size();
     for (std::size_t index = 0; index < rays.size(); ++index) {
+      const std::size_t corpus_index = static_cast<std::size_t>(frame) * rays.size() + index;
+      const auto validation_begin = Clock::now();
       const auto cpu_begin = Clock::now();
       const auto cpu = trace_fast(asset, poses.front(), rays[index]);
       const auto cpu_end = Clock::now();
@@ -1405,62 +1585,79 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
       if (boundary) {
         ++run.boundary_sensitive_rays;
       }
-      const auto &actual = gpu_hits[index];
-      const bool cpu_hit = cpu.closest.has_value();
-      const bool gpu_hit = actual.hit != 0U;
-      std::string mismatch_kind;
-      double position_error{};
-      double normal_error{};
-      double attribute_error{};
-      if (cpu_hit != gpu_hit) {
-        mismatch_kind = "hit_presence";
-      } else if (cpu_hit) {
-        const auto &expected = *cpu.closest;
-        if (actual.user_instance_id >= instance_info.size() ||
-            instance_info[actual.user_instance_id].copy != 0U ||
-            actual.source_primitive != expected.source_primitive ||
-            actual.material != expected.material) {
-          mismatch_kind = "ownership";
-        } else {
-          position_error = std::abs(expected.t - static_cast<double>(actual.distance)) *
-                           length(rays[index].direction);
-          normal_error = vec3_error(expected.normal, actual.normal);
-          attribute_error =
-              std::max(vec3_error(expected.source_barycentric, actual.source_barycentric),
-                       vec2_error(expected.uv, actual.uv));
-          if (position_error > 2.5e-5 || normal_error > 2.5e-5 || attribute_error > 2.5e-5) {
-            mismatch_kind = "value";
-          }
-        }
-      }
-      if (!mismatch_kind.empty()) {
+      const GpuHit actual = frame_hardware_hits[index];
+      const auto comparison = compare_hardware_hit(cpu, actual, instance_info, rays[index]);
+      run.cpu_validation_ms += milliseconds(validation_begin, Clock::now());
+      if (!comparison.kind.empty()) {
         ++run.hardware_mismatches;
-        record_mismatch(run, asset, poses.front(),
-                        static_cast<std::size_t>(frame) * rays.size() + index, rays[index], cpu,
-                        exact, actual, expected_cage_bary, mismatch_kind);
+        const auto classification = classify_recorded_mismatch(rays[index], cpu, exact, actual,
+                                                               expected_cage_bary, comparison.kind);
+        const auto minimization_begin = Clock::now();
+        const auto preserves_classification = [&](const Ray &candidate) {
+          if (!std::isfinite(length(candidate.direction)) ||
+              length(candidate.direction) <= 1.0e-12 || candidate.minimum_t > candidate.maximum_t) {
+            return false;
+          }
+          const auto candidate_cpu = trace_fast(asset, poses.front(), candidate);
+          const auto candidate_exact = trace_watertight4d(
+              asset, exact_bvh, poses.front(), candidate, ProjectionMode::bounded_simplex);
+          const GpuHit candidate_hardware = replay_hardware_ray(candidate);
+          const auto candidate_comparison =
+              compare_hardware_hit(candidate_cpu, candidate_hardware, instance_info, candidate);
+          if (candidate_comparison.kind.empty()) {
+            return false;
+          }
+          std::optional<Vec4> candidate_cage_bary;
+          if (candidate_cpu.closest &&
+              candidate_cpu.closest->tet_id < asset.cage.tetrahedra.size()) {
+            candidate_cage_bary =
+                to_barycentric(posed_tet(asset, poses.front(), candidate_cpu.closest->tet_id),
+                               candidate_cpu.closest->position);
+          }
+          return classify_recorded_mismatch(candidate, candidate_cpu, candidate_exact,
+                                            candidate_hardware, candidate_cage_bary,
+                                            candidate_comparison.kind) == classification;
+        };
+        const Ray minimized = minimize_metal_mismatch_ray(rays[index], preserves_classification);
+        const bool minimization_verified = preserves_classification(minimized);
+        run.minimization_total_ms += milliseconds(minimization_begin, Clock::now());
+        if (minimization_verified) {
+          ++run.minimized_regressions;
+        } else {
+          ++run.minimization_failures;
+        }
+        record_mismatch(run, asset, poses.front(), corpus_index, rays[index], minimized,
+                        classification, minimization_verified, cpu, exact, actual,
+                        expected_cage_bary, comparison.kind);
       }
-      const bool use_fallback = options.boundary_fallback && (boundary || !mismatch_kind.empty());
-      if (use_fallback) {
+      const MetalFinalPath final_path =
+          choose_metal_final_path(options.boundary_fallback, boundary, !comparison.kind.empty());
+      if (final_path == MetalFinalPath::cpu_fallback) {
         --run.gpu_eligible_rays;
         ++run.cpu_fallback_rays;
         if (cpu.closest) {
           ++run.cpu_fallback_hits;
         }
         run.fallback_ms += milliseconds(cpu_begin, cpu_end);
-        record_fallback_sample(run, static_cast<std::size_t>(frame) * rays.size() + index,
-                               rays[index], cpu);
-        continue;
+        record_fallback_sample(run, corpus_index, rays[index], cpu);
       }
-      if (mismatch_kind == "hit_presence") {
-        ++run.misses;
-      } else if (mismatch_kind == "ownership") {
-        ++run.wrong_ownership;
+      const auto merge_begin = Clock::now();
+      record_final_hit(run, corpus_index, final_path, rays[index], cpu, actual, instance_info);
+      run.final_merge_ms += milliseconds(merge_begin, Clock::now());
+      if (final_path == MetalFinalPath::hardware && !comparison.kind.empty()) {
+        ++run.final_stream_errors;
+        if (comparison.kind == "hit_presence") {
+          ++run.misses;
+        } else if (comparison.kind == "ownership") {
+          ++run.wrong_ownership;
+        }
       }
-      run.position_error_max = std::max(run.position_error_max, position_error);
-      run.normal_error_max = std::max(run.normal_error_max, normal_error);
-      run.attribute_error_max = std::max(run.attribute_error_max, attribute_error);
+      if (final_path == MetalFinalPath::hardware) {
+        run.position_error_max = std::max(run.position_error_max, comparison.position_error);
+        run.normal_error_max = std::max(run.normal_error_max, comparison.normal_error);
+        run.attribute_error_max = std::max(run.attribute_error_max, comparison.attribute_error);
+      }
     }
-    run.attribute_validation_ms += milliseconds(validation_begin, Clock::now());
     ++run.completed_frames;
   };
 
@@ -1557,6 +1754,14 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     run.failure_code = "metal_cpu_oracle_mismatch";
     run.failure_message =
         "GPU hits or reconstructed attributes exceeded the declared 2.5e-5 tolerance";
+  } else if (run.final_hit_records.size() != run.rays || run.final_stream_errors != 0U) {
+    run.failure_code = "metal_final_stream_invalid";
+    run.failure_message = "the merged CPU/GPU final-hit stream did not validate for every ray";
+  } else if (run.minimization_failures != 0U ||
+             run.minimized_regressions != run.hardware_mismatches) {
+    run.failure_code = "metal_minimization_replay_failed";
+    run.failure_message =
+        "one or more minimized mismatch rays did not preserve classification on hardware replay";
   }
   run.total_ms = milliseconds(total_begin, Clock::now());
   const int exit_code = run.failure_code.empty() ? 0 : 3;

@@ -1257,6 +1257,15 @@ void test_metal_mismatch_classification_and_ray_minimization() {
   CHECK_IN(test, near(reduced.minimum_t, 0.0, 1.0e-15));
   CHECK_IN(test, near(reduced.maximum_t, 2.0, 1.0e-15));
   CHECK_IN(test, preserves_failure(reduced));
+
+  CHECK_IN(test, tetcage::choose_metal_final_path(false, true, true) ==
+                     tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, false) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, false, true) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, false, false) ==
+                     tetcage::MetalFinalPath::hardware);
 }
 
 } // namespace
