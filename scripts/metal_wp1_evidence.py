@@ -152,7 +152,7 @@ def require_direct_run(
         for record in final_hits
     ):
         errors.append("a selected final hit lacks reconstructed attributes")
-    elif sum(record["selected_path"] == "cpu_fallback" for record in final_hits) != statistics.get(
+    elif sum(record["selected_path"] == "cpu_fallback" for record in final_hits) != correctness.get(
         "cpu_fallback_rays"
     ):
         errors.append("final-hit selection does not match fallback accounting")
@@ -272,14 +272,17 @@ def contract_smoke() -> None:
         "failures": [],
         "configuration": {"requested_rays": 1},
         "timings_ms": {"shading": None},
-        "correctness": {"rays": 1, "hardware_mismatches": 0},
+        "correctness": {
+            "rays": 1,
+            "hardware_mismatches": 0,
+            "cpu_fallback_rays": 0,
+        },
         "statistics": {
             "frames_completed": 1,
             "instances": 1,
             "mismatch_samples": [],
             "minimized_regressions": 0,
             "minimization_failures": 0,
-            "cpu_fallback_rays": 0,
             "final_hit_records": [
                 {"ray_index": 0, "selected_path": "hardware", "hit": False}
             ],
