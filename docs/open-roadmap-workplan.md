@@ -61,7 +61,7 @@ asset, or an end-to-end renderer integration.
 | M2 — asset compiler | Deterministic compiler with topology, shading, ownership, malformed-input, migration, and image coverage | Core v1 compiler and tests exist; dense image and broader asset coverage remain | Content and test coverage |
 | M3 — CPU deformed-surface baseline | Correct across a representative animated corpus | Correct on checked synthetic fixtures; production-scale corpus remains | Content |
 | M4 — shared GPU contracts | Stable CPU/stub-tested layouts and policies | Closed for the current contract | None; update only through versioned migration |
-| M5 — Metal fast path | All declared correctness rays pass, with dense animation, rebuild/refit policy, limits, and scale evidence | Real M1 Max tracing works, but residual misses and errors contradict the all-rays gate | Correctness and content |
+| M5 — Metal fast path | All declared correctness rays pass, with dense animation, rebuild/refit policy, limits, and scale evidence | Closed for the declared Apple M1 Max gate at clean commit `32af558`: 1,408/1,408 audited rays, zero CPU fallback, 8-frame dense refit/rebuild, standard and extended 65,536-instance builds, and five repetitions at 1/4/16/64 copies | Broader production content and Vulkan comparison |
 | M6 — Vulkan fast path | Validated Vulkan AS/ray-query path on NVIDIA | Capability probe only; Vulkan SDK/device and NVIDIA host absent | Environment, then implementation |
 | M7 — CUDA/Vulkan interop | Measured interop advantage or explicit removal | No matched Vulkan/CUDA device; current decision is removal from production | M6 and environment |
 | M8 — robustness and hybrid methods | Equal-work GPU comparison of hardware, exact 4D, and hybrid methods | Portable policy is tested; GPU experiments await retained GPU paths | M5 and M6 |
@@ -75,7 +75,7 @@ asset, or an end-to-end renderer integration.
 ## Recommended one-at-a-time order
 
 - [ ] WP0 — expand the compiler and CPU truth corpus (M2–M3)
-- [ ] WP1 — close Metal correctness and dense-animation evidence (M5)
+- [x] WP1 — close Metal correctness and dense-animation evidence (M5)
 - [ ] WP2 — acquire and qualify one NVIDIA/Vulkan host (M0 prerequisite)
 - [ ] WP3 — implement and validate the Vulkan fast path (M6)
 - [ ] WP4 — make the CUDA/Vulkan interop keep-or-remove decision (M7)
@@ -151,15 +151,20 @@ asset, or keep it as an explicitly optional local benchmark.
 
 - **Roadmap coverage:** M5
 - **Can start now:** Yes
-- **Primary blocker:** Correctness, followed by content
+- **Primary blocker:** Clean reproducibility and method selection, followed by
+  broader content
 
 ### Why it remains open
 
 The M1 Max path builds BLAS/TLAS data, generates descriptors on the GPU, and
-executes real Metal ray tracing. The current fast-path result still has a
-hardware miss and non-zero position and attribute residuals. The two-tetrahedron
-scale sweep exposes larger residuals. An experimental boundary fallback records
-the problem but does not prove that the hardware path is correct for all rays.
+executes real Metal ray tracing. The latest worktree implementation replaces
+fixed-function triangle acceptance with conservative procedural AABBs and a
+compensated projected-edge narrow phase in Metal. A CPU-audited run reports
+zero hardware mismatches over the 1,408-ray accepted corpus, while a paired
+`--gpu-only` run emits the same number of final records with no CPU oracle
+construction, invocation, or fallback. This must still be reproduced from a
+clean commit, and the software narrow phase needs repeated performance and
+broader-content evaluation before method selection closes.
 
 ### Work
 
@@ -224,6 +229,49 @@ If Metal cannot satisfy the boundary rule without a fallback, keep the fallback
 only if WP5 shows that its end-to-end correctness and cost are acceptable.
 Record this as a method-selection result rather than calling the pure hardware
 path watertight.
+
+### 2026-07-28 and 2026-07-29 execution update
+
+The dated WP1 artifacts exercise all four WP0 accepted assets on the real Apple
+M1 Max. A follow-up intersection-query implementation enumerates candidate
+triangles and applies stable ownership before selecting a hit. The retained
+fallback returns the CPU-oracle hit and attributes for the 544 residual
+mismatches instead of excluding the ray. This yields zero final misses and
+ownership errors while allowing hardware to supply 864 of 1,408 final hits. The
+eight-frame dense run keeps canonical micro-BLAS geometry immutable, records
+six TLAS refits and one periodic rebuild, and reports zero CPU dense-mesh
+regenerations. Standard and extended modes each successfully build and trace a
+65,536-instance TLAS; these are real builds, not descriptor-size queries.
+
+The first 2026-07-29 query result above is retained as diagnostic history. A
+second implementation uses procedural AABB primitives, three-component float
+expansions for rays/vertices/transforms, a projected-edge Metal predicate, and
+the declared near-equal ownership bucket. It also corrects a CPU resolver bug
+that sorted raw `t` before applying the documented stable-owner bucket.
+
+The paired worktree experiment now has two explicit modes:
+
+- the CPU-audited mode reports zero hardware mismatches, misses, wrong owners,
+  or CPU final hits over all 1,408 rays; and
+- `--gpu-only` does not construct the CPU BVH or invoke either CPU oracle,
+  reports zero selection-oracle time and fallback rays, and emits 1,408/1,408
+  complete Metal records. Oracle-derived correctness/error fields are `null`
+  in this mode.
+
+The dirty-worktree caveat is now resolved by the clean committed rerun at
+`32af558`. The final audited matrix reports zero mismatches, misses, wrong
+owners, and CPU fallback over 1,408 rays. The paired GPU-only matrix emits
+1,408/1,408 complete records with zero oracle rays. The eight-frame dense run
+reports six TLAS refits, one periodic rebuild, zero dense CPU mesh
+regenerations, and zero audited mismatches. Standard and extended modes each
+complete a 65,536-instance build and trace. Five GPU-only repetitions at 1, 4,
+16, and 64 copies provide the declared scale timing and memory measurements.
+
+WP1 and the M5 gate are closed for this declared Apple device/corpus. Broader
+production content and Vulkan comparison remain later-roadmap work. The full
+root-cause and design study is documented in
+`docs/metal-hardware-mismatch-study.md`; the clean gate evidence is
+`results/metal/2026-07-29-m5-clean-rerun.json`.
 
 ## WP2 — acquire and qualify one NVIDIA/Vulkan host
 

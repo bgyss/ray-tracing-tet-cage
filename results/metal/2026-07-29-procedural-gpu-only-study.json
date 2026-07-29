@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "kind": "metal_procedural_gpu_only_worktree_experiment",
+  "date": "2026-07-29",
+  "evidence_class": "direct_worktree_experiment",
+  "source": {
+    "base_commit": "24f7d1b2425b3a280ba1bf628b0bbff47bb43f3e",
+    "dirty": true,
+    "note": "The procedural AABB, compensated intersection, ownership, and gpu-only changes were uncommitted during this run."
+  },
+  "host": {
+    "os": "macOS",
+    "os_version": "27.0.0",
+    "architecture": "arm64",
+    "device": "Apple M1 Max"
+  },
+  "configuration": {
+    "copies": 1,
+    "frames": 1,
+    "motion_amplitude": 0.0,
+    "compact_blas": true,
+    "gpu_instances": true,
+    "traversal_mode": "procedural_aabb_expansion3_projected_edges",
+    "ownership_distance_bucket": "2e-10 * max(1, abs(t))",
+    "validation_tolerance": 2.5e-5
+  },
+  "baseline": {
+    "original": {
+      "source": "results/metal/2026-07-28-correctness-corpus.json",
+      "rays": 1408,
+      "hardware_mismatches": 672,
+      "cpu_final_hits": 1099
+    },
+    "intersection_query": {
+      "source": "results/metal/2026-07-29-intersection-query-study.json",
+      "rays": 1408,
+      "hardware_mismatches": 544,
+      "cpu_final_hits": 544
+    }
+  },
+  "cpu_audited_runs": [
+    {
+      "scene": "smooth_closed",
+      "rays": 128,
+      "hardware_mismatches": 0,
+      "misses": 0,
+      "wrong_ownership": 0,
+      "cpu_final_hits": 0,
+      "metal_final_hits": 128,
+      "traversal_wall_ms": 0.591792,
+      "traversal_gpu_ms": 0.34841662272810936,
+      "position_error_max": 4.4031245316489276e-10,
+      "normal_error_max": 3.12721421869e-7,
+      "attribute_error_max": 8.438396337240306e-8
+    },
+    {
+      "scene": "sharp_material_uv_seam",
+      "rays": 128,
+      "hardware_mismatches": 0,
+      "misses": 0,
+      "wrong_ownership": 0,
+      "cpu_final_hits": 0,
+      "metal_final_hits": 128,
+      "traversal_wall_ms": 0.601958,
+      "traversal_gpu_ms": 0.33991667442023754,
+      "position_error_max": 2.8760993586729455e-11,
+      "normal_error_max": 4.750302773359749e-8,
+      "attribute_error_max": 7.983239558306821e-8
+    },
+    {
+      "scene": "face_edge_vertex_sharing",
+      "rays": 128,
+      "hardware_mismatches": 0,
+      "misses": 0,
+      "wrong_ownership": 0,
+      "cpu_final_hits": 0,
+      "metal_final_hits": 128,
+      "traversal_wall_ms": 0.452625,
+      "traversal_gpu_ms": 0.19720831187441945,
+      "position_error_max": 1.1710072689297135e-8,
+      "normal_error_max": 0.0,
+      "attribute_error_max": 9.102495868162919e-8
+    },
+    {
+      "scene": "dense_animated_embedded_surface",
+      "rays": 1024,
+      "hardware_mismatches": 0,
+      "misses": 0,
+      "wrong_ownership": 0,
+      "cpu_final_hits": 0,
+      "metal_final_hits": 1024,
+      "traversal_wall_ms": 2.249125,
+      "traversal_gpu_ms": 0.7662916905246675,
+      "position_error_max": 2.4879520665876953e-10,
+      "normal_error_max": 0.0,
+      "attribute_error_max": 9.404971856863398e-8
+    }
+  ],
+  "cpu_audited_total": {
+    "rays": 1408,
+    "hardware_mismatches": 0,
+    "misses": 0,
+    "wrong_ownership": 0,
+    "cpu_final_hits": 0,
+    "metal_final_hits": 1408,
+    "position_error_max": 1.1710072689297135e-8,
+    "normal_error_max": 3.12721421869e-7,
+    "attribute_error_max": 9.404971856863398e-8
+  },
+  "gpu_only_runs": [
+    {
+      "scene": "smooth_closed",
+      "rays": 128,
+      "final_records": 128
+    },
+    {
+      "scene": "sharp_material_uv_seam",
+      "rays": 128,
+      "final_records": 128
+    },
+    {
+      "scene": "face_edge_vertex_sharing",
+      "rays": 128,
+      "final_records": 128
+    },
+    {
+      "scene": "dense_animated_embedded_surface",
+      "rays": 1024,
+      "final_records": 1024
+    }
+  ],
+  "gpu_only_total": {
+    "rays": 1408,
+    "final_records": 1408,
+    "final_stream_complete": true,
+    "cpu_oracle_constructed": false,
+    "cpu_oracle_rays": 0,
+    "cpu_validation_ms": 0.0,
+    "fallback_decision_oracle_ms": 0.0,
+    "cpu_fallback_rays": 0,
+    "oracle_derived_correctness_fields": null
+  },
+  "limitations": [
+    "This is direct hardware evidence from a dirty worktree and must be rerun from a clean commit.",
+    "The declared corpus is deterministic and synthetic; broader production content remains open.",
+    "GPU-only disables the CPU intersection oracle and fallback, but the CPU still prepares poses, transforms, and test rays.",
+    "The procedural narrow phase needs repeated scale and performance comparison before method-selection acceptance."
+  ]
+}

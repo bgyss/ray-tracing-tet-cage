@@ -40,6 +40,10 @@ promoted by that job.
 | Metal capability | `results/capabilities/2026-07-27-metal.json` | direct device query |
 | Metal fast path | `results/metal/2026-07-28-metal-gpu-instances.json` | direct device, partial correctness |
 | Metal negative scale sweep | `results/metal/2026-07-28-metal-scale-sweep.json` | direct device, negative result |
+| Metal WP1 correctness corpus | `results/metal/2026-07-28-correctness-corpus.json` | direct M1 Max trace plus validated final CPU/GPU selection; pure hardware mismatches retained |
+| Metal WP1 dense animation | `results/metal/2026-07-28-dense-animation.json` | direct eight-frame refit/rebuild trace; zero CPU dense-mesh regenerations |
+| Metal WP1 standard/extended builds | `results/metal/2026-07-28-limit-builds.json` | direct completed 65,536-instance builds and traces; not a maximum-limit claim |
+| Metal minimized regressions | `tests/assets/metal-regressions/2026-07-28-minimized-corpus.json` | deterministic corpus; every reduction re-verified by real Metal replay at the recorded source revision |
 | Portable scale control | `results/benchmarks/2026-07-28-portable-scale-sweep.json` | CPU/stub synthetic control; no GPU claim |
 | Vulkan capability | `results/capabilities/2026-07-27-vulkan.json` | unverified/host-limited |
 | CUDA/Vulkan interop gate | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` | host capability gate; no interop benchmark claimed |

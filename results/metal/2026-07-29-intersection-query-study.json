@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "kind": "metal_intersection_query_worktree_experiment",
+  "date": "2026-07-29",
+  "evidence_class": "direct_worktree_experiment",
+  "source": {
+    "base_commit": "24f7d1b2425b3a280ba1bf628b0bbff47bb43f3e",
+    "dirty": true,
+    "note": "The query and fallback changes were uncommitted during this diagnostic run."
+  },
+  "host": {
+    "os": "macOS",
+    "os_version": "27.0.0",
+    "architecture": "arm64",
+    "device": "Apple M1 Max"
+  },
+  "configuration": {
+    "rays_per_frame": 128,
+    "compact_blas": true,
+    "gpu_instances": true,
+    "correctness_fallback": true,
+    "traversal_mode": "intersection_query_deterministic_candidate_ownership",
+    "validation_tolerance": 2.5e-5
+  },
+  "baseline": {
+    "source": "results/metal/2026-07-28-correctness-corpus.json",
+    "rays": 1408,
+    "hardware_mismatches": 672,
+    "cpu_final_hits": 1099,
+    "mismatch_classification": {
+      "shared_edge_ownership_disagreement": 408,
+      "floating_point_tolerance_policy_error": 133,
+      "metal_intersection_acceptance_rule": 127,
+      "generated_triangle_overlap_or_gap": 4
+    }
+  },
+  "runs": [
+    {
+      "scene": "smooth_closed",
+      "frames": 1,
+      "rays": 128,
+      "hardware_mismatches": 7,
+      "boundary_sensitive_rays": 128,
+      "hardware_final_hits": 121,
+      "cpu_final_hits": 7,
+      "final_misses": 0,
+      "final_wrong_ownership": 0,
+      "traversal_ms": 0.335875
+    },
+    {
+      "scene": "sharp_material_uv_seam",
+      "frames": 1,
+      "rays": 128,
+      "hardware_mismatches": 4,
+      "boundary_sensitive_rays": 26,
+      "hardware_final_hits": 124,
+      "cpu_final_hits": 4,
+      "final_misses": 0,
+      "final_wrong_ownership": 0,
+      "traversal_ms": 0.345833
+    },
+    {
+      "scene": "face_edge_vertex_sharing",
+      "frames": 1,
+      "rays": 128,
+      "hardware_mismatches": 12,
+      "boundary_sensitive_rays": 48,
+      "hardware_final_hits": 116,
+      "cpu_final_hits": 12,
+      "final_misses": 0,
+      "final_wrong_ownership": 0,
+      "traversal_ms": 0.349625
+    },
+    {
+      "scene": "dense_animated_embedded_surface",
+      "frames": 8,
+      "rays": 1024,
+      "hardware_mismatches": 521,
+      "boundary_sensitive_rays": 768,
+      "hardware_final_hits": 503,
+      "cpu_final_hits": 521,
+      "final_misses": 0,
+      "final_wrong_ownership": 0,
+      "traversal_ms": 2.699961
+    }
+  ],
+  "total": {
+    "rays": 1408,
+    "hardware_mismatches": 544,
+    "hardware_mismatch_reduction": 128,
+    "hardware_mismatch_reduction_fraction": 0.19047619047619047,
+    "hardware_final_hits": 864,
+    "cpu_final_hits": 544,
+    "cpu_final_fraction": 0.38636363636363635,
+    "final_misses": 0,
+    "final_wrong_ownership": 0,
+    "mismatch_classification": {
+      "shared_edge_ownership_disagreement": 289,
+      "floating_point_tolerance_policy_error": 133,
+      "metal_intersection_acceptance_rule": 118,
+      "generated_triangle_overlap_or_gap": 4
+    }
+  },
+  "limitations": [
+    "Every ray is still CPU traced for validation and fallback selection.",
+    "Metal fixed-function traversal does not expose triangles it rejects as candidates.",
+    "The result does not close M5 or establish an equal-work performance win."
+  ]
+}

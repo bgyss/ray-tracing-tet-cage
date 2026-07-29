@@ -2,6 +2,7 @@
 #include "tetcage/authoring.h"
 #include "tetcage/io.h"
 #include "tetcage/math.h"
+#include "tetcage/metal_evidence.h"
 #include "tetcage/oracle.h"
 #include "tetcage/runtime.h"
 
@@ -683,6 +684,26 @@ void test_cpu_fast_and_4d_oracles_reconstruct_same_hit() {
   }
 }
 
+void test_near_equal_boundary_hits_use_stable_source_owner() {
+  constexpr const char *test = "near-equal boundary hits use stable source owner";
+  const auto loaded = tetcage::load_asset_file(std::string(TETCAGE_SOURCE_DIR) +
+                                               "/assets/golden/smooth_closed.tetcage");
+  CHECK_IN(test, loaded.value.has_value());
+  if (!loaded.value) {
+    return;
+  }
+  const tetcage::Ray ray{{0.67735026918962582, 1.1773502691896258, 0.67735026918962582},
+                         {-0.57735026918962584, -0.57735026918962584, -0.57735026918962584},
+                         0.0,
+                         4.0};
+  const auto result = tetcage::trace_fast(*loaded.value, loaded.value->cage.vertices, ray);
+  CHECK_IN(test, result.raw_hits > 1U);
+  CHECK_IN(test, result.closest.has_value());
+  if (result.closest) {
+    CHECK_IN(test, result.closest->source_primitive == 0U);
+  }
+}
+
 void test_adversarial_ray_corpus_matches_4d_oracle() {
   constexpr const char *test = "adversarial ray corpus matches 4d oracle";
   tetcage::Cage cage{};
@@ -1214,6 +1235,63 @@ void test_robust_tolerance_policy_scales_and_falls_back() {
   CHECK_IN(test, invalid.decision == tetcage::RobustPolicyDecision::invalid_input);
 }
 
+void test_metal_mismatch_classification_and_ray_minimization() {
+  constexpr const char *test = "Metal mismatch evidence classification and minimization";
+
+  tetcage::MetalMismatchSignals signals{};
+  signals.cpu_disagrees_with_exact_oracle = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::cpu_oracle_defect);
+
+  signals = {};
+  signals.generated_boundary = true;
+  signals.shared_edge = true;
+  signals.ownership_differs = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::shared_edge_ownership_disagreement);
+
+  signals = {};
+  signals.generated_boundary = true;
+  signals.hit_presence_differs = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::metal_intersection_acceptance_rule);
+
+  signals = {};
+  signals.primitive_matches = true;
+  signals.distance_within_policy = true;
+  signals.attributes_differ = true;
+  CHECK_IN(test, tetcage::classify_metal_mismatch(signals) ==
+                     tetcage::MetalMismatchClass::provenance_attribute_reconstruction_defect);
+
+  const tetcage::Ray original{{0.123456, 4.25, -0.75}, {0.25, 0.5, -1.0}, 0.001, 9.75};
+  const auto preserves_failure = [](const tetcage::Ray &candidate) {
+    return candidate.origin.x >= 0.1 && candidate.direction.z <= -1.0 && candidate.maximum_t >= 2.0;
+  };
+  const auto reduced = tetcage::minimize_metal_mismatch_ray(original, preserves_failure);
+  CHECK_IN(test, near(reduced.origin.x, 0.1, 1.0e-15));
+  CHECK_IN(test, near(reduced.origin.y, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.origin.z, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.x, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.y, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.direction.z, -1.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.minimum_t, 0.0, 1.0e-15));
+  CHECK_IN(test, near(reduced.maximum_t, 2.0, 1.0e-15));
+  CHECK_IN(test, preserves_failure(reduced));
+
+  CHECK_IN(test, tetcage::choose_metal_final_path(false, true, true) ==
+                     tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, false) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, false, true) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, false, false) ==
+                     tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, false, true) ==
+                     tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, true, true) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
+}
+
 } // namespace
 
 int main() {
@@ -1242,6 +1320,7 @@ int main() {
   test_invalid_cage_file_has_line_diagnostic();
   test_bounded_simplex_projection_matches_vertex_enumeration();
   test_cpu_fast_and_4d_oracles_reconstruct_same_hit();
+  test_near_equal_boundary_hits_use_stable_source_owner();
   test_adversarial_ray_corpus_matches_4d_oracle();
   test_fast_stub_accepts_animated_crossing_boundary_rays();
   test_exact_projection_is_no_looser_than_interval_sum();
@@ -1257,6 +1336,7 @@ int main() {
   test_cage_lod_set_has_deterministic_parent_maps();
   test_method_selection_policy_is_explicit_and_deterministic();
   test_robust_tolerance_policy_scales_and_falls_back();
+  test_metal_mismatch_classification_and_ray_minimization();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

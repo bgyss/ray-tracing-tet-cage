@@ -1,13 +1,13 @@
 {
   "api_counts": {
-    "metal": 8,
+    "metal": 15,
     "stub": 6
   },
   "evidence_class_counts": {
-    "direct": 8,
+    "direct": 15,
     "synthetic": 6
   },
-  "file_count": 22,
+  "file_count": 34,
   "files": [
     {
       "documents": 1,
@@ -78,6 +78,46 @@
       "kinds": [
         "other"
       ],
+      "path": "compiler/2026-07-28-asset-corpus.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/dense_animated_embedded_surface/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/face_edge_vertex_sharing/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/sharp_material_uv_seam/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "compiler/images/smooth_closed/report.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
       "path": "cpu/2026-07-27-two-tet-oracle.json",
       "shared_records": 0
     },
@@ -87,6 +127,14 @@
         "other"
       ],
       "path": "cpu/2026-07-27-two-tet-pre-fix-counterexample.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "cpu/2026-07-28-oracle-corpus.json",
       "shared_records": 0
     },
     {
@@ -124,6 +172,30 @@
     {
       "documents": 1,
       "kinds": [
+        "scale_sweep"
+      ],
+      "path": "metal/2026-07-28-correctness-corpus.json",
+      "shared_records": 4
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "shared_manifest"
+      ],
+      "path": "metal/2026-07-28-dense-animation.json",
+      "shared_records": 1
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "scale_sweep"
+      ],
+      "path": "metal/2026-07-28-limit-builds.json",
+      "shared_records": 2
+    },
+    {
+      "documents": 1,
+      "kinds": [
         "shared_manifest"
       ],
       "path": "metal/2026-07-28-metal-boundary-fallback.json",
@@ -152,6 +224,30 @@
       ],
       "path": "metal/2026-07-28-metal-scale-sweep.json",
       "shared_records": 4
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "metal/2026-07-29-intersection-query-study.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "metal/2026-07-29-m5-clean-rerun.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "metal/2026-07-29-procedural-gpu-only-study.json",
+      "shared_records": 0
     },
     {
       "documents": 1,
@@ -189,7 +285,7 @@
   "generator": "scripts/result_report.py",
   "results_root": "results",
   "schema_version": 1,
-  "shared_manifest_count": 14,
+  "shared_manifest_count": 21,
   "shared_manifest_failure_count": 12,
   "shared_manifests": [
     {
@@ -331,6 +427,139 @@
       "evidence_class": "direct",
       "failure_count": 0,
       "misses": 0,
+      "path": "metal/2026-07-28-correctness-corpus.json",
+      "peak_total_bytes": 36028,
+      "rays": 128,
+      "run_id": "metal-fast-27ee73ddc7d21d98",
+      "run_index": 0,
+      "scene": "smooth_closed",
+      "scene_hash": "27ee73ddc7d21d98",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 369.577958,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-correctness-corpus.json",
+      "peak_total_bytes": 35668,
+      "rays": 128,
+      "run_id": "metal-fast-2230fd170fcce77e",
+      "run_index": 1,
+      "scene": "sharp_material_uv_seam",
+      "scene_hash": "2230fd170fcce77e",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 212.531334,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-correctness-corpus.json",
+      "peak_total_bytes": 44140,
+      "rays": 128,
+      "run_id": "metal-fast-e14a6623e35a13ac",
+      "run_index": 2,
+      "scene": "face_edge_vertex_sharing",
+      "scene_hash": "e14a6623e35a13ac",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 354.391208,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-correctness-corpus.json",
+      "peak_total_bytes": 48436,
+      "rays": 1024,
+      "run_id": "metal-fast-92944d564639b50f",
+      "run_index": 3,
+      "scene": "dense_animated_embedded_surface",
+      "scene_hash": "92944d564639b50f",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 14811.14775,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-dense-animation.json",
+      "peak_total_bytes": 48436,
+      "rays": 1024,
+      "run_id": "metal-fast-92944d564639b50f",
+      "run_index": null,
+      "scene": "dense_animated_embedded_surface",
+      "scene_hash": "92944d564639b50f",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 14530.387542,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-limit-builds.json",
+      "peak_total_bytes": 36547120,
+      "rays": 128,
+      "run_id": "metal-fast-27ee73ddc7d21d98",
+      "run_index": 0,
+      "scene": "standard_limit_build",
+      "scene_hash": "27ee73ddc7d21d98",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 452.494333,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
+      "path": "metal/2026-07-28-limit-builds.json",
+      "peak_total_bytes": 36547120,
+      "rays": 128,
+      "run_id": "metal-fast-27ee73ddc7d21d98",
+      "run_index": 1,
+      "scene": "extended_limit_build",
+      "scene_hash": "27ee73ddc7d21d98",
+      "source_commit": "7ffab58d22f6327ce15aabf37497641136b9c052",
+      "source_dirty": false,
+      "status": "measured",
+      "total_ms": 476.130584,
+      "wrong_ownership": 0
+    },
+    {
+      "api": "metal",
+      "duplicate_hits": 0,
+      "evidence_class": "direct",
+      "failure_count": 0,
+      "misses": 0,
       "path": "metal/2026-07-28-metal-boundary-fallback.json",
       "peak_total_bytes": 33804,
       "rays": 128,
@@ -460,6 +689,6 @@
     }
   ],
   "status_counts": {
-    "measured": 14
+    "measured": 21
   }
 }

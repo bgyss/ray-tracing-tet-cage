@@ -1,0 +1,15 @@
+# The first pair shares a face, the third tet shares an edge, and the fourth shares a vertex.
+v 10 0 0 0
+v 20 1 0 0
+v 30 0 1 0
+v 40 0 0 1
+v 50 0 0 -1
+v 60 0.8 -0.6 0.1
+v 70 0.7 -0.5 -0.7
+v 80 -0.6 0.3 -0.4
+v 90 -0.5 -0.6 0.3
+v 100 -0.4 -0.4 -0.5
+t 10 20 30 40
+t 10 30 20 50
+t 10 20 60 70
+t 10 80 90 100

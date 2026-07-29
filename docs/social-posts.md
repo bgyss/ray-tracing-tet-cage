@@ -1,5 +1,102 @@
 # Social announcement posts
 
+## M5 Metal correctness and GPU-only closure
+
+These drafts announce the specific clean-commit Metal milestone. They claim
+only the measured Apple M1 Max corpus and configuration; broader production
+content and Vulkan comparison remain open.
+
+Project: <https://github.com/bgyss/ray-tracing-tet-cage>
+
+Evidence: [clean M5 result manifest](results/metal/2026-07-29-m5-clean-rerun.json)
+
+### LinkedIn
+
+The Metal M5 milestone is now closed for the declared Apple M1 Max corpus in my tetrahedral-cage ray-tracing reimplementation study.
+
+The final committed path replaces fixed-function triangle acceptance with conservative procedural AABBs and a compensated projected-edge narrow phase. That lets Metal handle candidate traversal, intersection acceptance, stable shared-boundary ownership, hit distance, provenance, and attributes without a CPU final-hit oracle.
+
+Clean-commit results:
+
+- 1,408/1,408 audited correctness rays passed;
+- zero hardware mismatches, misses, wrong owners, or CPU fallback hits;
+- GPU-only mode emitted 1,408/1,408 complete final records with zero CPU-oracle rays;
+- an 8-frame dense animation completed six TLAS refits and one periodic rebuild with zero dense CPU mesh regenerations;
+- standard and extended 65,536-instance limit builds both passed; and
+- five repeated GPU-only scale runs covered 1, 4, 16, and 64 copies.
+
+The result closes the declared M5 gate for this device and corpus—not the entire research program. Broader production content, cross-platform Vulkan validation, and massive-scale crossover work remain open.
+
+Repository: <https://github.com/bgyss/ray-tracing-tet-cage>
+
+The implementation and evidence are documented in the repository’s Metal mismatch study, roadmap, and dated result manifest.
+
+#RayTracing #ComputerGraphics #GPUProgramming #Metal #AppleSilicon #Rendering #NumericalRobustness
+
+### X/Twitter
+
+Metal M5 is closed for the declared Apple M1 Max corpus.
+
+The committed path uses procedural AABBs + compensated projected-edge intersection, so Metal handles traversal, acceptance, ownership, provenance, and attributes without the CPU final-hit oracle.
+
+Results: 1,408/1,408 audited rays passed; 0 mismatches, misses, wrong owners, or CPU fallback hits. GPU-only mode produced 1,408/1,408 final records with 0 oracle rays.
+
+Also verified: 8-frame dense refit/rebuild, standard + extended 65,536-instance builds, and five repetitions at 1/4/16/64 copies.
+
+Repo: https://github.com/bgyss/ray-tracing-tet-cage
+
+Broader production content and Vulkan comparison remain open.
+
+#Graphics #RayTracing #Metal #GPUProgramming
+
+#### Optional X/Twitter follow-up
+
+The important fix was not just “use more precision.” The CPU owner resolver and Metal shader now share the same near-equal-distance boundary bucket and stable source/owner ordering. A focused regression caught the case where binary64 sorting disagreed with the documented ownership contract.
+
+### Reddit
+
+#### Title
+
+Metal M5 correctness milestone closed: 1,408 audited rays, zero CPU fallback
+
+#### Body
+
+I’ve completed the clean committed Metal M5 gate for my tetrahedral-cage ray-tracing reimplementation:
+
+https://github.com/bgyss/ray-tracing-tet-cage
+
+The retained path uses Metal acceleration structures over conservative procedural AABBs. The Metal kernel performs the narrow-phase projected-edge ray/triangle test using compensated three-component float expansions, then resolves near-equal boundary candidates with the stable source/owner rule and reconstructs provenance and attributes.
+
+The clean Apple M1 Max rerun reports:
+
+1. 1,408/1,408 CPU-audited correctness rays passed.
+2. Zero hardware mismatches, misses, wrong ownership, or CPU fallback hits.
+3. GPU-only mode produced 1,408 complete final records without constructing or invoking the CPU intersection oracle.
+4. An 8-frame dense animation completed six TLAS refits and one periodic rebuild without regenerating a dense CPU mesh.
+5. Standard and extended 65,536-instance limit builds both completed.
+6. Five repeated GPU-only measurements covered 1, 4, 16, and 64 copies.
+
+This closes M5 for the declared device, fixtures, and measurement matrix. It does not claim production-scale content coverage, a Vulkan result, or a cross-platform performance crossover. Those remain later roadmap work.
+
+The dated result manifest records the source commit, clean-tree status, correctness totals, dense-animation counters, limit checks, and repeated scale statistics.
+
+## Short Reddit version
+
+The Metal M5 gate is now closed for the declared Apple M1 Max corpus:
+
+https://github.com/bgyss/ray-tracing-tet-cage
+
+The procedural-AABB Metal path passes 1,408/1,408 audited rays with zero mismatches and zero CPU fallback. GPU-only mode emits all final records without the CPU intersection oracle. I also verified dense refit/rebuild behavior, standard/extended 65,536-instance builds, and repeated 1/4/16/64-copy measurements.
+
+This is a scoped milestone result, not a claim of production-scale or cross-platform performance.
+
+### Posting notes
+
+- LinkedIn: attach a compact diagram showing procedural AABB traversal, compensated narrow phase, and GPU-only final-hit output.
+- X/Twitter: post the main version, then use the ownership-bucket regression as the follow-up.
+- Reddit: include the dated result manifest and explain that the gate is closed only for the declared Apple device/corpus.
+- Keep the distinction between CPU-audited correctness and GPU-only execution explicit; GPU-only oracle-derived error fields are intentionally unavailable rather than inferred.
+
 These drafts announce the public planning/reimplementation repository. They intentionally do not claim that the implementation or performance has been validated yet.
 
 Project: <https://github.com/bgyss/ray-tracing-tet-cage>

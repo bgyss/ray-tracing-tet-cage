@@ -1,0 +1,24 @@
+{
+  "channels": [
+    "position",
+    "normal",
+    "uv",
+    "material",
+    "ownership",
+    "miss_classification"
+  ],
+  "comparison_policy": "Per-pixel edge disagreements are retained as a visualization classification. Ownership is source-primitive agreement; the adversarial ray oracle is the gate.",
+  "correctness": {
+    "hit_mismatches": 121,
+    "material_mismatches": 0,
+    "max_normal_error": 1.57009e-16,
+    "max_position_error": 0,
+    "max_uv_error": 3.33067e-16,
+    "source_primitive_ownership_mismatches": 0
+  },
+  "height": 48,
+  "report_kind": "image_space_differential",
+  "schema_version": 1,
+  "wall_clock_ms": 25.151415989967063,
+  "width": 48
+}

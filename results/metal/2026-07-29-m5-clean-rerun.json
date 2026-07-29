@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "metal_m5_clean_committed_rerun",
+  "date": "2026-07-29",
+  "evidence_class": "direct_clean_commit",
+  "source": {
+    "commit": "32af558812fe1603c89b6d84186c0159fb1fe6d4",
+    "dirty": false,
+    "device": "Apple M1 Max",
+    "os": "macOS 27.0.0",
+    "architecture": "arm64"
+  },
+  "configuration": {
+    "gpu_instances": true,
+    "compact_blas": true,
+    "traversal_mode": "procedural_aabb_expansion3_projected_edges",
+    "validation_tolerance": 2.5e-5,
+    "scale_repetitions": 5,
+    "scale_copy_counts": [1, 4, 16, 64],
+    "scale_rays_per_run": 256
+  },
+  "correctness_corpus": {
+    "runs": [
+      {"scene": "smooth_closed", "rays": 128, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "final_records": 128, "position_error_max": 4.403124531648928e-10, "normal_error_max": 3.12721421869e-7, "attribute_error_max": 8.438396337240306e-8},
+      {"scene": "sharp_material_uv_seam", "rays": 128, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "final_records": 128, "position_error_max": 2.8760993586729455e-11, "normal_error_max": 4.750302773359749e-8, "attribute_error_max": 7.98323955830682e-8},
+      {"scene": "face_edge_vertex_sharing", "rays": 128, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "final_records": 128, "position_error_max": 1.1710072689297135e-8, "normal_error_max": 0.0, "attribute_error_max": 9.102495868162919e-8},
+      {"scene": "dense_animated_embedded_surface", "rays": 1024, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "final_records": 1024, "position_error_max": 2.4879520665876953e-10, "normal_error_max": 0.0, "attribute_error_max": 9.404971856863398e-8}
+    ],
+    "total": {"rays": 1408, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "final_records": 1408, "position_error_max": 1.1710072689297135e-8, "normal_error_max": 3.12721421869e-7, "attribute_error_max": 9.404971856863398e-8}
+  },
+  "gpu_only_corpus": {
+    "rays": 1408,
+    "final_records": 1408,
+    "final_stream_complete": true,
+    "cpu_oracle_constructed": false,
+    "cpu_oracle_rays": 0,
+    "cpu_validation_ms": 0.0,
+    "fallback_decision_oracle_ms": 0.0,
+    "cpu_fallback_rays": 0,
+    "oracle_derived_correctness_fields": null
+  },
+  "dense_animation": {
+    "configuration": {"scene": "dense_animated_embedded_surface", "copies": 1, "rays_per_frame": 1024, "frames": 8, "motion_amplitude": 0.05, "rebuild_period": 4},
+    "audited": {"rays": 8192, "hardware_mismatches": 0, "misses": 0, "wrong_ownership": 0, "cpu_fallback_rays": 0, "frames_completed": 8, "tlas_refit_frames": 6, "tlas_rebuild_frames": 1, "dense_cpu_mesh_regenerations": 0, "final_records": 8192, "final_stream_complete": true},
+    "gpu_only": {"rays": 8192, "frames_completed": 8, "tlas_refit_frames": 6, "tlas_rebuild_frames": 1, "dense_cpu_mesh_regenerations": 0, "cpu_oracle_constructed": false, "cpu_oracle_rays": 0, "final_records": 8192, "final_stream_complete": true}
+  },
+  "limit_checks": [
+    {"mode": "standard", "copies": 65536, "rays": 1, "extended_limits": false, "status": "measured", "instances": 65536, "final_records": 1, "exit_code": 0},
+    {"mode": "extended", "copies": 65536, "rays": 1, "extended_limits": true, "status": "measured", "instances": 65536, "final_records": 1, "exit_code": 0}
+  ],
+  "scale_measurements": [
+    {"copies": 1, "repetitions": 5, "rays": 256, "traversal_wall_ms": {"min": 1.062292, "median": 1.121292, "mean": 1.1618418, "max": 1.418083}, "traversal_gpu_ms": {"min": 0.7646249723620713, "median": 0.7661250419914722, "mean": 0.7666499936021864, "max": 0.7699999841861427}, "total_ms": {"min": 90.946875, "median": 91.58675, "mean": 92.6993248, "max": 96.565458}, "peak_bytes": 100292},
+    {"copies": 4, "repetitions": 5, "rays": 256, "traversal_wall_ms": {"min": 1.063334, "median": 1.098375, "mean": 1.2016336, "max": 1.659042}, "traversal_gpu_ms": {"min": 0.7707499898970127, "median": 0.7714583189226687, "mean": 0.77213334152475, "max": 0.7754583493806422}, "total_ms": {"min": 88.109417, "median": 90.17125, "mean": 94.8349334, "max": 112.8895}, "peak_bytes": 101544},
+    {"copies": 16, "repetitions": 5, "rays": 256, "traversal_wall_ms": {"min": 1.093583, "median": 1.19275, "mean": 1.2305582, "max": 1.441625}, "traversal_gpu_ms": {"min": 0.7746249902993441, "median": 0.7750000222586095, "mean": 0.8136333432048559, "max": 0.9364166762679815}, "total_ms": {"min": 90.497583, "median": 99.567833, "mean": 98.25865, "max": 103.701084}, "peak_bytes": 110136},
+    {"copies": 64, "repetitions": 5, "rays": 256, "traversal_wall_ms": {"min": 1.055583, "median": 1.122542, "mean": 1.1259666, "max": 1.217458}, "traversal_gpu_ms": {"min": 0.775333319325, "median": 0.776749977376312, "mean": 0.7856583222746849, "max": 0.8198749856092036}, "total_ms": {"min": 88.79, "median": 98.519459, "mean": 98.9423086, "max": 106.5965}, "peak_bytes": 160632}
+  ],
+  "interpretation": {
+    "correctness_gate": "passed",
+    "dense_animation_gate": "passed",
+    "limit_gate": "passed",
+    "scale_gate": "passed_for_declared_1_4_16_64_copy_matrix",
+    "remaining_scope": "broader production content and cross-platform Vulkan evidence remain outside M5"
+  }
+}

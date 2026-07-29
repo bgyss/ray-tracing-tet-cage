@@ -16,8 +16,9 @@ namespace {
 void usage() {
   std::cerr << "usage: tetcage_metal_fast_path <asset.tetcage> <result.json> "
                "--copies <u32> --rays <u32> --motion <value> "
+               "[--frames <u32>] [--rebuild-period <u32>] "
                "[--compact] [--extended-limits] [--boundary-fallback] [--gpu-instances] "
-               "[--allow-unverified]\n";
+               "[--gpu-only] [--allow-unverified]\n";
 }
 
 bool parse_u32(const std::string &text, std::uint32_t &value) {
@@ -50,7 +51,22 @@ int main(int argc, char **argv) {
   }
   for (int index = 9; index < argc; ++index) {
     const std::string flag(argv[index]);
-    if (flag == "--compact") {
+    if (flag == "--frames" || flag == "--rebuild-period") {
+      if (index + 1 >= argc) {
+        usage();
+        return EXIT_FAILURE;
+      }
+      std::uint32_t value{};
+      if (!parse_u32(argv[++index], value) || (flag == "--frames" && value == 0U)) {
+        usage();
+        return EXIT_FAILURE;
+      }
+      if (flag == "--frames") {
+        options.frames = value;
+      } else {
+        options.rebuild_period = value;
+      }
+    } else if (flag == "--compact") {
       options.compact_blas = true;
     } else if (flag == "--extended-limits") {
       options.extended_limits = true;
@@ -58,12 +74,18 @@ int main(int argc, char **argv) {
       options.boundary_fallback = true;
     } else if (flag == "--gpu-instances") {
       options.gpu_instances = true;
+    } else if (flag == "--gpu-only") {
+      options.cpu_validation = false;
     } else if (flag == "--allow-unverified") {
       options.allow_unverified = true;
     } else {
       usage();
       return EXIT_FAILURE;
     }
+  }
+  if (!options.cpu_validation && options.boundary_fallback) {
+    std::cerr << "--gpu-only cannot be combined with --boundary-fallback\n";
+    return EXIT_FAILURE;
   }
 
   const auto loaded = tetcage::load_asset_file(argv[1]);
