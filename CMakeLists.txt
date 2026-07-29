@@ -343,6 +343,14 @@ if(TETCAGE_BUILD_TOOLS)
       set_tests_properties(tetcage.metal_fast_path PROPERTIES
         FIXTURES_REQUIRED compiled_asset
         PASS_REGULAR_EXPRESSION "\"api\": \"metal\"")
+      add_test(NAME tetcage.metal_gpu_only
+        COMMAND tetcage_metal_fast_path
+          "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+          "${CMAKE_CURRENT_BINARY_DIR}/metal-gpu-only.json"
+          --copies 1 --rays 128 --motion 0.05 --gpu-only --allow-unverified)
+      set_tests_properties(tetcage.metal_gpu_only PROPERTIES
+        FIXTURES_REQUIRED compiled_asset
+        PASS_REGULAR_EXPRESSION "\"cpu_validation\": false")
       add_test(NAME tetcage.metal_wp1_evidence_smoke
         COMMAND "${CMAKE_COMMAND}" -E env
           "PYTHONDONTWRITEBYTECODE=1"

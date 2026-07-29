@@ -17,6 +17,7 @@ struct MetalFastPathOptions {
   bool extended_limits{};
   bool boundary_fallback{};
   bool gpu_instances{};
+  bool cpu_validation{true};
   bool allow_unverified{};
 };
 

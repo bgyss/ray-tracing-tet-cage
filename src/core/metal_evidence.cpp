@@ -90,8 +90,9 @@ const char *metal_mismatch_class_name(MetalMismatchClass value) {
 }
 
 MetalFinalPath choose_metal_final_path(bool fallback_enabled, bool boundary_sensitive,
-                                       bool hardware_mismatch) {
-  return fallback_enabled && (boundary_sensitive || hardware_mismatch)
+                                       bool hardware_mismatch, bool hardware_resolves_boundaries) {
+  const bool unresolved_boundary = boundary_sensitive && !hardware_resolves_boundaries;
+  return fallback_enabled && (unresolved_boundary || hardware_mismatch)
              ? MetalFinalPath::cpu_fallback
              : MetalFinalPath::hardware;
 }

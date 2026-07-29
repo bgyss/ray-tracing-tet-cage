@@ -11,13 +11,17 @@ XDG_CACHE_HOME="$PWD/.cache" nix develop path:. --command \
   results/metal/2026-07-28-metal-scale-sweep.json
 ```
 
-The sweep varies copies/instances at a fixed ray count, uses GPU-generated
-instance descriptors, and keeps the explicit experimental boundary fallback.
-Boundary-sensitive rays are routed through the standalone CPU fallback and
-reported as `cpu_fallback_rays`; they are not silently counted as GPU
-correctness. Each embedded manifest retains BLAS/TLAS/scratch/instance memory
-and stage timings. `evidence_class: direct_synthetic_scale_subset` is deliberate: a
-meaningful M9 crossover still requires a production-style animated asset,
+The checked-in sweep varies copies/instances at a fixed ray count, uses
+GPU-generated instance descriptors, and was recorded with the older
+intersection-query/fallback kernel. Each embedded manifest retains
+BLAS/TLAS/scratch/instance memory and stage timings.
+`evidence_class: direct_synthetic_scale_subset` is deliberate.
+
+The newer procedural-AABB/compensated kernel passes the declared 1,408-ray
+corpus without CPU fallback and exposes `--gpu-only`, but its one-shot worktree
+timings do not retroactively update this sweep. Regenerate the scale study with
+the new kernel before making throughput or crossover claims. A meaningful M9
+crossover still requires repeated runs, a production-style animated asset,
 dense-deformation baseline, and NVIDIA comparison.
 
 The portable control matrix can be regenerated with:

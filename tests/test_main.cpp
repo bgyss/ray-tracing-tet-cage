@@ -684,6 +684,26 @@ void test_cpu_fast_and_4d_oracles_reconstruct_same_hit() {
   }
 }
 
+void test_near_equal_boundary_hits_use_stable_source_owner() {
+  constexpr const char *test = "near-equal boundary hits use stable source owner";
+  const auto loaded = tetcage::load_asset_file(std::string(TETCAGE_SOURCE_DIR) +
+                                               "/assets/golden/smooth_closed.tetcage");
+  CHECK_IN(test, loaded.value.has_value());
+  if (!loaded.value) {
+    return;
+  }
+  const tetcage::Ray ray{{0.67735026918962582, 1.1773502691896258, 0.67735026918962582},
+                         {-0.57735026918962584, -0.57735026918962584, -0.57735026918962584},
+                         0.0,
+                         4.0};
+  const auto result = tetcage::trace_fast(*loaded.value, loaded.value->cage.vertices, ray);
+  CHECK_IN(test, result.raw_hits > 1U);
+  CHECK_IN(test, result.closest.has_value());
+  if (result.closest) {
+    CHECK_IN(test, result.closest->source_primitive == 0U);
+  }
+}
+
 void test_adversarial_ray_corpus_matches_4d_oracle() {
   constexpr const char *test = "adversarial ray corpus matches 4d oracle";
   tetcage::Cage cage{};
@@ -1266,6 +1286,10 @@ void test_metal_mismatch_classification_and_ray_minimization() {
                      tetcage::MetalFinalPath::cpu_fallback);
   CHECK_IN(test, tetcage::choose_metal_final_path(true, false, false) ==
                      tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, false, true) ==
+                     tetcage::MetalFinalPath::hardware);
+  CHECK_IN(test, tetcage::choose_metal_final_path(true, true, true, true) ==
+                     tetcage::MetalFinalPath::cpu_fallback);
 }
 
 } // namespace
@@ -1296,6 +1320,7 @@ int main() {
   test_invalid_cage_file_has_line_diagnostic();
   test_bounded_simplex_projection_matches_vertex_enumeration();
   test_cpu_fast_and_4d_oracles_reconstruct_same_hit();
+  test_near_equal_boundary_hits_use_stable_source_owner();
   test_adversarial_ray_corpus_matches_4d_oracle();
   test_fast_stub_accepts_animated_crossing_boundary_rays();
   test_exact_projection_is_no_looser_than_interval_sum();

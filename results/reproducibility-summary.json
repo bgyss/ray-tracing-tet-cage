@@ -7,7 +7,7 @@
     "direct": 15,
     "synthetic": 6
   },
-  "file_count": 31,
+  "file_count": 33,
   "files": [
     {
       "documents": 1,
@@ -224,6 +224,22 @@
       ],
       "path": "metal/2026-07-28-metal-scale-sweep.json",
       "shared_records": 4
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "metal/2026-07-29-intersection-query-study.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "other"
+      ],
+      "path": "metal/2026-07-29-procedural-gpu-only-study.json",
+      "shared_records": 0
     },
     {
       "documents": 1,

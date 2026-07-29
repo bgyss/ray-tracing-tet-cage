@@ -37,7 +37,8 @@ struct MetalMismatchSignals {
 [[nodiscard]] MetalMismatchClass classify_metal_mismatch(const MetalMismatchSignals &signals);
 [[nodiscard]] const char *metal_mismatch_class_name(MetalMismatchClass value);
 [[nodiscard]] MetalFinalPath choose_metal_final_path(bool fallback_enabled, bool boundary_sensitive,
-                                                     bool hardware_mismatch);
+                                                     bool hardware_mismatch,
+                                                     bool hardware_resolves_boundaries = false);
 [[nodiscard]] const char *metal_final_path_name(MetalFinalPath value);
 
 [[nodiscard]] Ray

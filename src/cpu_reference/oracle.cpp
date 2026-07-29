@@ -269,7 +269,17 @@ TraceResult resolve_hits(std::vector<TraceHit> hits, std::uint64_t visited_nodes
     }
   }
   if (!resolved.empty()) {
-    result.closest = resolved.front();
+    const double minimum_t = resolved.front().t;
+    const double ownership_tolerance = 2.0e-10 * std::max(1.0, std::abs(minimum_t));
+    const auto boundary_end =
+        std::find_if(resolved.begin(), resolved.end(),
+                     [&](const TraceHit &hit) { return hit.t - minimum_t > ownership_tolerance; });
+    const auto owner =
+        std::min_element(resolved.begin(), boundary_end, [](const TraceHit &a, const TraceHit &b) {
+          return std::tie(a.source_primitive, a.tet_id, a.micro_triangle, a.t) <
+                 std::tie(b.source_primitive, b.tet_id, b.micro_triangle, b.t);
+        });
+    result.closest = *owner;
   }
   return result;
 }
