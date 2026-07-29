@@ -10,12 +10,12 @@
       "report": {
         "asset_hash_fnv1a64": "27ee73ddc7d21d98",
         "bvh": {
-          "build_ms": 0.124875,
+          "build_ms": 0.220875,
           "leaf_size": 4,
           "node_count": 1,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/smooth_closed.tetcage /tmp/tetcage-corpus-review/oracle/smooth_closed.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-boundary/artifacts/smooth_closed.tetcage /tmp/tetcage-boundary/oracle/smooth_closed.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -44,21 +44,21 @@
         "motion": 0,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.00175,
+            "bounds_build_ms": 0.001875,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 0.125,
-            "trace_ms": 1.683625,
+            "trace_ms": 2.664958,
             "visited_nodes": 288
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.000584,
+            "bounds_build_ms": 0.00075,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 0.125,
-            "trace_ms": 1.328625,
+            "trace_ms": 1.661916,
             "visited_nodes": 288
           }
         },
@@ -66,7 +66,7 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 314.00549999671057
+        "wall_clock_ms": 16.158583981450647
       }
     },
     {
@@ -74,12 +74,12 @@
       "report": {
         "asset_hash_fnv1a64": "2230fd170fcce77e",
         "bvh": {
-          "build_ms": 0.022416,
+          "build_ms": 0.022541,
           "leaf_size": 4,
           "node_count": 1,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/sharp_material_uv_seam.tetcage /tmp/tetcage-corpus-review/oracle/sharp_material_uv_seam.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-boundary/artifacts/sharp_material_uv_seam.tetcage /tmp/tetcage-boundary/oracle/sharp_material_uv_seam.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -108,21 +108,21 @@
         "motion": 0,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.001708,
+            "bounds_build_ms": 0.001792,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 14,
             "summed_node_volume": 0,
-            "trace_ms": 1.572083,
+            "trace_ms": 1.585958,
             "visited_nodes": 288
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.000542,
+            "bounds_build_ms": 0.000583,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 14,
             "summed_node_volume": 0,
-            "trace_ms": 1.456709,
+            "trace_ms": 1.21175,
             "visited_nodes": 288
           }
         },
@@ -130,20 +130,20 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 10.527458012802526
+        "wall_clock_ms": 10.274625004967675
       }
     },
     {
       "id": "face_edge_vertex_sharing",
       "report": {
-        "asset_hash_fnv1a64": "961a7562439dc7f0",
+        "asset_hash_fnv1a64": "e14a6623e35a13ac",
         "bvh": {
-          "build_ms": 0.024292,
+          "build_ms": 0.02375,
           "leaf_size": 4,
           "node_count": 2,
           "tree_count": 2
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/face_edge_vertex_sharing.tetcage /tmp/tetcage-corpus-review/oracle/face_edge_vertex_sharing.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-boundary/artifacts/face_edge_vertex_sharing.tetcage /tmp/tetcage-boundary/oracle/face_edge_vertex_sharing.json --seed 81002718 --random-rays 256 --frames 1 --motion 0.0",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -172,21 +172,21 @@
         "motion": 0,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.003291,
+            "bounds_build_ms": 0.00325,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 6,
-            "summed_node_volume": 0.1875,
-            "trace_ms": 2.612458,
+            "summed_node_volume": 0.2505,
+            "trace_ms": 2.570083,
             "visited_nodes": 576
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.001666,
+            "bounds_build_ms": 0.001,
             "hits": 288,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 6,
-            "summed_node_volume": 0.1875,
-            "trace_ms": 1.709625,
+            "summed_node_volume": 0.2505,
+            "trace_ms": 1.792041,
             "visited_nodes": 576
           }
         },
@@ -194,7 +194,7 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 15.487666008993983
+        "wall_clock_ms": 12.513791996752843
       }
     },
     {
@@ -202,12 +202,12 @@
       "report": {
         "asset_hash_fnv1a64": "92944d564639b50f",
         "bvh": {
-          "build_ms": 0.10425,
+          "build_ms": 0.106084,
           "leaf_size": 4,
           "node_count": 11,
           "tree_count": 1
         },
-        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-corpus-review/artifacts/dense_animated_embedded_surface.tetcage /tmp/tetcage-corpus-review/oracle/dense_animated_embedded_surface.json --seed 81002718 --random-rays 256 --frames 8 --motion 0.025",
+        "command": "build/dev/tetcage_oracle_report /tmp/tetcage-boundary/artifacts/dense_animated_embedded_surface.tetcage /tmp/tetcage-boundary/oracle/dense_animated_embedded_surface.json --seed 81002718 --random-rays 256 --frames 8 --motion 0.025",
         "correctness": {
           "exact_duplicate_ownership": 0,
           "exact_misses": 0,
@@ -299,21 +299,21 @@
         "motion": 0.025,
         "projection_comparison": {
           "bounded_simplex": {
-            "bounds_build_ms": 0.016375,
+            "bounds_build_ms": 0.016209,
             "hits": 2795,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 1.332267629550188e-17,
-            "trace_ms": 69.805125,
+            "trace_ms": 65.539916,
             "visited_nodes": 21242
           },
           "paper_interval_sum": {
-            "bounds_build_ms": 0.00375,
+            "bounds_build_ms": 0.003125,
             "hits": 2795,
             "invalid_bounds": 0,
             "raw_duplicate_candidates": 0,
             "summed_node_volume": 1.332267629550188e-17,
-            "trace_ms": 37.93804299999999,
+            "trace_ms": 37.578416,
             "visited_nodes": 21242
           }
         },
@@ -321,7 +321,7 @@
         "report_kind": "cpu_4d_oracle",
         "schema_version": 1,
         "seed": 81002718,
-        "wall_clock_ms": 233.7648750108201
+        "wall_clock_ms": 224.76179199293256
       }
     }
   ],

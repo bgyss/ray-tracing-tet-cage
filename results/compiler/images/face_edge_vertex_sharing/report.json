@@ -12,13 +12,13 @@
     "hit_mismatches": 0,
     "material_mismatches": 0,
     "max_normal_error": 0,
-    "max_position_error": 6.66134e-16,
-    "max_uv_error": 1.11022e-15,
+    "max_position_error": 8.88178e-16,
+    "max_uv_error": 7.77156e-16,
     "source_primitive_ownership_mismatches": 0
   },
   "height": 48,
   "report_kind": "image_space_differential",
   "schema_version": 1,
-  "wall_clock_ms": 28.23349999380298,
+  "wall_clock_ms": 27.02895802212879,
   "width": 48
 }

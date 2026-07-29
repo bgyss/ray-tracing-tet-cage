@@ -51,24 +51,31 @@ def require_clean_oracle(case_id: str, report: dict[str, object]) -> None:
         raise RuntimeError(f"{case_id}: CPU oracle correctness gate failed: {failures}")
 
 
+def require_boundary_modes(case_id: str, report: dict[str, object], required: list[str]) -> None:
+    modes = report["modes"]
+    failures = [mode for mode in required if mode not in modes or not modes[mode]["passed"]]
+    if failures:
+        raise RuntimeError(f"{case_id}: boundary-mode probe failed: {failures}")
+
+
 def main() -> int:
-    if len(sys.argv) not in {6, 12}:
+    if len(sys.argv) not in {7, 13}:
         print(
-            f"usage: {sys.argv[0]} <compiler> <oracle> <image-differential> <source-dir> <output-dir> "
+            f"usage: {sys.argv[0]} <compiler> <oracle> <image-differential> <boundary-probe> <source-dir> <output-dir> "
             "[--compiler-report <path> --oracle-report <path> --images-dir <path>]",
             file=sys.stderr,
         )
         return 2
-    if len(sys.argv) == 12:
-        compiler, oracle, image_tool, source_text, output_text = sys.argv[1:6]
-        if sys.argv[6:12:2] != ["--compiler-report", "--oracle-report", "--images-dir"]:
+    if len(sys.argv) == 13:
+        compiler, oracle, image_tool, boundary_probe, source_text, output_text = sys.argv[1:7]
+        if sys.argv[7:13:2] != ["--compiler-report", "--oracle-report", "--images-dir"]:
             print("invalid corpus report output options", file=sys.stderr)
             return 2
-        compiler_report_path = Path(sys.argv[7])
-        oracle_report_path = Path(sys.argv[9])
-        images_root = Path(sys.argv[11])
+        compiler_report_path = Path(sys.argv[8])
+        oracle_report_path = Path(sys.argv[10])
+        images_root = Path(sys.argv[12])
     else:
-        compiler, oracle, image_tool, source_text, output_text = sys.argv[1:6]
+        compiler, oracle, image_tool, boundary_probe, source_text, output_text = sys.argv[1:7]
         compiler_report_path = Path(output_text) / "compiler.json"
         oracle_report_path = Path(output_text) / "oracle.json"
         images_root = Path(output_text) / "images"
@@ -128,6 +135,16 @@ def main() -> int:
             require_clean_oracle(case_id, oracle_report)
             oracle_report["wall_clock_ms"] = oracle_ms
             oracle_reports.append({"id": case_id, "report": oracle_report})
+            if "required_boundary_cases" in case:
+                boundary_path = output / "boundary" / f"{case_id}.json"
+                boundary_path.parent.mkdir(exist_ok=True)
+                boundary_completed, boundary_ms = run(
+                    [boundary_probe, str(artifact), str(boundary_path)]
+                )
+                boundary_report = json.loads(boundary_completed.stdout)
+                require_boundary_modes(case_id, boundary_report, case["required_boundary_cases"])
+                boundary_report["wall_clock_ms"] = boundary_ms
+                accepted[-1]["boundary_probe"] = boundary_report
             image_dir = images_root / case_id
             image_completed, image_ms = run(
                 [image_tool, str(artifact), str(image_dir), "--width", "48", "--height", "48"]

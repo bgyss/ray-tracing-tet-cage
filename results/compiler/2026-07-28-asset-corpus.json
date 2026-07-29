@@ -3,7 +3,7 @@
     {
       "artifact_sha256": "e00b036e370f4a7613fd65a39f6a6044ed92635b99a9928bb054b0d340e161af",
       "boundary_coverage": [],
-      "compiler_ms": 5.149125005118549,
+      "compiler_ms": 8.93233300303109,
       "golden": "assets/golden/smooth_closed.tetcage",
       "id": "smooth_closed",
       "statistics": {
@@ -25,7 +25,7 @@
     {
       "artifact_sha256": "6204111f1e07df0f6ac7353b1a26a02f5c7964e8a9ccacfca186845f4bc50b82",
       "boundary_coverage": [],
-      "compiler_ms": 4.914165998343378,
+      "compiler_ms": 14.572541025700048,
       "golden": "assets/golden/sharp_material_uv_seam.tetcage",
       "id": "sharp_material_uv_seam",
       "statistics": {
@@ -45,14 +45,45 @@
       }
     },
     {
-      "artifact_sha256": "8dcc950099dd183e85a114662bcf242f74da3174a6444d7bff004b01b0ae90f9",
+      "artifact_sha256": "6a49a556c0a4c2af80d55ea0bae146248e2344c3e9b26993193b86894a1cf021",
       "boundary_coverage": [
         "cross_shared_face",
         "on_shared_face",
         "on_shared_edge",
         "at_shared_vertex"
       ],
-      "compiler_ms": 4.923250002320856,
+      "boundary_probe": {
+        "modes": {
+          "at_shared_vertex": {
+            "exact_ray_hit": true,
+            "exact_ray_primitive": 2,
+            "passed": true,
+            "qualifying_fragments": 1
+          },
+          "cross_shared_face": {
+            "exact_ray_hit": true,
+            "exact_ray_primitive": 0,
+            "passed": true,
+            "qualifying_fragments": 2
+          },
+          "on_shared_edge": {
+            "exact_ray_hit": true,
+            "exact_ray_primitive": 2,
+            "passed": true,
+            "qualifying_fragments": 1
+          },
+          "on_shared_face": {
+            "exact_ray_hit": true,
+            "exact_ray_primitive": 1,
+            "passed": true,
+            "qualifying_fragments": 1
+          }
+        },
+        "report_kind": "shared_boundary_probe",
+        "schema_version": 1,
+        "wall_clock_ms": 8.530749997589737
+      },
+      "compiler_ms": 4.890290991170332,
       "golden": "assets/golden/face_edge_vertex_sharing.tetcage",
       "id": "face_edge_vertex_sharing",
       "statistics": {
@@ -74,7 +105,7 @@
     {
       "artifact_sha256": "9268e24741c9366768aaea71328d9df925d014aaec959ed8beaeae962b8221e6",
       "boundary_coverage": [],
-      "compiler_ms": 5.343833996448666,
+      "compiler_ms": 6.199208000907674,
       "golden": "assets/golden/dense_animated_embedded_surface.tetcage",
       "id": "dense_animated_embedded_surface",
       "statistics": {
@@ -99,19 +130,19 @@
   "manifest_version": "wp0-corpus-v1",
   "rejected": [
     {
-      "compiler_ms": 4.427125008078292,
+      "compiler_ms": 4.540041001746431,
       "diagnostic": "degenerate_cage_tet: A cage tetrahedron is singular or too poorly conditioned.",
       "expected": "rejected:degenerate_cage_tet",
       "id": "near_degenerate"
     },
     {
-      "compiler_ms": 5.7945829757954925,
+      "compiler_ms": 5.678207991877571,
       "diagnostic": "duplicate_cage_tet: Two cage tetrahedra reference the same four stable vertices.",
       "expected": "rejected:duplicate_cage_tet",
       "id": "duplicate_topology"
     },
     {
-      "compiler_ms": 4.9016250122804195,
+      "compiler_ms": 4.747083003167063,
       "diagnostic": "/Users/briangyss/.codex/worktrees/334e/ray-tracing-tet-cage/tests/assets/invalid.cage: line 3: tet references an unknown stable vertex ID",
       "expected": "rejected:parse_error",
       "id": "malformed_cage"

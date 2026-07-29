@@ -53,6 +53,8 @@ if(TETCAGE_BUILD_TOOLS)
   target_link_libraries(tetcage_oracle_report PRIVATE tetcage_core)
   add_executable(tetcage_image_differential tools/image_differential/main.cpp)
   target_link_libraries(tetcage_image_differential PRIVATE tetcage_core)
+  add_executable(tetcage_boundary_probe tools/boundary_probe/main.cpp)
+  target_link_libraries(tetcage_boundary_probe PRIVATE tetcage_core)
   add_executable(tetcage_benchmark tools/benchmark/main.cpp)
   target_link_libraries(tetcage_benchmark PRIVATE tetcage_core)
   add_executable(tetcage_cage_quality tools/cage_quality/main.cpp)
@@ -146,6 +148,7 @@ if(TETCAGE_BUILD_TOOLS)
         "$<TARGET_FILE:tetcage_asset_compiler>"
         "$<TARGET_FILE:tetcage_oracle_report>"
         "$<TARGET_FILE:tetcage_image_differential>"
+        "$<TARGET_FILE:tetcage_boundary_probe>"
         "${CMAKE_CURRENT_SOURCE_DIR}"
         "${CMAKE_CURRENT_BINARY_DIR}/asset-corpus")
     set_tests_properties(tetcage.asset_corpus PROPERTIES
@@ -155,6 +158,20 @@ if(TETCAGE_BUILD_TOOLS)
         "${CMAKE_CURRENT_SOURCE_DIR}")
     set_tests_properties(tetcage.asset_corpus_manifest PROPERTIES
       PASS_REGULAR_EXPRESSION "\"cases\": 7")
+    add_test(NAME tetcage.shared_boundary_compiler
+      COMMAND tetcage_asset_compiler
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/corpus/shared-boundary.obj"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/corpus/topology-sharing.cage"
+        "${CMAKE_CURRENT_BINARY_DIR}/shared-boundary.tetcage")
+    set_tests_properties(tetcage.shared_boundary_compiler PROPERTIES
+      FIXTURES_SETUP shared_boundary)
+    add_test(NAME tetcage.shared_boundary_probe
+      COMMAND tetcage_boundary_probe
+        "${CMAKE_CURRENT_BINARY_DIR}/shared-boundary.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/shared-boundary.json")
+    set_tests_properties(tetcage.shared_boundary_probe PROPERTIES
+      FIXTURES_REQUIRED shared_boundary
+      PASS_REGULAR_EXPRESSION "\"at_shared_vertex\": {\"passed\": true")
     add_test(NAME tetcage.benchmark_cli
       COMMAND tetcage_benchmark
         "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
