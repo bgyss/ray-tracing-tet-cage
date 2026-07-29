@@ -407,6 +407,8 @@ std::string manifest_json(const RunMeasurements &run, const MetalFastPathOptions
          << "    \"same_work_comparator\": {\"rays\": " << run.rays
          << ", \"hardware_only_trace_ms\": " << run.traversal_ms
          << ", \"selection_oracle_ms\": " << run.fallback_decision_oracle_ms
+         << ", \"selection_oracle_scope\": "
+            "\"cpu_trace_boundary_test_hardware_comparison_and_path_choice\""
          << ", \"selected_fallback_ms\": " << run.fallback_ms
          << ", \"selected_fallback_cost_accounting\": "
             "\"subset_of_selection_oracle_ms_reused_without_retrace\""
@@ -1569,10 +1571,21 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     for (std::size_t index = 0; index < rays.size(); ++index) {
       const std::size_t corpus_index = static_cast<std::size_t>(frame) * rays.size() + index;
       const auto validation_begin = Clock::now();
-      const auto cpu_begin = Clock::now();
+      const auto selection_begin = Clock::now();
+      const auto cpu_begin = selection_begin;
       const auto cpu = trace_fast(asset, poses.front(), rays[index]);
       const auto cpu_end = Clock::now();
-      run.fallback_decision_oracle_ms += milliseconds(cpu_begin, cpu_end);
+      const bool boundary =
+          cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], cpu);
+      const GpuHit actual = frame_hardware_hits[index];
+      const auto comparison = compare_hardware_hit(cpu, actual, instance_info, rays[index]);
+      const MetalFinalPath final_path =
+          choose_metal_final_path(options.boundary_fallback, boundary, !comparison.kind.empty());
+      run.fallback_decision_oracle_ms += milliseconds(selection_begin, Clock::now());
+
+      if (boundary) {
+        ++run.boundary_sensitive_rays;
+      }
       const auto exact = trace_watertight4d(asset, exact_bvh, poses.front(), rays[index],
                                             ProjectionMode::bounded_simplex);
       std::optional<Vec4> expected_cage_bary;
@@ -1580,13 +1593,6 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
         expected_cage_bary = to_barycentric(posed_tet(asset, poses.front(), cpu.closest->tet_id),
                                             cpu.closest->position);
       }
-      const bool boundary =
-          cpu.closest && boundary_sensitive_ray(asset, poses.front(), rays[index], cpu);
-      if (boundary) {
-        ++run.boundary_sensitive_rays;
-      }
-      const GpuHit actual = frame_hardware_hits[index];
-      const auto comparison = compare_hardware_hit(cpu, actual, instance_info, rays[index]);
       run.cpu_validation_ms += milliseconds(validation_begin, Clock::now());
       if (!comparison.kind.empty()) {
         ++run.hardware_mismatches;
@@ -1630,8 +1636,6 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
                         classification, minimization_verified, cpu, exact, actual,
                         expected_cage_bary, comparison.kind);
       }
-      const MetalFinalPath final_path =
-          choose_metal_final_path(options.boundary_fallback, boundary, !comparison.kind.empty());
       if (final_path == MetalFinalPath::cpu_fallback) {
         --run.gpu_eligible_rays;
         ++run.cpu_fallback_rays;

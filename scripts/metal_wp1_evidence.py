@@ -174,7 +174,9 @@ def require_direct_run(
         if not isinstance(comparator.get(field), (int, float)) or comparator[field] < 0:
             errors.append(f"same-work comparator field {field} is unavailable")
     if (
-        comparator.get("selected_fallback_cost_accounting")
+        comparator.get("selection_oracle_scope")
+        != "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
+        or comparator.get("selected_fallback_cost_accounting")
         != "subset_of_selection_oracle_ms_reused_without_retrace"
         or comparator.get("end_to_end_formula")
         != "hardware_only_trace_ms + selection_oracle_ms + merge_ms"
@@ -293,6 +295,9 @@ def contract_smoke() -> None:
                 "rays": 1,
                 "hardware_only_trace_ms": 1.0,
                 "selection_oracle_ms": 1.0,
+                "selection_oracle_scope": (
+                    "cpu_trace_boundary_test_hardware_comparison_and_path_choice"
+                ),
                 "selected_fallback_ms": 0.0,
                 "selected_fallback_cost_accounting": (
                     "subset_of_selection_oracle_ms_reused_without_retrace"
