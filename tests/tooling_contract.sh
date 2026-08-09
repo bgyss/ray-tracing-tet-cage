@@ -35,7 +35,7 @@ require_text flake.nix 'packages'
 require_text flake.nix '/usr/bin/clang'
 require_text flake.nix 'TETCAGE_NIX_SHELL'
 
-for task in doctor configure build test check format format-check; do
+for task in doctor configure build test check format format-check integration-probe; do
   require_text mise.toml "\\[tasks\\.${task}\\]"
 done
 require_text mise.toml 'nix develop path:\.'

@@ -7,7 +7,7 @@
     "direct": 15,
     "synthetic": 6
   },
-  "file_count": 34,
+  "file_count": 36,
   "files": [
     {
       "documents": 1,
@@ -159,6 +159,22 @@
         "integration"
       ],
       "path": "integrations/2026-07-28-host-gates.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-08-cycles-setup.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-08-host-gates.json",
       "shared_records": 0
     },
     {

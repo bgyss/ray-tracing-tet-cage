@@ -122,6 +122,8 @@ if(TETCAGE_BUILD_TOOLS)
         "${CMAKE_CURRENT_BINARY_DIR}/asset-cache-reports")
     set_tests_properties(tetcage.asset_cache_smoke PROPERTIES
       PASS_REGULAR_EXPRESSION "\"byte_identical\":true")
+    add_test(NAME tetcage.integration_probe_contract
+      COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_probe_contract.sh")
     add_test(NAME tetcage.asset_inspector_cli
       COMMAND tetcage_inspect "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage")
     set_tests_properties(tetcage.asset_inspector_cli PROPERTIES

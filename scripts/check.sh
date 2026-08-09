@@ -23,7 +23,7 @@ export TETCAGE_PRESET
 
 bash tests/tooling_contract.sh
 bash scripts/format.sh --check
-shellcheck scripts/*.sh tests/tooling_contract.sh
+shellcheck scripts/*.sh tests/*.sh
 cmake --fresh --preset "${TETCAGE_PRESET}"
 cmake --build --preset "${TETCAGE_PRESET}"
 ctest --preset "${TETCAGE_PRESET}"
