@@ -25,17 +25,21 @@ reporting whether a clean Blender source checkout is available for UI and debug
 views.
 
 The pinned macOS setup is recorded separately in
-`results/integrations/2026-08-08-cycles-setup.json`. It proves a standalone
-Cycles CPU build and upstream test, plus a Blender developer/debug configure
-with the UI and Cycles enabled against Blender's precompiled arm64 dependency
-bundle, and a focused `bf_intern_cycles` library compile. Keeping this evidence
-separate prevents a later host probe from overwriting the build record.
+`results/integrations/2026-08-08-cycles-setup.json`. The current full-build and
+runtime evidence is in
+`results/integrations/2026-08-09-blender-ui-build.json`: it proves the complete
+`blender` target, an explicit app-bundle install (including `Resources/lib`),
+and an isolated Python/Cycles smoke in both the background and windowed launch
+paths. The Xcode 26 SDK emits availability diagnostics for Blender's pinned
+11.2 deployment target, so the developer cache explicitly downgrades
+`unguarded-availability-new` from an error; this is a build-environment
+compatibility setting, not a renderer/device claim.
 
 These are environment gates, not claims that the integrations are impossible.
 The standalone checkout does not close M12: device implementation remains
 deferred until M9 selects the retained representation, and OptiX needs a
-qualified NVIDIA host. The clean pinned Blender checkout and successful debug
-configure make Blender UI/debug-view scaffolding a candidate now; they do not
-select a retained device method or prove a renderer result. Importer, RDG,
+qualified NVIDIA host. The clean pinned Blender checkout and successful full
+executable/UI smoke make Blender UI/debug-view scaffolding executable now; they
+do not select a retained device method or prove a renderer result. Importer, RDG,
 shader-table, Cycles device, motion, and mixed-scene work still require their
 roadmap gates and measured proof.

@@ -43,15 +43,36 @@ source trees and their macOS arm64 dependency payloads are host integrations:
 
 ```sh
 XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
-jq . results/integrations/2026-08-08-cycles-verification.json
+jq . results/integrations/2026-08-09-cycles-verification.json
 ```
 
 `cycles-verify` is read-only. It checks the pinned source and dependency
 revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
-CTest/runtime result, the Blender developer/debug CMake cache profile, and the
-focused `bf_intern_cycles` library artifact. Use the environment variables in
-`scripts/cycles_verify.py` to point at another pinned host setup; a passing
-result still does not claim a full Blender build or renderer/device integration.
+CTest/runtime result, the Blender developer/debug CMake cache profile, the
+full installed Blender executable, and an isolated Python/Cycles UI smoke. Use
+the environment variables in `scripts/cycles_verify.py` to point at another
+pinned host setup; a passing result still does not claim a rendered tet-cage
+scene, MetalRT, OptiX, or device performance integration.
+
+CTest writes a `Testing/Temporary` log even for this one-test Cycles build. If
+the external build tree is read-only, the verifier records the permission
+boundary and runs the same generated `cycles_version` test metadata in a
+writable temporary mirror.
+
+The macOS app-bundle lane is built and installed with:
+
+```sh
+cmake --build /Users/briangyss/src/build_blender_tetcage_debug_make \
+  --target blender --parallel 8
+cmake --install /Users/briangyss/src/build_blender_tetcage_debug_make \
+  --config Debug --prefix /Users/briangyss/src/build_blender_tetcage_debug_make/bin
+```
+
+For an isolated windowed UI launch, point `BLENDER_USER_CONFIG` and
+`BLENDER_USER_SCRIPTS` at temporary directories and run the installed
+`Blender.app/Contents/MacOS/Blender` with `--factory-startup` and
+`scripts/blender_ui_smoke.py`. The smoke switches a fresh scene to the Cycles
+engine and verifies the Cycles/OSL build options without touching user files.
 
 ## Direct Nix workflow
 

@@ -6,9 +6,11 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import re
 import shlex
 import subprocess
 import sys
+import tempfile
 from typing import Any
 
 
@@ -20,7 +22,12 @@ DEFAULT_LFS_FILE_COUNT = 622
 
 
 class CommandResult:
-    def __init__(self, args: list[str], cwd: pathlib.Path | None) -> None:
+    def __init__(
+        self,
+        args: list[str],
+        cwd: pathlib.Path | None,
+        env: dict[str, str] | None = None,
+    ) -> None:
         self.args = args
         self.cwd = cwd
         try:
@@ -31,6 +38,7 @@ class CommandResult:
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=env,
             )
         except OSError as error:
             self.returncode = 127
@@ -50,8 +58,12 @@ class CommandResult:
         return self.stdout.strip() or self.stderr.strip()
 
 
-def run(args: list[str], cwd: pathlib.Path | None = None) -> CommandResult:
-    return CommandResult(args, cwd)
+def run(
+    args: list[str],
+    cwd: pathlib.Path | None = None,
+    env: dict[str, str] | None = None,
+) -> CommandResult:
+    return CommandResult(args, cwd, env)
 
 
 def env_path(name: str, default: str) -> pathlib.Path:
@@ -186,7 +198,18 @@ def check_cycles_tests(build_root: pathlib.Path, binary: pathlib.Path) -> tuple[
         return blocked, blocked
     ctest = run(["ctest", "--test-dir", str(build_root), "--output-on-failure"])
     if ctest.returncode != 0:
-        tests = record("failed", tail(ctest.output) or "Cycles CTest failed", command=ctest.command)
+        ctest_diagnostics = f"{ctest.stdout}\n{ctest.stderr}"
+        if "Operation not permitted" in ctest_diagnostics or "Cannot create log file" in ctest_diagnostics:
+            tests = check_cycles_tests_in_writable_mirror(build_root, ctest)
+        else:
+            tests = record(
+                "failed",
+                tail(ctest.output) or "Cycles CTest failed",
+                command=ctest.command,
+                returncode=ctest.returncode,
+                stdout=tail(ctest.stdout),
+                stderr=tail(ctest.stderr),
+            )
     else:
         tests = record("passed", tail(ctest.output) or "Cycles CTest passed", command=ctest.command)
     if not binary.is_file() or not os.access(binary, os.X_OK):
@@ -200,6 +223,64 @@ def check_cycles_tests(build_root: pathlib.Path, binary: pathlib.Path) -> tuple[
     else:
         runtime = record("passed", tail(runtime_result.stdout), command=runtime_result.command)
     return tests, runtime
+
+
+def check_cycles_tests_in_writable_mirror(
+    build_root: pathlib.Path, original: CommandResult
+) -> dict[str, Any]:
+    """Run the configured upstream CTest test without mutating an external build tree.
+
+    CTest always writes ``Testing/Temporary``.  The host verifier is often run
+    in a sandbox where the pinned checkout is readable but not writable, so
+    mirror the generated root/src/app test metadata into a temporary directory
+    and keep the actual test command (and executable) pinned to the original
+    build.  This preserves the upstream test definition while making the
+    verification lane read-only with respect to the source/build checkout.
+    """
+
+    app_testfile = build_root / "src/app/CTestTestfile.cmake"
+    try:
+        app_contents = app_testfile.read_text()
+    except OSError as error:
+        return record(
+            "failed",
+            f"CTest metadata mirror is unavailable: {error}",
+            command=original.command,
+            returncode=original.returncode,
+        )
+    if not re.search(r"add_test\(cycles_version\s+", app_contents):
+        return record(
+            "failed",
+            "CTest metadata mirror could not find the cycles_version test",
+            command=original.command,
+            returncode=original.returncode,
+        )
+
+    with tempfile.TemporaryDirectory(prefix="tetcage-cycles-ctest-") as raw:
+        mirror = pathlib.Path(raw)
+        (mirror / "src/app").mkdir(parents=True)
+        (mirror / "CTestTestfile.cmake").write_text('subdirs("src")\n')
+        (mirror / "src/CTestTestfile.cmake").write_text('subdirs("app")\n')
+        (mirror / "src/app/CTestTestfile.cmake").write_text(app_contents)
+        mirrored = run(["ctest", "--test-dir", str(mirror), "--output-on-failure"])
+        if mirrored.returncode != 0:
+            return record(
+                "failed",
+                tail(mirrored.output) or "Cycles CTest failed in writable metadata mirror",
+                command=mirrored.command,
+                returncode=mirrored.returncode,
+                original_returncode=original.returncode,
+            )
+        detail = "Cycles CTest passed in a writable metadata mirror; the original build tree was read-only"
+        normalized_output = mirrored.output.replace(str(mirror), "<writable metadata mirror>")
+        return record(
+            "passed",
+            f"{detail}\n{tail(normalized_output)}",
+            command="ctest --test-dir <writable metadata mirror> --output-on-failure",
+            fallback=True,
+            original_command=original.command,
+            original_returncode=original.returncode,
+        )
 
 
 def cmake_cache_values(cache_path: pathlib.Path) -> dict[str, str]:
@@ -221,8 +302,14 @@ def check_blender_debug_cache(build_root: pathlib.Path) -> dict[str, Any]:
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "CMAKE_CXX_FLAGS": "-Wno-error=unguarded-availability-new",
+        "CMAKE_C_FLAGS": "-Wno-error=unguarded-availability-new",
         "CMAKE_GENERATOR": "Unix Makefiles",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.2",
+        "WITH_BLENDER": "ON",
         "WITH_CYCLES": "ON",
+        "WITH_CYCLES_OSL": "ON",
         "WITH_CYCLES_DEVICE_METAL": "ON",
         "WITH_CYCLES_DEVICE_CUDA": "OFF",
         "WITH_CYCLES_DEVICE_OPTIX": "OFF",
@@ -235,6 +322,81 @@ def check_blender_debug_cache(build_root: pathlib.Path) -> dict[str, Any]:
     if mismatches:
         return record("failed", "Blender debug cache does not match the verification profile", mismatches=mismatches)
     return record("passed", "Blender developer/debug cache has UI/Cycles profile", profile=expected)
+
+
+def check_blender_runtime(binary: pathlib.Path, smoke_script: pathlib.Path) -> dict[str, Any]:
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        return record("blocked", f"Blender executable is missing or not executable: {binary}")
+    if not smoke_script.is_file():
+        return record("blocked", f"Blender smoke script is missing: {smoke_script}")
+
+    version = run([str(binary), "--version"])
+    if version.returncode != 0:
+        return record(
+            "failed",
+            version.output or "Blender executable did not start",
+            command=version.command,
+        )
+
+    with tempfile.TemporaryDirectory(prefix="tetcage-blender-verify-") as raw:
+        root = pathlib.Path(raw)
+        user_config = root / "config"
+        user_scripts = root / "scripts"
+        user_config.mkdir()
+        user_scripts.mkdir()
+        smoke_output = root / "smoke.json"
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "BLENDER_USER_CONFIG": str(user_config),
+                "BLENDER_USER_SCRIPTS": str(user_scripts),
+                "TETCAGE_BLENDER_SMOKE_OUTPUT": str(smoke_output),
+            }
+        )
+        smoke = run(
+            [
+                str(binary),
+                "--background",
+                "--factory-startup",
+                "--python",
+                str(smoke_script),
+                "--python-exit-code",
+                "7",
+            ],
+            env=environment,
+        )
+        if smoke.returncode != 0:
+            return record(
+                "failed",
+                tail(smoke.output) or "Blender background UI/Cycles smoke failed",
+                command=smoke.command,
+                version=tail(version.output, 1),
+            )
+        try:
+            payload = json.loads(smoke_output.read_text())
+        except (OSError, json.JSONDecodeError) as error:
+            return record(
+                "failed",
+                f"Blender smoke did not produce valid JSON: {error}",
+                command=smoke.command,
+                version=tail(version.output, 1),
+                output=tail(smoke.output),
+            )
+    if payload.get("status") != "passed":
+        return record(
+            "failed",
+            "Blender smoke reported a failed UI/Cycles profile",
+            command=smoke.command,
+            version=tail(version.output, 1),
+            smoke=payload,
+        )
+    return record(
+        "passed",
+        "Blender executable started and the isolated UI/Cycles Python smoke passed",
+        command=smoke.command,
+        version=tail(version.output, 1),
+        smoke=payload,
+    )
 
 
 def check_file(path: pathlib.Path, detail: str) -> dict[str, Any]:
@@ -258,6 +420,14 @@ def main() -> int:
     cycles_build = env_path("CYCLES_BUILD_DIR", str(cycles_root / "build-tetcage-cpu-clang"))
     cycles_binary = env_path("CYCLES_BINARY", str(cycles_build / "bin/cycles"))
     blender_build = env_path("BLENDER_BUILD_DIR", "/Users/briangyss/src/build_blender_tetcage_debug_make")
+    blender_binary = env_path(
+        "BLENDER_BINARY",
+        str(blender_build / "bin/Blender.app/Contents/MacOS/Blender"),
+    )
+    blender_smoke_script = env_path(
+        "BLENDER_SMOKE_SCRIPT",
+        str(pathlib.Path(__file__).resolve().with_name("blender_ui_smoke.py")),
+    )
     blender_cycles_library = env_path(
         "BLENDER_CYCLES_LIBRARY", str(blender_build / "lib/libbf_intern_cycles.a")
     )
@@ -287,6 +457,7 @@ def main() -> int:
     checks["blender_cycles_library"] = check_file(
         blender_cycles_library, "Blender Cycles integration library"
     )
+    checks["blender_runtime"] = check_blender_runtime(blender_binary, blender_smoke_script)
 
     statuses = {check["status"] for check in checks.values()}
     if statuses == {"passed"}:
@@ -308,6 +479,7 @@ def main() -> int:
             "blender": str(blender_root),
             "cycles_build": str(cycles_build),
             "blender_build": str(blender_build),
+            "blender_binary": str(blender_binary),
         },
         "toolchain": {
             "git": tool_version(["git", "--version"]),
@@ -317,7 +489,7 @@ def main() -> int:
             "python": tool_version(["python3", "--version"]),
         },
         "checks": checks,
-        "claim_boundary": "A passed result proves the pinned source/dependency trees, hydrated LFS payloads, standalone Cycles CPU test/runtime, Blender developer/debug cache profile, and the focused bf_intern_cycles library artifact. It does not prove a full Blender build or renderer/device integration.",
+        "claim_boundary": "A passed result proves the pinned source/dependency trees, hydrated LFS payloads, standalone Cycles CPU test/runtime, a full Blender developer/debug executable with installed resources, and an isolated Blender Python/UI/Cycles smoke. It does not prove a rendered tet-cage scene, MetalRT, OptiX, or device performance integration.",
     }
     encoded = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     output_path = os.environ.get("CYCLES_VERIFY_OUTPUT")

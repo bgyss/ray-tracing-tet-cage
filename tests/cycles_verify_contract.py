@@ -129,8 +129,14 @@ def main() -> None:
             "CMAKE_BUILD_TYPE:STRING=Debug\n"
             "CMAKE_C_COMPILER:FILEPATH=/usr/bin/clang\n"
             "CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/clang++\n"
+            "CMAKE_CXX_FLAGS:STRING=-Wno-error=unguarded-availability-new\n"
+            "CMAKE_C_FLAGS:STRING=-Wno-error=unguarded-availability-new\n"
             "CMAKE_GENERATOR:INTERNAL=Unix Makefiles\n"
+            "CMAKE_OSX_ARCHITECTURES:STRING=arm64\n"
+            "CMAKE_OSX_DEPLOYMENT_TARGET:STRING=11.2\n"
+            "WITH_BLENDER:BOOL=ON\n"
             "WITH_CYCLES:BOOL=ON\n"
+            "WITH_CYCLES_OSL:BOOL=ON\n"
             "WITH_CYCLES_DEVICE_METAL:BOOL=ON\n"
             "WITH_CYCLES_DEVICE_CUDA:UNINITIALIZED=OFF\n"
             "WITH_CYCLES_DEVICE_OPTIX:UNINITIALIZED=OFF\n"
@@ -138,6 +144,28 @@ def main() -> None:
         blender_cycles_library = blender_build / "lib" / "libbf_intern_cycles.a"
         blender_cycles_library.parent.mkdir()
         blender_cycles_library.write_bytes(b"fixture Cycles library")
+        blender_binary = blender_build / "bin" / "Blender.app" / "Contents" / "MacOS" / "Blender"
+        blender_binary.parent.mkdir(parents=True)
+        blender_binary.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json\n"
+            "import os\n"
+            "import pathlib\n"
+            "import sys\n"
+            "if '--version' in sys.argv:\n"
+            "    print('Blender 5.3 Fixture')\n"
+            "elif '--python' in sys.argv:\n"
+            "    payload = {'schema_version': 1, 'kind': 'blender_ui_smoke',\n"
+            "               'status': 'passed', 'passed': True,\n"
+            "               'blender_version': '5.3 Fixture', 'background': True,\n"
+            "               'window_context': True,\n"
+            "               'build_options': {'cycles': True, 'cycles_osl': True},\n"
+            "               'render_engine': 'CYCLES', 'cycles_device': 'CPU',\n"
+            "               'missing_options': []}\n"
+            "    pathlib.Path(os.environ['TETCAGE_BLENDER_SMOKE_OUTPUT']).write_text(json.dumps(payload))\n"
+            "    print('TETCAGE_BLENDER_SMOKE_OK ' + json.dumps(payload))\n"
+        )
+        blender_binary.chmod(0o755)
 
         environment = os.environ.copy()
         environment.update(

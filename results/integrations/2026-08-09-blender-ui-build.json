@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "kind": "blender_ui_build_verification",
+  "status": "passed",
+  "host": {
+    "os": "macOS 27.0 (26A5378n)",
+    "architecture": "arm64",
+    "xcode": "26.6 (17F113)",
+    "apple_clang": "21.0.0.21000101",
+    "macos_sdk": "MacOSX26.5.sdk"
+  },
+  "sources": {
+    "cycles": {
+      "root": "/Users/briangyss/src/cycles",
+      "revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d"
+    },
+    "blender": {
+      "root": "/Users/briangyss/src/blender",
+      "revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "dependency_revision": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+      "working_tree": "clean"
+    }
+  },
+  "build": {
+    "directory": "/Users/briangyss/src/build_blender_tetcage_debug_make",
+    "generator": "Unix Makefiles",
+    "configuration": "Debug",
+    "target": "blender",
+    "command": "cmake --build /Users/briangyss/src/build_blender_tetcage_debug_make --target blender --parallel 8",
+    "result": "passed",
+    "cache_profile": {
+      "WITH_BLENDER": true,
+      "WITH_CYCLES": true,
+      "WITH_CYCLES_OSL": true,
+      "WITH_CYCLES_DEVICE_METAL": true,
+      "WITH_CYCLES_DEVICE_CUDA": false,
+      "WITH_CYCLES_DEVICE_OPTIX": false,
+      "CMAKE_OSX_ARCHITECTURES": "arm64",
+      "CMAKE_OSX_DEPLOYMENT_TARGET": "11.2",
+      "CMAKE_C_FLAGS": "-Wno-error=unguarded-availability-new",
+      "CMAKE_CXX_FLAGS": "-Wno-error=unguarded-availability-new"
+    },
+    "availability_workaround": "Xcode 26 SDK availability diagnostics are downgraded for the pinned Blender 11.2 deployment target; the source checkout is unchanged.",
+    "executable": "/Users/briangyss/src/build_blender_tetcage_debug_make/bin/Blender.app/Contents/MacOS/Blender",
+    "version": "Blender 5.3.0 Alpha",
+    "cycles_library": "/Users/briangyss/src/build_blender_tetcage_debug_make/lib/libbf_intern_cycles.a"
+  },
+  "install": {
+    "command": "cmake --install /Users/briangyss/src/build_blender_tetcage_debug_make --config Debug --prefix /Users/briangyss/src/build_blender_tetcage_debug_make/bin",
+    "result": "passed",
+    "resources": {
+      "scripts": true,
+      "datafiles": true,
+      "libraries": true,
+      "osl": true
+    }
+  },
+  "runtime": {
+    "background_smoke": {
+      "command": "/Users/briangyss/src/build_blender_tetcage_debug_make/bin/Blender.app/Contents/MacOS/Blender --background --factory-startup --python scripts/blender_ui_smoke.py --python-exit-code 7",
+      "result": "passed",
+      "blender_version": "5.3.0 Alpha",
+      "background": true,
+      "window_context": true,
+      "build_options": {
+        "cycles": true,
+        "cycles_osl": true
+      },
+      "render_engine": "CYCLES",
+      "cycles_device": "CPU"
+    },
+    "windowed_launch": {
+      "command": "/Users/briangyss/src/build_blender_tetcage_debug_make/bin/Blender.app/Contents/MacOS/Blender --factory-startup --python scripts/blender_ui_smoke.py",
+      "result": "passed",
+      "observed": "The process remained alive for a bounded 10-second launch, emitted the checked-in smoke marker with background=false, window=true, and engine=CYCLES, and was then stopped explicitly.",
+      "isolated_user_data": true
+    }
+  },
+  "claim_boundary": "This proves a complete pinned Blender developer/debug build, installed macOS app resources, and executable background/windowed Python/Cycles startup. It does not prove a rendered tet-cage scene, MetalRT, OptiX, or device performance integration."
+}
