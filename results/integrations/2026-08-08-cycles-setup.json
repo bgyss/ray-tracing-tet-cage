@@ -51,6 +51,12 @@
       "metal_found": true,
       "result": "passed"
     },
+    "debug_compile": {
+      "target": "bf_intern_cycles",
+      "library": "/Users/briangyss/src/build_blender_tetcage_debug_make/lib/libbf_intern_cycles.a",
+      "command": "cmake --build /Users/briangyss/src/build_blender_tetcage_debug_make --target bf_intern_cycles --parallel 8",
+      "result": "passed"
+    },
     "ui_debug_status": "candidate"
   },
   "device_integration": {
@@ -58,5 +64,5 @@
     "optix": "blocked_qualified_nvidia_host_and_m9",
     "representation_boundary": "docs/cycles-representation-boundary.md"
   },
-  "claim_boundary": "This proves pinned macOS dependency hydration, a standalone Cycles CPU build and upstream test, and a Blender developer/debug UI configure. It does not prove a full Blender build, renderer integration, MetalRT, OptiX, or device performance."
+  "claim_boundary": "This proves pinned macOS dependency hydration, a standalone Cycles CPU build and upstream test, a Blender developer/debug UI configure, and the focused bf_intern_cycles library compile. It does not prove a full Blender build, renderer integration, MetalRT, OptiX, or device performance."
 }

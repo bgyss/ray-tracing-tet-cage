@@ -49,6 +49,10 @@ run = "nix develop path:. --command bash -lc 'mkdir -p results && bash scripts/r
 description = "Record installed Unreal, standalone Cycles, and Blender integration prerequisites"
 run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && bash scripts/integration_probe.sh > results/integrations/2026-08-08-host-gates.json'"
 
+[tasks.cycles-verify]
+description = "Verify pinned Cycles/Blender sources, LFS hydration, CPU tests, and Blender debug cache"
+run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && CYCLES_VERIFY_OUTPUT=results/integrations/2026-08-08-cycles-verification.json python3 scripts/cycles_verify.py'"
+
 [tasks.interop-probe]
 description = "Record Vulkan/CUDA interop prerequisites without claiming a benchmark"
 run = "nix develop path:. --command bash -lc 'mkdir -p results/capabilities && bash scripts/interop_probe.sh > results/capabilities/2026-07-28-cuda-vulkan-interop.json'"

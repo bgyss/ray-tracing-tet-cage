@@ -2,7 +2,7 @@
 
 ## Current host snapshot
 
-Checked on 2026-07-27:
+Checked on 2026-08-08:
 
 | Surface | Direct observation | Classification |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Checked on 2026-07-27:
 | NVIDIA GPU/CUDA | no `nvidia-smi` or `nvcc`; no Vulkan device probe possible | unavailable |
 | CUDA/Vulkan interop | `results/capabilities/2026-07-28-cuda-vulkan-interop.json` records no Vulkan/CUDA/NVIDIA tools | blocked; remove from production path until matched-device end-to-end evidence |
 | Unreal Engine | no installation or source checkout found | unavailable |
-| Blender | Blender 5.2.0 LTS binary installed | importer testing possible; Cycles source integration unavailable |
+| Blender/Cycles | Blender 5.2.0 LTS plus clean pinned Blender/Cycles source trees, hydrated arm64 dependencies, a passing developer/debug configure, and a focused `bf_intern_cycles` compile | UI/debug scaffolding and standalone CPU verification available; renderer/device integration remains unproven |
 | RenderMan | RenderManProServer 26.2 headers and runtime installed | conditional for a 26.2 public-API study; not proof for the roadmap's later version |
 
 The Metal probe needs direct driver access. A filesystem-sandboxed execution can

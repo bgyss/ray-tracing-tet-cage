@@ -7,7 +7,7 @@
     "direct": 15,
     "synthetic": 6
   },
-  "file_count": 36,
+  "file_count": 37,
   "files": [
     {
       "documents": 1,
@@ -167,6 +167,14 @@
         "integration"
       ],
       "path": "integrations/2026-08-08-cycles-setup.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-08-cycles-verification.json",
       "shared_records": 0
     },
     {

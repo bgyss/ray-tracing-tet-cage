@@ -68,7 +68,7 @@ asset, or an end-to-end renderer integration.
 | M9 — scale, crossover, and method selection | Cross-platform, representative-asset crossover and optimization study | Synthetic Metal and portable selector evidence exists | M5, M6, M8, and content |
 | M10 — cage authoring | Representative clips, visual quality, stable LOD transitions, and practical authoring workflow | Procedural clip, fitting, refinement, and parent-mapped LODs exist | Content and integration |
 | M11 — Unreal Engine 5 | Pinned UE5 source integration on the target renderer/hardware | Only an unrelated Unreal 4.19.2 tree was discovered | Source access, Windows/NVIDIA host, M9 |
-| M12 — Cycles | Pinned Cycles source integration for MetalRT and OptiX while retaining existing devices | Blender binary exists; no pinned source tree | Source access, M9, and NVIDIA for OptiX |
+| M12 — Cycles | Pinned Cycles source integration for MetalRT and OptiX while retaining existing devices | Pinned standalone Cycles/Blender sources, hydrated macOS dependencies, CPU/CTest proof, and focused Blender Cycles-library compile | M9 retained-method selection, device implementation, and NVIDIA/OptiX evidence |
 | M13 — RenderMan | Licensed feasibility result and explicit go/no-go | Public 26.2 headers expose Riley prototype/instance APIs but no proven custom-AS/intersection path | License or vendor API |
 | M14 — production hardening | Supported backends and integrations pass conformance, CI, packaging, legal, samples, and documentation gates | Portable CI, fuzzing, deterministic reports, v1 golden/migration, cache smoke, and safety outcomes exist | All retained paths plus release work |
 
@@ -560,7 +560,7 @@ preferable to a visually plausible but untraceable result.
 
 - **Roadmap coverage:** M12
 - **Can start now:** Source setup can start; device integration should follow M9
-- **Primary blocker:** Pinned source tree and NVIDIA host for OptiX
+- **Primary blocker:** M9 retained-method selection and NVIDIA host for OptiX
 
 ### Access and setup
 
@@ -578,8 +578,10 @@ BLENDER_SOURCE_ROOT=/absolute/path/to/pinned/blender \
 ### Work
 
 1. Record the exact Blender/Cycles commit, dependency revision, compiler, SDK,
-   and device versions.
-2. Build and run the upstream CPU tests before adding an adapter.
+   and device versions; keep the read-only `cycles-verify` result alongside the
+   setup record.
+2. Build and run the upstream CPU tests before adding an adapter; the pinned
+   macOS CPU build and one-test CTest lane are now proven.
 3. Add a narrow internal representation boundary between tet-cage assets and
    Cycles device backends.
 4. Implement and validate the MetalRT path first on the qualified Apple host.

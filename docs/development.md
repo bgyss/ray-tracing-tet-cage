@@ -31,12 +31,27 @@ MISE_DISABLE_VERSION_CHECK=1 mise run report
 ```
 
 Other tasks are `format`, `format-check`, `nix-check`, `report`,
-`renderman-probe`, and `integration-probe`. `check` is the
+`renderman-probe`, `integration-probe`, and `cycles-verify`. `check` is the
 normal local gate: it validates formatting and shell scripts, builds with the
 `nix` CMake preset, runs CTest, and checks the working diff. `nix-check` also
 builds the Metal-disabled portable package in a pure Nix derivation.
 `report` regenerates deterministic JSON/Markdown summaries from `results/` and
 retains partial or synthetic evidence labels.
+
+The pinned external Cycles/Blender lane is verified separately because those
+source trees and their macOS arm64 dependency payloads are host integrations:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
+jq . results/integrations/2026-08-08-cycles-verification.json
+```
+
+`cycles-verify` is read-only. It checks the pinned source and dependency
+revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
+CTest/runtime result, the Blender developer/debug CMake cache profile, and the
+focused `bf_intern_cycles` library artifact. Use the environment variables in
+`scripts/cycles_verify.py` to point at another pinned host setup; a passing
+result still does not claim a full Blender build or renderer/device integration.
 
 ## Direct Nix workflow
 

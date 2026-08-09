@@ -9,6 +9,13 @@ XDG_CACHE_HOME="$PWD/.cache" mise run integration-probe
 jq . results/integrations/2026-08-08-host-gates.json
 ```
 
+Verify the prepared source/build environment with:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
+jq . results/integrations/2026-08-08-cycles-verification.json
+```
+
 The probe records what is actually installed and refuses to reinterpret an
 older engine as the requested target. On this host it finds an Unreal
 `4.19.2-release` checkout, which is useful for historical RHI inspection but
@@ -21,8 +28,8 @@ The pinned macOS setup is recorded separately in
 `results/integrations/2026-08-08-cycles-setup.json`. It proves a standalone
 Cycles CPU build and upstream test, plus a Blender developer/debug configure
 with the UI and Cycles enabled against Blender's precompiled arm64 dependency
-bundle. Keeping this evidence separate prevents a later host probe from
-overwriting the build record.
+bundle, and a focused `bf_intern_cycles` library compile. Keeping this evidence
+separate prevents a later host probe from overwriting the build record.
 
 These are environment gates, not claims that the integrations are impossible.
 The standalone checkout does not close M12: device implementation remains

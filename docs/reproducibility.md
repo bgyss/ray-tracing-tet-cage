@@ -50,7 +50,8 @@ promoted by that job.
 | Representation selection policy | `results/selection/2026-07-28-two-tet-policy.json` | deterministic fallback evaluation from measured inputs; not performance evidence |
 | Robust tolerance policy | `results/robustness/2026-07-28-tolerance-policy.json` | scale/edge/conditioning-aware portable policy; no GPU watertightness claim |
 | Runtime safety policy | `results/runtime/2026-07-28-safe-frame-policy.json` | portable allocation/cancellation/reset/device-loss/unsupported fallback contract |
-| Unreal/Cycles gates | `results/integrations/2026-07-28-host-gates.json` | blocked host inspection |
+| Unreal/Cycles host gates | `results/integrations/2026-08-08-host-gates.json` | live host inspection; UE remains blocked and Cycles/Blender are candidates |
+| Cycles/Blender setup | `results/integrations/2026-08-08-cycles-setup.json` and `results/integrations/2026-08-08-cycles-verification.json` | pinned macOS setup plus read-only verification |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 
 ## Explicitly unproven
@@ -59,7 +60,7 @@ The repository does not claim completion of M5, M6, M7, M8, M9, M10, M11, M12,
 or M14. The new clip evaluator advances M10 authoring diagnostics but does not
 close its representative-production-clip or LOD gates. Closing the remaining
 milestones requires the real NVIDIA/Vulkan environment, representative
-animation clips, pinned UE5 and Cycles source trees, a licensed RenderMan
+animation clips, pinned UE5 source, a licensed RenderMan
 runtime, or additional production hardening beyond the portable parser gate. A
 green portable build is not substituted for any of those requirements.
 The v1 identity round-trip is a compatibility harness, not historical-version

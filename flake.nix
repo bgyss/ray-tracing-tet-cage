@@ -39,6 +39,7 @@
         pkgs: with pkgs; [
           clang-tools
           cmake
+          git-lfs
           glslang
           jq
           ninja
