@@ -358,6 +358,14 @@
         "sum_abs_difference": 31.679999761283398,
         "result": "open_motion_shading_precision"
       },
+      "transparent_mix": {
+        "transparent_mix": 0.0,
+        "native_sha256": "af6cb8f6efb2b0771947a279b307f9285f9165c446bb93bbada0d7fdba5854b1",
+        "fallback_sha256": "ceddcdef3dc33990941fd77409f822cf720485670f85c8e287af302cc14c033e",
+        "pixel_differences": 0,
+        "result": "passed",
+        "diagnostic": "Fully transparent material matches; the residual is tied to emission/transparent closure interaction in the motion path."
+      },
       "claim_boundary": "The motion shadow-all callback runs, but animated transparent/emission traversal is not yet equivalent to ordinary Cycles; the residual persists with the transparent mix set to emission-only."
     },
     "native_local_ao_render": {
