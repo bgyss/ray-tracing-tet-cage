@@ -47,7 +47,8 @@ traversal, and the zero-hit local-ray path now have native Blender differentials
 normal/position handoff and point/sun lighting controls match, while area-light
 sampling remains an explicit parity gate. SSS is numerically close under point
 and sun controls but diverges under area sampling; the closed-tet volume probe
-is numerically close but not exact. An isolated
+is float-noise-only under point and sun controls and diverges only under area
+sampling. An isolated
 Blender branch (`6f188797d690`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds

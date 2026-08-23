@@ -323,7 +323,21 @@
       "pixel_differences": 35,
       "max_abs_rgb_difference": 0.022648286074399948,
       "sum_abs_rgb_difference": 0.02848556899698451,
-      "result": "measured_with_numeric_difference",
+      "light_controls": {
+        "point": {
+          "pixel_differences": 2,
+          "max_abs_rgb_difference": 1.8440186977386475e-07,
+          "sum_abs_rgb_difference": 1.7144775483757257e-06,
+          "result": "float_noise"
+        },
+        "sun": {
+          "pixel_differences": 2,
+          "max_abs_rgb_difference": 2.682209014892578e-07,
+          "sum_abs_rgb_difference": 1.6696285456418991e-06,
+          "result": "float_noise"
+        }
+      },
+      "result": "measured_with_area_light_difference; point_and_sun_float_noise_only",
       "claim_boundary": "Volume entry/exit query runs and remains numerically close to the ordinary Cycles path, but is not yet exact; volume precision and multi-object stack semantics remain open."
     },
     "native_shading_diagnostics": {
