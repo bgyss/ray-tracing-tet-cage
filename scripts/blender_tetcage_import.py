@@ -1,8 +1,10 @@
 """Blender-side import and debug visualization for a compiled tet-cage asset.
 
 The importer deliberately creates ordinary triangle geometry and a wireframe
-cage.  This is the safe Blender fallback while the procedural Cycles primitive
-is still being integrated; it does not pretend to activate tet-cage MetalRT.
+cage. It also records the versioned native Cycles contract as an explicit
+candidate on the mesh/object/scene, so a future Blender sync can promote the
+same immutable topology without changing the fallback. This script does not
+activate tet-cage MetalRT by itself.
 """
 
 from __future__ import annotations
@@ -74,6 +76,8 @@ def _surface_objects(
         mesh = bpy.data.meshes.new(f"TetCage_Tet_{tet_id:04d}")
         mesh.from_pydata(vertices, [], faces)
         mesh.update()
+        mesh["tetcage_native_candidate"] = True
+        mesh["tetcage_native_contract"] = "cycles_tetcage_v1"
         primitive_attribute = mesh.attributes.new("tetcage_source_primitive", "INT", "FACE")
         owner_attribute = mesh.attributes.new("tetcage_owner_tet", "INT", "FACE")
         material_attribute = mesh.attributes.new("tetcage_material", "INT", "FACE")
@@ -87,6 +91,8 @@ def _surface_objects(
         obj.matrix_world = _tet_matrix(asset, pose, tet_id)
         obj["tetcage_fallback_mode"] = "conventional_mesh"
         obj["tetcage_render_mode"] = "per_tet_triangle_instances"
+        obj["tetcage_native_candidate"] = True
+        obj["tetcage_native_contract"] = "cycles_tetcage_v1"
         obj["tetcage_tet_id"] = tet_id
         obj["tetcage_generated_triangles"] = len(faces)
         obj["tetcage_source_triangles"] = len(asset["source_triangles"])
@@ -201,6 +207,8 @@ def import_asset(
     for surface in surfaces:
         surface["tetcage_asset_path"] = asset_path
     scene["tetcage_fallback_mode"] = "conventional_mesh"
+    scene["tetcage_native_candidate"] = True
+    scene["tetcage_native_contract"] = "cycles_tetcage_v1"
     scene["tetcage_asset_format_version"] = asset["format_version"]
     scene["tetcage_source_triangles"] = len(asset["source_triangles"])
     scene["tetcage_generated_triangles"] = len(asset["micro_triangles"])
@@ -218,6 +226,8 @@ def import_asset(
         "tet_objects": len(surfaces),
         "render_mode": "per_tet_triangle_instances",
         "procedural_metalrt": False,
+        "native_candidate": True,
+        "native_contract": "cycles_tetcage_v1",
         "pose_update_handler": True,
     }
     register_handlers()

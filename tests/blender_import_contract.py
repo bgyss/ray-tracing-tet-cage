@@ -43,24 +43,6 @@ def main() -> int:
             stdout=subprocess.PIPE,
             text=True,
         )
-        expression = (
-            "import sys; "
-            f"sys.path.insert(0, {str(REPO_ROOT / 'scripts')!r}); "
-            "from blender_tetcage_import import import_asset, update_surface_from_cage; "
-            f"payload=import_asset({str(asset)!r}, {str(output)!r}, {str(blend)!r}); "
-            "import bpy, json; "
-            "cage=bpy.data.objects['TetCage_Debug_Cage']; "
-            "surface=bpy.data.objects['TetCage_Tet_0000']; "
-            "before=tuple(surface.matrix_world.translation); "
-            "cage.data.vertices[0].co.x += 0.1; "
-            "assert update_surface_from_cage(cage); "
-            "after=tuple(surface.matrix_world.translation); "
-            f"payload['pose_updated'] = before != after; bpy.ops.wm.save_as_mainfile(filepath={str(blend)!r}); "
-            "cage.data.vertices[1].co.x = -1.0; "
-            "payload['invalid_pose_rejected'] = not update_surface_from_cage(cage); "
-            "payload['invalid_pose_reason'] = cage.get('tetcage_fallback_reason'); "
-            f"pathlib=__import__('pathlib'); pathlib.Path({str(output)!r}).write_text(json.dumps(payload))"
-        )
         environment = os.environ.copy()
         environment.update(
             {
@@ -73,10 +55,14 @@ def main() -> int:
                 str(blender),
                 "--background",
                 "--factory-startup",
-                "--python-expr",
-                expression,
                 "--python-exit-code",
                 "7",
+                "--python",
+                str(REPO_ROOT / "scripts/blender_import_contract_probe.py"),
+                "--",
+                str(asset),
+                str(output),
+                str(blend),
             ],
             check=False,
             env=environment,
