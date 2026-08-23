@@ -18,6 +18,11 @@ unmodified pinned Cycles MetalRT backend on the Apple M1 Max and the project's
 standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
+The isolated Cycles branch also contains a scene-side transport contract at
+revision `1059d3e590045c008cb69e8e82c2b97554278c77`. It compiles into the
+standalone scene library, but it is intentionally not a `Geometry` subclass and
+does not yet reach Cycles BVH or device code.
+
 The same manifest includes an ordinary Cycles glass/caustics comparison. That
 closes only the upstream MetalRT non-opaque baseline; the tet-cage path still
 needs its own shadow, transparent, local-intersection, and mixed-scene tests.

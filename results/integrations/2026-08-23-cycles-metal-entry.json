@@ -29,6 +29,21 @@
     "command": "cmake --build $CYCLES_BUILD_DIR --target cycles --parallel 8",
     "result": "passed"
   },
+  "cycles_native_scene_contract": {
+    "worktree": "$CYCLES_NATIVE_WORKTREE",
+    "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+    "implementation_revision": "1059d3e590045c008cb69e8e82c2b97554278c77",
+    "dependency_revision": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+    "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
+    "result": "passed",
+    "contract": [
+      "immutable provenance-bearing micro-triangles",
+      "complete per-tetrahedron affine frame snapshots",
+      "explicit NONE/REQUESTED/ACTIVE fallback state"
+    ],
+    "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
+    "claim_boundary": "This proves the native Cycles scene library compiles with the tet-cage transport contract. It does not add a Geometry subclass, BVH builder, kernel primitive, Metal intersection function, or Blender importer."
+  },
   "device": {
     "command": "$CYCLES_BINARY --list-devices",
     "result": "passed",

@@ -34,10 +34,14 @@ verified in
   affine transforms from cage edits, rejects invalid poses, survives save/reload,
   and renders with CPU disabled on Metal.
 
-The native procedural primitive is still open: the isolated exploratory Cycles
-worktree is prepared, but no `TetCageGeometry` has yet been added to Cycles'
-scene/geometry pipeline, and tet-specific shadow-all, local, transparent,
-volume, and mixed-scene semantics remain unproven. The evidence manifest keeps
+The native procedural primitive is still open. An isolated exploratory Cycles
+branch now contains and builds a bounded scene-side `TetCageGeometry` transport
+contract (`$CYCLES_NATIVE_WORKTREE`, revision
+`1059d3e590045c008cb69e8e82c2b97554278c77`): immutable provenance-bearing
+micro-triangles, complete per-tet affine frame snapshots, and explicit fallback
+state. It is not a `Geometry` subclass and is not consumed by a BVH, kernel, or
+Metal backend yet. Tet-specific shadow-all, local, transparent, volume, and
+mixed-scene semantics therefore remain unproven. The evidence manifest keeps
 these claims separate rather than promoting the fallback path to native Cycles
 support.
 
