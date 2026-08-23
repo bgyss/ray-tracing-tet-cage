@@ -4,6 +4,20 @@ This is the narrow boundary for the pinned standalone Cycles revision
 `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a`. It is a design map, not a device
 patch: M9 must select the retained method before MetalRT or OptiX code changes.
 
+The repository-side bridge contract is declared in
+`include/tetcage/cycles_bridge.h`. It turns a compiled asset plus a posed cage
+into deterministic per-tet transforms, conservative bounds, and a stable
+micro-triangle index stream. Its hit-normalization function maps a Metal-style
+`instance/tet/primitive/u/v` result back to the source primitive and Cycles'
+ordinary triangle `u/v` coordinates; invalid topology or poses select the
+conventional-mesh fallback.
+
+The first live entry proof is recorded in
+`results/integrations/2026-08-23-cycles-metal-entry.json`. It proves the
+unmodified pinned Cycles MetalRT backend on the Apple M1 Max and the project's
+standalone procedural AABB path using this contract. It does not yet claim
+that Cycles itself loads `.tetcage` assets.
+
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |
 | Immutable payload | compiled clipped micro-triangles, source primitive ID, source triangle barycentrics, material/shader ID | one immutable geometry/BLAS payload per compatible source mesh |

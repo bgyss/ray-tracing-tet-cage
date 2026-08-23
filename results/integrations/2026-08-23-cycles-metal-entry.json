@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "cycles_metal_entry",
+  "status": "passed",
+  "sources": {
+    "cycles": {
+      "root": "$CYCLES_SOURCE_ROOT",
+      "revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "working_tree": "clean"
+    },
+    "blender": {
+      "root": "$BLENDER_SOURCE_ROOT",
+      "revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "working_tree": "clean"
+    }
+  },
+  "toolchain": {
+    "xcode": "26.6 (17F113)",
+    "macos_sdk": "26.5",
+    "metal_compiler": "Apple metal version 32023.883 (metalfe-32023.883)",
+    "architecture": "arm64"
+  },
+  "build": {
+    "directory": "$CYCLES_BUILD_DIR",
+    "configuration": "Debug",
+    "with_cycles_device_metal": true,
+    "with_cycles_device_cuda": false,
+    "with_cycles_device_optix": false,
+    "command": "cmake --build $CYCLES_BUILD_DIR --target cycles --parallel 8",
+    "result": "passed"
+  },
+  "device": {
+    "command": "$CYCLES_BINARY --list-devices",
+    "result": "passed",
+    "devices": [
+      "CPU Apple M1 Max",
+      "METAL Apple M1 Max (GPU - 32 cores)"
+    ]
+  },
+  "ordinary_scene_metalrt": {
+    "scene": "scene_cube_surface.xml",
+    "resolution": "16x16",
+    "samples": 1,
+    "kernel_source": "$CYCLES_SOURCE_ROOT/src",
+    "off": {
+      "environment": "CYCLES_METALRT=0",
+      "result": "passed",
+      "acceleration_layout": "BVH2",
+      "image_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311"
+    },
+    "on": {
+      "environment": "CYCLES_METALRT=1",
+      "result": "passed",
+      "acceleration_layout": "mesh BLAS plus TLAS",
+      "image_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311"
+    },
+    "images_byte_identical": true
+  },
+  "tet_cage_procedural_path": {
+    "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 1 --rays 64 --motion 0.0 --compact",
+    "result": "passed",
+    "device": "Apple M1 Max",
+    "traversal_mode": "procedural_aabb_expansion3_projected_edges",
+    "rays": 64,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "position_error_max": 2.8760993586729455e-11,
+    "normal_error_max": 0.0,
+    "attribute_error_max": 5.0716770116920884e-08,
+    "runtime_shader_compiled": true,
+    "gpu_attribute_reconstruction": true,
+    "claim_boundary": "This is direct Metal proof for the project's standalone procedural AABB path, now consuming the Cycles tet-cage frame contract. It is not yet proof that Blender/Cycles can ingest or render a .tetcage asset."
+  },
+  "claim_boundary": "This closes the unmodified Cycles MetalRT entry gate and proves the project's static procedural Metal AABB path on the Apple M1 Max. It does not prove Cycles tet-cage ingestion, Cycles renderer shading integration, motion semantics, or Blender UI support."
+}

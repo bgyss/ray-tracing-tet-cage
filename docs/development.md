@@ -46,6 +46,12 @@ XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
 jq . results/integrations/2026-08-09-cycles-verification.json
 ```
 
+The first MetalRT entry proof and the repository-side procedural tet-cage path
+are recorded in
+`results/integrations/2026-08-23-cycles-metal-entry.json`. This is a direct
+Metal baseline plus standalone AABB/custom-intersection evidence; Cycles
+renderer ingestion and Blender asset UI remain later gates.
+
 `cycles-verify` is read-only. It checks the pinned source and dependency
 revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
 CTest/runtime result, the Blender developer/debug CMake cache profile, the
