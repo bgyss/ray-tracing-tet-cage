@@ -223,6 +223,24 @@
       "result": "passed",
       "claim_boundary": "Static tet-only native Blender Metal intersection proof; mixed ordinary geometry, motion, transparent/shadow-all, local, volume, and full Principled shading semantics remain open."
     },
+    "native_mixed_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... mixed",
+      "device": "METAL Apple M1 Max",
+      "scene": "default cube plus one tet-cage candidate",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "native_sha256": "fd5a05d632c774e513a0b6c579ee0cc6e6e974b84ad3dd47b6622fc4f5bf8fb1",
+      "fallback_sha256": "80a996a7ec2a0bfc8660f087bece5ecc38a777ad8aad2a610e8601cf0f7f7795",
+      "pixel_differences": 0,
+      "selection_log": [
+        "Enabled static native tet-cage adapter cycles_tetcage_v1",
+        "Building mesh BLAS for ordinary cube",
+        "Building tet-cage AABB BLAS"
+      ],
+      "result": "passed",
+      "claim_boundary": "Static mixed ordinary-triangle plus tet-AABB traversal proof under a fixed emission shader; Principled lighting/material, motion, transparent/shadow-all, local, and volume semantics remain open."
+    },
     "metal_render": {
       "binary": "$BLENDER_BINARY",
       "cpu_device": false,

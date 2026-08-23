@@ -97,8 +97,8 @@ the fallback scene. It also records `tetcage_native_candidate` and the
 authoring/debug fallback; it does not claim that the procedural MetalRT
 primitive is active in Blender by default. Set `CYCLES_TETCAGE_NATIVE=1` for the
 isolated static native path. The candidate branch passes the full `blender`
-build, app-bundle install, direct importer probe, Cycles/UI smoke, and a
-tet-only native-vs-fallback emission differential; the release-binary
+build, app-bundle install, direct importer probe, Cycles/UI smoke, and tet-only
+plus mixed-scene native-vs-fallback emission differentials; the release-binary
 child-launch harness remains separately host-limited.
 
 ## Direct Nix workflow

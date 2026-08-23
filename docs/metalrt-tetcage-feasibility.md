@@ -47,9 +47,9 @@ volume, mixed-scene, full shading-attribute semantics, and Blender-native Metal
 dispatch remain unproven. An isolated Blender branch (`d4d3ec46c93c`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds
-a native AABB BLAS, and passes a tet-only native-vs-fallback emission
-differential. Its full Blender target, app-bundle install, direct importer
-probe, and Cycles/UI smoke also pass. Mixed ordinary geometry, motion,
+a native AABB BLAS, and passes tet-only and mixed ordinary-triangle/native-AABB
+native-vs-fallback emission differentials. Its full Blender target, app-bundle
+install, direct importer probe, and Cycles/UI smoke also pass. Motion,
 transparent/shadow-all, local/volume, and full Principled shading semantics
 remain open.
 

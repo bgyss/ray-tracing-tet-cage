@@ -52,10 +52,10 @@ intersection queries while preserving ordinary mesh fallback by default. Mirrore
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 Its full Blender target, app-bundle install, direct importer probe, Cycles/UI
-smoke, and tet-only native-vs-fallback emission differential pass in the isolated
-build; mixed ordinary geometry and broader traversal/shading semantics remain
-open. The older release-binary Python child-launch path remains a separate
-host-startup limitation.
+smoke, and tet-only plus mixed ordinary-triangle/native-AABB emission
+differentials pass in the isolated build; Principled shading and broader
+traversal semantics remain open. The older release-binary Python child-launch
+path remains a separate host-startup limitation.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |

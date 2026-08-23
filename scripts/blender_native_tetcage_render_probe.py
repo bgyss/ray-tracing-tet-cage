@@ -55,7 +55,7 @@ def _enable_metal(scene: bpy.types.Scene) -> str:
     return preferences.compute_device_type
 
 
-def _use_probe_emission_material() -> None:
+def _use_probe_emission_material(mixed_scene: bool) -> None:
     material = bpy.data.materials.new("TetCage_Native_Probe_Emission")
     material.use_nodes = True
     nodes = material.node_tree.nodes
@@ -67,7 +67,7 @@ def _use_probe_emission_material() -> None:
     emission.inputs["Strength"].default_value = 1.0
     links.new(emission.outputs["Emission"], output.inputs["Surface"])
     for obj in bpy.context.scene.objects:
-        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+        if obj.type == "MESH" and (mixed_scene or obj.get("tetcage_native_candidate")):
             obj.data.materials.clear()
             obj.data.materials.append(material)
 
@@ -92,19 +92,23 @@ def _use_black_world(scene: bpy.types.Scene) -> None:
 
 def main() -> int:
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
-    if len(args) != 3:
+    if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json"
+            "-- asset output.exr result.json [tet_only|mixed]"
         )
 
-    asset, output_image, output_json = args
+    asset, output_image, output_json = args[:3]
+    mixed_scene = len(args) == 4 and args[3] == "mixed"
+    if len(args) == 4 and args[3] not in {"tet_only", "mixed"}:
+        raise RuntimeError("probe mode must be tet_only or mixed")
     payload = import_asset(asset)
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
-    _remove_non_tetcage_meshes()
+    if not mixed_scene:
+        _remove_non_tetcage_meshes()
     compute_device_type = _enable_metal(scene)
-    _use_probe_emission_material()
+    _use_probe_emission_material(mixed_scene)
     _use_black_world(scene)
     scene.cycles.samples = 1
     scene.cycles.use_adaptive_sampling = False
@@ -135,6 +139,7 @@ def main() -> int:
         "native_gate_requested": os.environ.get("CYCLES_TETCAGE_NATIVE") == "1",
         "native_candidate": payload.get("native_candidate", False),
         "native_contract": payload.get("native_contract"),
+        "scene_mode": "mixed" if mixed_scene else "tet_only",
         "resolution": "16x16",
         "samples": 1,
         "output": str(pathlib.Path(output_image).resolve()),
