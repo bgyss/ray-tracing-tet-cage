@@ -1339,8 +1339,8 @@ void test_cycles_hit_normalization_reconstructs_source_identity() {
   const auto &a = compiled.asset->generated_vertices[fragment.vertex_indices[0]];
   const auto &b = compiled.asset->generated_vertices[fragment.vertex_indices[1]];
   const auto &c = compiled.asset->generated_vertices[fragment.vertex_indices[2]];
-  const auto expected = a.source_barycentric * 0.25 + b.source_barycentric * 0.25 +
-                        c.source_barycentric * 0.5;
+  const auto expected =
+      a.source_barycentric * 0.25 + b.source_barycentric * 0.25 + c.source_barycentric * 0.5;
   CHECK_IN(test, normalized->object_id == 42U);
   CHECK_IN(test, normalized->source_primitive == 17U);
   CHECK_IN(test, normalized->owner_tet == 0U);
@@ -1376,11 +1376,11 @@ void test_cycles_hit_normalization_rejects_unknown_backend_hits() {
     return;
   }
   CHECK_IN(test, !tetcage::normalize_cycles_metal_hit(
-                           *compiled.asset, tetcage::CyclesMetalHit{0U, 1U, 0U, 1.0, 0.2, 0.2})
-                           .has_value());
+                      *compiled.asset, tetcage::CyclesMetalHit{0U, 1U, 0U, 1.0, 0.2, 0.2})
+                      .has_value());
   CHECK_IN(test, !tetcage::normalize_cycles_metal_hit(
-                           *compiled.asset, tetcage::CyclesMetalHit{0U, 0U, 2U, 1.0, 0.2, 0.2})
-                           .has_value());
+                      *compiled.asset, tetcage::CyclesMetalHit{0U, 0U, 2U, 1.0, 0.2, 0.2})
+                      .has_value());
 }
 
 void test_cycles_xml_export_preserves_compiled_microgeometry() {

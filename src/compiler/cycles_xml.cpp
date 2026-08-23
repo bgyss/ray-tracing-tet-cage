@@ -24,10 +24,9 @@ bool valid_micro_triangle(const CompiledAsset &asset, const MicroTriangle &trian
       triangle.owner_tet >= asset.cage.tetrahedra.size()) {
     return false;
   }
-  return std::all_of(triangle.vertex_indices.begin(), triangle.vertex_indices.end(),
-                     [&asset](std::uint32_t index) {
-                       return index < asset.generated_vertices.size();
-                     });
+  return std::all_of(
+      triangle.vertex_indices.begin(), triangle.vertex_indices.end(),
+      [&asset](std::uint32_t index) { return index < asset.generated_vertices.size(); });
 }
 
 } // namespace
@@ -66,8 +65,8 @@ std::string write_cycles_xml(const std::string &path, const CompiledAsset &asset
            << "<state shader=\"tet_cage_fallback\">\n  <mesh P=\"";
     for (const auto *triangle : triangles) {
       for (const auto vertex_index : triangle->vertex_indices) {
-        const auto point = from_barycentric(
-            tet, asset.generated_vertices[vertex_index].cage_barycentric);
+        const auto point =
+            from_barycentric(tet, asset.generated_vertices[vertex_index].cage_barycentric);
         output << point.x << ' ' << point.y << ' ' << point.z - 3.0 << ' ';
       }
     }

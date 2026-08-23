@@ -1384,22 +1384,18 @@ InstanceRecords make_instance_records(const CompiledAsset &asset,
         throw std::runtime_error("Cycles tet-cage frame is missing a tetrahedron transform");
       }
       const auto &transform = frame.tet_transforms[tet_id];
-      const PackedFloat3 c0{
-          static_cast<float>(transform.linear.columns[0].x),
-          static_cast<float>(transform.linear.columns[0].y),
-          static_cast<float>(transform.linear.columns[0].z)};
-      const PackedFloat3 c1{
-          static_cast<float>(transform.linear.columns[1].x),
-          static_cast<float>(transform.linear.columns[1].y),
-          static_cast<float>(transform.linear.columns[1].z)};
-      const PackedFloat3 c2{
-          static_cast<float>(transform.linear.columns[2].x),
-          static_cast<float>(transform.linear.columns[2].y),
-          static_cast<float>(transform.linear.columns[2].z)};
-      const PackedFloat3 translation{
-          static_cast<float>(transform.translation.x),
-          static_cast<float>(transform.translation.y),
-          static_cast<float>(transform.translation.z)};
+      const PackedFloat3 c0{static_cast<float>(transform.linear.columns[0].x),
+                            static_cast<float>(transform.linear.columns[0].y),
+                            static_cast<float>(transform.linear.columns[0].z)};
+      const PackedFloat3 c1{static_cast<float>(transform.linear.columns[1].x),
+                            static_cast<float>(transform.linear.columns[1].y),
+                            static_cast<float>(transform.linear.columns[1].z)};
+      const PackedFloat3 c2{static_cast<float>(transform.linear.columns[2].x),
+                            static_cast<float>(transform.linear.columns[2].y),
+                            static_cast<float>(transform.linear.columns[2].z)};
+      const PackedFloat3 translation{static_cast<float>(transform.translation.x),
+                                     static_cast<float>(transform.translation.y),
+                                     static_cast<float>(transform.translation.z)};
       MTLAccelerationStructureUserIDInstanceDescriptor descriptor{};
       descriptor.transformationMatrix =
           MTLPackedFloat4x3(MTLPackedFloat3(c0.x, c0.y, c0.z), MTLPackedFloat3(c1.x, c1.y, c1.z),
@@ -1419,10 +1415,8 @@ InstanceRecords make_instance_records(const CompiledAsset &asset,
       records.info.push_back({copy, blas_index, tet_id});
       records.instance_to_blas.push_back(blas_index);
       records.precise_transforms.push_back(
-          {split_vec3(transform.linear.columns[0]),
-           split_vec3(transform.linear.columns[1]),
-           split_vec3(transform.linear.columns[2]),
-           split_vec3(transform.translation)});
+          {split_vec3(transform.linear.columns[0]), split_vec3(transform.linear.columns[1]),
+           split_vec3(transform.linear.columns[2]), split_vec3(transform.translation)});
     }
   }
   return records;

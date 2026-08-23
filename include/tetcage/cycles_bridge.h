@@ -64,13 +64,13 @@ struct CyclesNormalizedHit {
 };
 
 [[nodiscard]] CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
-                                                              const Cage &posed_cage,
-                                                              std::uint64_t pose_generation);
+                                                             const Cage &posed_cage,
+                                                             std::uint64_t pose_generation);
 
 [[nodiscard]] CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
-                                                              const Cage &posed_cage,
-                                                              std::uint64_t pose_generation,
-                                                              std::uint64_t asset_checksum);
+                                                             const Cage &posed_cage,
+                                                             std::uint64_t pose_generation,
+                                                             std::uint64_t asset_checksum);
 
 [[nodiscard]] std::optional<CyclesNormalizedHit>
 normalize_cycles_metal_hit(const CompiledAsset &asset, const CyclesMetalHit &hit);

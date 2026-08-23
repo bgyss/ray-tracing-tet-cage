@@ -47,10 +47,9 @@ void set_fallback(CyclesTetCageFrame &frame, CyclesFallbackReason reason) {
 }
 
 bool source_primitive_exists(const CompiledAsset &asset, std::uint32_t primitive) {
-  return std::any_of(asset.source.triangles.begin(), asset.source.triangles.end(),
-                     [primitive](const SourceTriangle &triangle) {
-                       return triangle.primitive_id == primitive;
-                     });
+  return std::any_of(
+      asset.source.triangles.begin(), asset.source.triangles.end(),
+      [primitive](const SourceTriangle &triangle) { return triangle.primitive_id == primitive; });
 }
 
 bool valid_micro_triangle(const CompiledAsset &asset, const MicroTriangle &triangle) {
@@ -59,10 +58,9 @@ bool valid_micro_triangle(const CompiledAsset &asset, const MicroTriangle &trian
       !source_primitive_exists(asset, triangle.source_primitive)) {
     return false;
   }
-  return std::all_of(triangle.vertex_indices.begin(), triangle.vertex_indices.end(),
-                     [&asset](std::uint32_t index) {
-                       return index < asset.generated_vertices.size();
-                     });
+  return std::all_of(
+      triangle.vertex_indices.begin(), triangle.vertex_indices.end(),
+      [&asset](std::uint32_t index) { return index < asset.generated_vertices.size(); });
 }
 
 } // namespace
@@ -95,15 +93,13 @@ const char *cycles_fallback_reason_name(CyclesFallbackReason reason) {
   return "invalid_asset";
 }
 
-CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
-                                               const Cage &posed_cage,
+CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset, const Cage &posed_cage,
                                                std::uint64_t pose_generation) {
-  return build_cycles_tet_cage_frame(
-      asset, posed_cage, pose_generation, asset_checksum(serialize_asset(asset)));
+  return build_cycles_tet_cage_frame(asset, posed_cage, pose_generation,
+                                     asset_checksum(serialize_asset(asset)));
 }
 
-CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
-                                               const Cage &posed_cage,
+CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset, const Cage &posed_cage,
                                                std::uint64_t pose_generation,
                                                std::uint64_t checksum) {
   CyclesTetCageFrame frame{};
@@ -150,7 +146,8 @@ CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
     }
     CyclesTetPrimitive primitive{};
     primitive.tet_id = tet_id;
-    primitive.micro_triangle_begin = static_cast<std::uint32_t>(frame.micro_triangle_indices.size());
+    primitive.micro_triangle_begin =
+        static_cast<std::uint32_t>(frame.micro_triangle_indices.size());
     primitive.micro_triangle_count = static_cast<std::uint32_t>(indices.size());
     primitive.bounds_min = {std::numeric_limits<double>::infinity(),
                             std::numeric_limits<double>::infinity(),
@@ -163,8 +160,8 @@ CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
       frame.micro_triangle_indices.push_back(micro_index);
       const auto &triangle = asset.micro_triangles[micro_index];
       for (const auto vertex_index : triangle.vertex_indices) {
-        const auto point = from_barycentric(
-            pose, asset.generated_vertices[vertex_index].cage_barycentric);
+        const auto point =
+            from_barycentric(pose, asset.generated_vertices[vertex_index].cage_barycentric);
         primitive.bounds_min.x = std::min(primitive.bounds_min.x, point.x);
         primitive.bounds_min.y = std::min(primitive.bounds_min.y, point.y);
         primitive.bounds_min.z = std::min(primitive.bounds_min.z, point.z);
@@ -173,13 +170,10 @@ CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
         primitive.bounds_max.z = std::max(primitive.bounds_max.z, point.z);
       }
     }
-    const double scale = std::max({1.0,
-                                   std::abs(primitive.bounds_min.x),
-                                   std::abs(primitive.bounds_min.y),
-                                   std::abs(primitive.bounds_min.z),
-                                   std::abs(primitive.bounds_max.x),
-                                   std::abs(primitive.bounds_max.y),
-                                   std::abs(primitive.bounds_max.z)});
+    const double scale =
+        std::max({1.0, std::abs(primitive.bounds_min.x), std::abs(primitive.bounds_min.y),
+                  std::abs(primitive.bounds_min.z), std::abs(primitive.bounds_max.x),
+                  std::abs(primitive.bounds_max.y), std::abs(primitive.bounds_max.z)});
     const double margin = 32.0 * std::numeric_limits<double>::epsilon() * scale;
     primitive.bounds_min = primitive.bounds_min - Vec3{margin, margin, margin};
     primitive.bounds_max = primitive.bounds_max + Vec3{margin, margin, margin};
@@ -216,13 +210,9 @@ std::optional<CyclesNormalizedHit> normalize_cycles_metal_hit(const CompiledAsse
   if (!finite(source_barycentric)) {
     return std::nullopt;
   }
-  return CyclesNormalizedHit{hit.object_id,
-                             triangle.source_primitive,
-                             triangle.owner_tet,
-                             source_barycentric,
-                             hit.distance,
-                             source_barycentric.y,
-                             source_barycentric.z};
+  return CyclesNormalizedHit{
+      hit.object_id, triangle.source_primitive, triangle.owner_tet,  source_barycentric,
+      hit.distance,  source_barycentric.y,      source_barycentric.z};
 }
 
 } // namespace tetcage
