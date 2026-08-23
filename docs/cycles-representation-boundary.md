@@ -35,8 +35,9 @@ Cycles as the scene engine. Its contract test accepts an explicit
 `BLENDER_BINARY` so it can use a release binary when the large pinned Debug
 executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
-their affine object transforms when the cage changes; the CPU-disabled Metal
-render proof is recorded in the entry manifest.
+their affine object transforms when the cage changes. Mirrored or near-singular
+poses are rejected with `invalid_pose` and leave the last valid transforms in
+place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |

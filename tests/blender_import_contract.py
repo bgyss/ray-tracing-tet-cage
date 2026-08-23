@@ -56,6 +56,9 @@ def main() -> int:
             "assert update_surface_from_cage(cage); "
             "after=tuple(surface.matrix_world.translation); "
             f"payload['pose_updated'] = before != after; bpy.ops.wm.save_as_mainfile(filepath={str(blend)!r}); "
+            "cage.data.vertices[1].co.x = -1.0; "
+            "payload['invalid_pose_rejected'] = not update_surface_from_cage(cage); "
+            "payload['invalid_pose_reason'] = cage.get('tetcage_fallback_reason'); "
             f"pathlib=__import__('pathlib'); pathlib.Path({str(output)!r}).write_text(json.dumps(payload))"
         )
         environment = os.environ.copy()
@@ -110,6 +113,8 @@ def main() -> int:
     assert payload["tet_objects"] == 1
     assert payload["pose_update_handler"] is True
     assert payload["pose_updated"] is True
+    assert payload["invalid_pose_rejected"] is True
+    assert payload["invalid_pose_reason"] == "invalid_pose"
     print("Blender tet-cage import contract: pass")
     return 0
 

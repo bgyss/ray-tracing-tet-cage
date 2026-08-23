@@ -8,6 +8,7 @@ is still being integrated; it does not pretend to activate tet-cage MetalRT.
 from __future__ import annotations
 
 import json
+import math
 import pathlib
 import sys
 from typing import Any
@@ -24,7 +25,7 @@ _IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
 def _tet_matrix(asset: dict[str, Any], cage_vertices: list[dict[str, Any]], tet_id: int) -> Any:
     tet = asset["cage_tetrahedra"][tet_id]
     p0, p1, p2, p3 = (cage_vertices[index]["position"] for index in tet)
-    return Matrix(
+    matrix = Matrix(
         (
             (p1[0] - p0[0], p2[0] - p0[0], p3[0] - p0[0], p0[0]),
             (p1[1] - p0[1], p2[1] - p0[1], p3[1] - p0[1], p0[1]),
@@ -32,6 +33,10 @@ def _tet_matrix(asset: dict[str, Any], cage_vertices: list[dict[str, Any]], tet_
             (0.0, 0.0, 0.0, 1.0),
         )
     )
+    determinant = matrix.to_3x3().determinant()
+    if not math.isfinite(determinant) or determinant <= 1.0e-12:
+        raise ValueError(f"tet {tet_id} is mirrored or near singular")
+    return matrix
 
 
 def _surface_objects(
@@ -145,10 +150,21 @@ def update_surface_from_cage(cage: bpy.types.Object) -> bool:
     if not surfaces:
         return False
     generation = int(cage.get("tetcage_pose_generation", 0)) + 1
+    try:
+        transforms = {
+            int(surface["tetcage_tet_id"]): _tet_matrix(
+                asset, posed_vertices, int(surface["tetcage_tet_id"])
+            )
+            for surface in surfaces
+        }
+    except ValueError:
+        cage["tetcage_fallback_reason"] = "invalid_pose"
+        return False
     for surface in surfaces:
-        surface.matrix_world = _tet_matrix(asset, posed_vertices, int(surface["tetcage_tet_id"]))
+        surface.matrix_world = transforms[int(surface["tetcage_tet_id"])]
         surface["tetcage_pose_generation"] = generation
     cage["tetcage_pose_generation"] = generation
+    cage["tetcage_fallback_reason"] = "none"
     return True
 
 
@@ -181,6 +197,7 @@ def import_asset(
     asset_path = str(pathlib.Path(asset_path).resolve())
     _IMPORTED_ASSETS[asset_path] = asset
     cage["tetcage_asset_path"] = asset_path
+    cage["tetcage_fallback_reason"] = "none"
     for surface in surfaces:
         surface["tetcage_asset_path"] = asset_path
     scene["tetcage_fallback_mode"] = "conventional_mesh"

@@ -113,6 +113,8 @@
     "fallback_mode": "conventional_mesh",
     "pose_update_handler": true,
     "pose_updated": true,
+    "invalid_pose_rejected": true,
+    "invalid_pose_reason": "invalid_pose",
     "save_reload": true,
     "procedural_metalrt": false,
     "metal_render": {
