@@ -146,6 +146,9 @@ transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the
 zero-hit local-ray path; `deformation_local_motion` exercises the motion-local
 multi-hit callback; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact.
+Transparent object motion currently retains ordinary Cycles fallback because
+the native motion closure path is not yet qualified; `transparent_motion` probes
+that boundary explicitly.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
 The `normal`, `position`, `uv`, `source_normal`, `source_primitive`, `owner_tet`,

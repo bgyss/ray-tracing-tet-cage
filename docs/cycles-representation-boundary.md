@@ -51,7 +51,7 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `7add5059ffbf` now recognizes that
+Blender sync. The isolated Blender branch at `ca1768d89f4e9` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local AABB
@@ -64,7 +64,8 @@ Its full Blender target, app-bundle install, direct importer probe, Cycles/UI
 smoke, and tet-only, mixed, object-transform-motion, plus one native shape-key
 deformation ordinary-triangle/native-AABB emission differentials pass in the
 isolated build; broader deformation topology, SSS multi-hit/local ordering, exact
-volume precision, Principled shading, and broader traversal semantics remain open. The
+volume precision, Principled shading, and broader traversal semantics remain open. Transparent motion
+explicitly retains ordinary Cycles fallback until its closure semantics are qualified. The
 older release-binary Python child-launch
 path remains a separate host-startup limitation.
 

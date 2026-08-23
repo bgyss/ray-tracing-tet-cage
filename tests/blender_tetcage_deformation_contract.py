@@ -24,6 +24,10 @@ def main() -> int:
     assert "attr_P->data_at_time_step<packed_float3>" in bvh
     assert "const float ray_time" in kernel
     assert "metalrt_tetcage_motion_vertices" in kernel
+    assert "has_transparent_surface" in mesh
+    assert "has_surface_shadow_transparency" in mesh
+    assert "Scene::MOTION_BLUR" in mesh
+    assert "transparent motion" in mesh
     print("Blender native deformation contract: pass")
     return 0
 
