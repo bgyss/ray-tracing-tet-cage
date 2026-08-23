@@ -101,6 +101,23 @@ build, app-bundle install, direct importer probe, Cycles/UI smoke, and tet-only
 plus mixed-scene native-vs-fallback emission differentials; the release-binary
 child-launch harness remains separately host-limited.
 
+For the isolated native probe, use the embedded Cycles source root explicitly:
+
+```sh
+build/dev/tetcage_asset_compiler \
+  tests/assets/one-tet.obj tests/assets/one-tet.cage build/one-tet.tetcage
+CYCLES_KERNEL_PATH="$BLENDER_NATIVE_WORKTREE/intern/cycles" \
+CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 \
+"$BLENDER_NATIVE_BINARY" --background --factory-startup \
+  --python scripts/blender_native_tetcage_render_probe.py -- \
+  build/one-tet.tetcage build/blender-native.exr build/blender-native.json mixed
+```
+
+Unset `CYCLES_TETCAGE_NATIVE` (or set it to `0`) to render the same probe
+through ordinary triangle fallback. The checked-in probe uses a fixed emission
+shader and removes unrelated meshes in `tet_only` mode so the differential
+measures intersection rather than lighting noise.
+
 ## Direct Nix workflow
 
 Enter an interactive shell:
