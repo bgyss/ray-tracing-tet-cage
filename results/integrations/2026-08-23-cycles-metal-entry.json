@@ -614,6 +614,13 @@
         "fallback_sha256": "6e5d0ac81855d765815a6a8d25446f40e3107bdb629e53fa26b8f03c0437624b",
         "pixel_differences": 0,
         "shader": "UV -> Checker Texture -> Emission",
+        "differential_harness": {
+          "script": "scripts/blender_native_differential.py",
+          "native_elapsed_ms": 7442.514000053052,
+          "fallback_elapsed_ms": 3033.8028330006637,
+          "comparison_elapsed_ms": null,
+          "result": "exact"
+        },
         "result": "passed"
       },
       "source_normal": {

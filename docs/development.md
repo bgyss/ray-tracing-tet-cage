@@ -123,6 +123,21 @@ It verifies that both native Cycles lanes use the projected-axis tet predicate
 and the Cycles local hit-record policy; it skips when the isolated source
 worktrees are unavailable.
 
+For a reproducible native-vs-fallback render differential with timing and
+pixel metrics, run the wrapper against the isolated Blender build:
+
+```sh
+python3 scripts/blender_native_differential.py \
+  --blender "$BLENDER_NATIVE_BINARY" \
+  --kernel-root "$BLENDER_NATIVE_WORKTREE/intern/cycles" \
+  --asset build/one-tet.tetcage \
+  --mode texture \
+  --output-dir build/differentials/texture
+```
+
+The wrapper records native/fallback probe JSON, SHA-256 image hashes, elapsed
+times, and an in-Blender EXR pixel/RGB comparison in `differential.json`.
+
 The deformation-specific source contract is checked with:
 
 ```sh
