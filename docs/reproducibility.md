@@ -51,7 +51,7 @@ promoted by that job.
 | Robust tolerance policy | `results/robustness/2026-07-28-tolerance-policy.json` | scale/edge/conditioning-aware portable policy; no GPU watertightness claim |
 | Runtime safety policy | `results/runtime/2026-07-28-safe-frame-policy.json` | portable allocation/cancellation/reset/device-loss/unsupported fallback contract |
 | Unreal/Cycles host gates | `results/integrations/2026-08-08-host-gates.json` | live host inspection; UE remains blocked and Cycles/Blender are candidates |
-| Cycles/Blender setup | `results/integrations/2026-08-08-cycles-setup.json` and `results/integrations/2026-08-08-cycles-verification.json` | pinned macOS setup plus read-only verification |
+| Cycles/Blender setup and static native query | `results/integrations/2026-08-08-cycles-setup.json`, `results/integrations/2026-08-08-cycles-verification.json`, and `results/integrations/2026-08-23-cycles-metal-entry.json` | pinned macOS setup, read-only verification, and bounded static native proof |
 | RenderMan public API gate | `results/renderman-feasibility.json` | local header feasibility |
 
 ## Explicitly unproven
