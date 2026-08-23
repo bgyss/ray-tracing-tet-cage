@@ -12,7 +12,7 @@ import tempfile
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from tetcage_asset import load_asset  # noqa: E402
+from tetcage_asset import load_asset, micro_triangle_uvs  # noqa: E402
 
 
 def main() -> int:
@@ -42,6 +42,11 @@ def main() -> int:
     assert len(asset["generated_vertices"]) == 3
     assert len(asset["micro_triangles"]) == 1
     assert asset["micro_triangles"][0]["source_primitive"] == 0
+    assert micro_triangle_uvs(asset, asset["micro_triangles"][0]) == (
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (0.0, 1.0),
+    )
     print("tetcage asset parser contract: pass")
     return 0
 

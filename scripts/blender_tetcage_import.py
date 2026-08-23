@@ -18,7 +18,7 @@ from typing import Any
 import bpy
 from mathutils import Matrix
 
-from tetcage_asset import load_asset, micro_triangle_points
+from tetcage_asset import load_asset, micro_triangle_points, micro_triangle_uvs
 
 
 _IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
@@ -110,6 +110,7 @@ def _surface_objects(
     source_by_tet: dict[int, list[int]] = {}
     owner_by_tet: dict[int, list[int]] = {}
     materials_by_tet: dict[int, list[int]] = {}
+    uvs_by_tet: dict[int, list[tuple[tuple[float, float], ...]]] = {}
     for triangle in asset["micro_triangles"]:
         tet_id = triangle["tet_id"]
         vertices = vertices_by_tet.setdefault(tet_id, [])
@@ -127,6 +128,7 @@ def _surface_objects(
         source_by_tet.setdefault(tet_id, []).append(triangle["source_primitive"])
         owner_by_tet.setdefault(tet_id, []).append(triangle["owner_tet"])
         materials_by_tet.setdefault(tet_id, []).append(triangle["material"])
+        uvs_by_tet.setdefault(tet_id, []).append(micro_triangle_uvs(asset, triangle))
 
     surfaces: list[bpy.types.Object] = []
     pose = cage_vertices if cage_vertices is not None else asset["cage_vertices"]
@@ -136,6 +138,10 @@ def _surface_objects(
         mesh = bpy.data.meshes.new(f"TetCage_Tet_{tet_id:04d}")
         mesh.from_pydata(vertices, [], faces)
         mesh.update()
+        uv_layer = mesh.uv_layers.new(name="UVMap")
+        for face_index, polygon in enumerate(mesh.polygons):
+            for corner, loop_index in enumerate(polygon.loop_indices):
+                uv_layer.data[loop_index].uv = uvs_by_tet[tet_id][face_index][corner]
         mesh["tetcage_native_candidate"] = True
         mesh["tetcage_native_contract"] = "cycles_tetcage_v1"
         primitive_attribute = mesh.attributes.new("tetcage_source_primitive", "INT", "FACE")
@@ -294,6 +300,7 @@ def import_asset(
         "native_candidate": True,
         "native_contract": "cycles_tetcage_v1",
         "pose_update_handler": True,
+        "uv_layer": all(bool(surface.data.uv_layers) for surface in surfaces),
     }
     register_handlers()
     if output_json is not None:

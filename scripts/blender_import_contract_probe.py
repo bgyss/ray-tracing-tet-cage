@@ -22,6 +22,7 @@ def main() -> int:
     surface = bpy.data.objects["TetCage_Tet_0000"]
     assert surface.get("tetcage_native_candidate") is True
     assert surface.data.get("tetcage_native_candidate") is True
+    assert surface.data.uv_layers.get("UVMap") is not None
     before = tuple(surface.matrix_world.translation)
     cage.data.vertices[0].co.x += 0.1
     assert update_surface_from_cage(cage)

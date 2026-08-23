@@ -97,6 +97,7 @@ def main() -> int:
     assert payload["fallback_mode"] == "conventional_mesh"
     assert payload["render_mode"] == "per_tet_triangle_instances"
     assert payload["tet_objects"] == 1
+    assert payload["uv_layer"] is True
     assert payload["pose_update_handler"] is True
     assert payload["pose_updated"] is True
     assert payload["invalid_pose_rejected"] is True

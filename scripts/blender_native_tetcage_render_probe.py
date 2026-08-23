@@ -176,6 +176,24 @@ def _use_position_probe_material() -> None:
             obj.data.materials.append(material)
 
 
+def _use_uv_probe_material() -> None:
+    material = bpy.data.materials.new("TetCage_Native_Probe_UV")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    uv_map = nodes.new("ShaderNodeUVMap")
+    uv_map.uv_map = "UVMap"
+    emission = nodes.new("ShaderNodeEmission")
+    links.new(uv_map.outputs["UV"], emission.inputs["Color"])
+    links.new(emission.outputs["Emission"], output.inputs["Surface"])
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+
+
 def _use_diffuse_probe_material() -> None:
     material = bpy.data.materials.new("TetCage_Native_Probe_Diffuse")
     material.use_nodes = True
@@ -248,7 +266,7 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|transparent|local|ao|normal|position|diffuse|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|transparent|local|ao|normal|position|uv|diffuse|volume]"
         )
 
     asset, output_image, output_json = args[:3]
@@ -263,11 +281,12 @@ def main() -> int:
         "ao",
         "normal",
         "position",
+        "uv",
         "diffuse",
         "volume",
     }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, mixed_motion, transparent, local, ao, normal, position, diffuse, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, transparent, local, ao, normal, position, uv, diffuse, or volume"
         )
     mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
@@ -286,6 +305,8 @@ def main() -> int:
         _use_normal_probe_material()
     elif probe_mode == "position":
         _use_position_probe_material()
+    elif probe_mode == "uv":
+        _use_uv_probe_material()
     elif probe_mode == "diffuse":
         _use_diffuse_probe_material()
     elif probe_mode == "volume":
