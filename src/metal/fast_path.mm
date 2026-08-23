@@ -1361,7 +1361,8 @@ Tetrahedron posed_tet(const CompiledAsset &asset, const std::vector<Vec3> &pose,
 
 InstanceRecords make_instance_records(const CompiledAsset &asset,
                                       const std::vector<BlasGroup> &groups,
-                                      const std::vector<std::vector<Vec3>> &poses) {
+                                      const std::vector<std::vector<Vec3>> &poses,
+                                      const std::uint64_t asset_hash) {
   InstanceRecords records;
   const std::size_t count = poses.size() * groups.size();
   records.descriptors.reserve(count);
@@ -1372,7 +1373,7 @@ InstanceRecords make_instance_records(const CompiledAsset &asset,
   for (std::uint32_t copy = 0; copy < poses.size(); ++copy) {
     Cage posed_cage = asset.cage;
     posed_cage.vertices = poses[copy];
-    const auto frame = build_cycles_tet_cage_frame(asset, posed_cage, copy);
+    const auto frame = build_cycles_tet_cage_frame(asset, posed_cage, copy, asset_hash);
     if (frame.mode != CyclesGeometryMode::procedural_metalrt) {
       throw std::runtime_error("Cycles tet-cage frame selected conventional fallback: " +
                                std::string(cycles_fallback_reason_name(frame.fallback_reason)));
@@ -1724,7 +1725,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.cage_deformation_ms = milliseconds(cage_begin, cage_end);
 
   const auto transform_begin = Clock::now();
-  auto instance_records = make_instance_records(asset, groups, poses);
+  auto instance_records = make_instance_records(asset, groups, poses, run.asset_hash);
   auto &descriptors = instance_records.descriptors;
   auto &gpu_instance_inputs = instance_records.gpu_inputs;
   auto &instance_info = instance_records.info;
@@ -2136,7 +2137,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     run.cage_deformation_ms += milliseconds(frame_pose_begin, Clock::now());
 
     const auto frame_transform_begin = Clock::now();
-    instance_records = make_instance_records(asset, groups, poses);
+    instance_records = make_instance_records(asset, groups, poses, run.asset_hash);
     run.transform_generation_ms += milliseconds(frame_transform_begin, Clock::now());
     run.mirrored_instances = run.mirrored_instances || instance_records.mirrored;
     if (instance_records.descriptors.size() != descriptors.size()) {

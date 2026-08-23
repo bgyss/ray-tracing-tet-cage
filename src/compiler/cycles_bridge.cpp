@@ -98,14 +98,22 @@ const char *cycles_fallback_reason_name(CyclesFallbackReason reason) {
 CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
                                                const Cage &posed_cage,
                                                std::uint64_t pose_generation) {
+  return build_cycles_tet_cage_frame(
+      asset, posed_cage, pose_generation, asset_checksum(serialize_asset(asset)));
+}
+
+CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
+                                               const Cage &posed_cage,
+                                               std::uint64_t pose_generation,
+                                               std::uint64_t checksum) {
   CyclesTetCageFrame frame{};
   frame.pose_generation = pose_generation;
+  frame.asset_checksum = checksum;
   if (!same_topology(asset, posed_cage)) {
     set_fallback(frame, CyclesFallbackReason::invalid_asset);
     return frame;
   }
 
-  frame.asset_checksum = asset_checksum(serialize_asset(asset));
   frame.tet_transforms.reserve(posed_cage.tetrahedra.size());
   for (std::size_t tet_index = 0; tet_index < posed_cage.tetrahedra.size(); ++tet_index) {
     const auto &metadata = asset.tet_metadata[tet_index];
