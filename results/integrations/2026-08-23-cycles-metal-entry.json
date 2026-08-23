@@ -605,6 +605,14 @@
         "pixel_differences": 0,
         "result": "passed"
       },
+      "multi_tet_owner_tet": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "native_sha256": "e276b96e269019d9d76f056c75984681cbc0f632aec3935d32a6966aef488c11",
+        "fallback_sha256": "d09b563581c25ea478d1219b41b18e25715a85005ed5f0dcaf7277d1ef95b6e7",
+        "pixel_differences": 0,
+        "cage_tetrahedra": 2,
+        "result": "passed"
+      },
       "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; the checker texture graph passes, while broader custom shader-node semantics remain open."
     },
     "native_shading_diagnostics": {
