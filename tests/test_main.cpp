@@ -1,5 +1,6 @@
 #include "tetcage/asset_format.h"
 #include "tetcage/authoring.h"
+#include "tetcage/cycles_bridge.h"
 #include "tetcage/io.h"
 #include "tetcage/math.h"
 #include "tetcage/metal_evidence.h"
@@ -1292,6 +1293,96 @@ void test_metal_mismatch_classification_and_ray_minimization() {
                      tetcage::MetalFinalPath::cpu_fallback);
 }
 
+void test_cycles_frame_builds_pose_bounds_and_provenance_contract() {
+  constexpr const char *test = "Cycles frame builds pose bounds and provenance contract";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+
+  auto posed = single_tet_cage();
+  for (auto &vertex : posed.vertices) {
+    vertex.x += 2.0;
+  }
+  const auto frame = tetcage::build_cycles_tet_cage_frame(*compiled.asset, posed, 17U);
+  CHECK_IN(test, frame.mode == tetcage::CyclesGeometryMode::procedural_metalrt);
+  CHECK_IN(test, frame.fallback_reason == tetcage::CyclesFallbackReason::none);
+  CHECK_IN(test, frame.pose_generation == 17U);
+  CHECK_IN(test, frame.asset_checksum != 0U);
+  CHECK_IN(test, frame.tet_transforms.size() == 1U);
+  CHECK_IN(test, frame.primitives.size() == 1U);
+  if (!frame.primitives.empty()) {
+    CHECK_IN(test, frame.primitives.front().tet_id == 0U);
+    CHECK_IN(test, frame.primitives.front().micro_triangle_count == 1U);
+    CHECK_IN(test, frame.primitives.front().bounds_min.x >= 2.1 - 1.0e-12);
+    CHECK_IN(test, frame.primitives.front().bounds_max.x <= 2.7 + 1.0e-12);
+  }
+}
+
+void test_cycles_hit_normalization_reconstructs_source_identity() {
+  constexpr const char *test = "Cycles hit normalization reconstructs source identity";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  const auto &fragment = compiled.asset->micro_triangles.front();
+  const tetcage::CyclesMetalHit hit{42U, 0U, 0U, 3.5, 0.25, 0.5};
+  const auto normalized = tetcage::normalize_cycles_metal_hit(*compiled.asset, hit);
+  CHECK_IN(test, normalized.has_value());
+  if (!normalized) {
+    return;
+  }
+  const auto &a = compiled.asset->generated_vertices[fragment.vertex_indices[0]];
+  const auto &b = compiled.asset->generated_vertices[fragment.vertex_indices[1]];
+  const auto &c = compiled.asset->generated_vertices[fragment.vertex_indices[2]];
+  const auto expected = a.source_barycentric * 0.25 + b.source_barycentric * 0.25 +
+                        c.source_barycentric * 0.5;
+  CHECK_IN(test, normalized->object_id == 42U);
+  CHECK_IN(test, normalized->source_primitive == 17U);
+  CHECK_IN(test, normalized->owner_tet == 0U);
+  CHECK_IN(test, near(normalized->distance, 3.5));
+  CHECK_IN(test, near(normalized->source_barycentric, expected, 2.0e-12));
+  CHECK_IN(test, near(normalized->u, expected.y, 2.0e-12));
+  CHECK_IN(test, near(normalized->v, expected.z, 2.0e-12));
+}
+
+void test_cycles_frame_explicitly_falls_back_for_invalid_pose() {
+  constexpr const char *test = "Cycles frame explicitly falls back for invalid pose";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  auto mirrored = single_tet_cage();
+  mirrored.vertices[1].x = -1.0;
+  const auto frame = tetcage::build_cycles_tet_cage_frame(*compiled.asset, mirrored, 18U);
+  CHECK_IN(test, frame.mode == tetcage::CyclesGeometryMode::conventional_mesh);
+  CHECK_IN(test, frame.fallback_reason == tetcage::CyclesFallbackReason::invalid_pose);
+  CHECK_IN(test, frame.primitives.empty());
+  CHECK_IN(test, frame.tet_transforms.empty());
+}
+
+void test_cycles_hit_normalization_rejects_unknown_backend_hits() {
+  constexpr const char *test = "Cycles hit normalization rejects unknown backend hits";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  CHECK_IN(test, !tetcage::normalize_cycles_metal_hit(
+                           *compiled.asset, tetcage::CyclesMetalHit{0U, 1U, 0U, 1.0, 0.2, 0.2})
+                           .has_value());
+  CHECK_IN(test, !tetcage::normalize_cycles_metal_hit(
+                           *compiled.asset, tetcage::CyclesMetalHit{0U, 0U, 2U, 1.0, 0.2, 0.2})
+                           .has_value());
+}
+
 } // namespace
 
 int main() {
@@ -1337,6 +1428,10 @@ int main() {
   test_method_selection_policy_is_explicit_and_deterministic();
   test_robust_tolerance_policy_scales_and_falls_back();
   test_metal_mismatch_classification_and_ray_minimization();
+  test_cycles_frame_builds_pose_bounds_and_provenance_contract();
+  test_cycles_hit_normalization_reconstructs_source_identity();
+  test_cycles_frame_explicitly_falls_back_for_invalid_pose();
+  test_cycles_hit_normalization_rejects_unknown_backend_hits();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

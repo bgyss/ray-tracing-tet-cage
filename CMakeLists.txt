@@ -29,6 +29,7 @@ endif()
 add_library(tetcage_core
   src/core/math.cpp
   src/compiler/asset_compiler.cpp
+  src/compiler/cycles_bridge.cpp
   src/compiler/io.cpp
   src/cpu_reference/oracle.cpp
   src/core/metal_evidence.cpp
