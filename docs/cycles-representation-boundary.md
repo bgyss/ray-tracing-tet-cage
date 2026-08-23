@@ -29,7 +29,10 @@ fallback/debug view: it parses the version-1 asset, creates an ordinary surface
 mesh plus a wireframe cage, attaches source/tet face attributes, and selects
 Cycles as the scene engine. Its contract test accepts an explicit
 `BLENDER_BINARY` so it can use a release binary when the large pinned Debug
-executable cannot start under current host memory pressure.
+executable cannot start under current host memory pressure. The importer now
+creates one immutable canonical mesh object per occupied tet and updates only
+their affine object transforms when the cage changes; the CPU-disabled Metal
+render proof is recorded in the entry manifest.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |

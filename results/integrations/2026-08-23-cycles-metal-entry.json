@@ -96,7 +96,17 @@
     "pose_updated": true,
     "save_reload": true,
     "procedural_metalrt": false,
-    "claim_boundary": "This proves the version-1 asset parser and Blender mesh/wireframe debug fallback. It does not prove Blender-native procedural tet-cage MetalRT ingestion."
+    "metal_render": {
+      "binary": "$BLENDER_BINARY",
+      "cpu_device": false,
+      "metal_device": true,
+      "cycles_metalrt_environment": "CYCLES_METALRT=1",
+      "resolution": "16x16",
+      "samples": 1,
+      "result": "passed",
+      "image_sha256": "0b59c4ef02b733bb4634de92f55157d2884581cf170520ffc7efdbf50f761fdc"
+    },
+    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, and a CPU-disabled Cycles Metal render. It does not prove Blender-native procedural tet-cage MetalRT ingestion."
   },
   "claim_boundary": "This closes the unmodified Cycles MetalRT entry gate and proves the project's static procedural Metal AABB path on the Apple M1 Max. It does not prove Cycles tet-cage ingestion, Cycles renderer shading integration, motion semantics, or Blender UI support."
 }

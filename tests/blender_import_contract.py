@@ -50,11 +50,11 @@ def main() -> int:
             f"payload=import_asset({str(asset)!r}, {str(output)!r}, {str(blend)!r}); "
             "import bpy, json; "
             "cage=bpy.data.objects['TetCage_Debug_Cage']; "
-            "surface=bpy.data.objects['TetCage_Fallback_Surface']; "
-            "before=tuple(surface.data.vertices[0].co); "
+            "surface=bpy.data.objects['TetCage_Tet_0000']; "
+            "before=tuple(surface.matrix_world.translation); "
             "cage.data.vertices[0].co.x += 0.1; "
             "assert update_surface_from_cage(cage); "
-            "after=tuple(surface.data.vertices[0].co); "
+            "after=tuple(surface.matrix_world.translation); "
             f"payload['pose_updated'] = before != after; bpy.ops.wm.save_as_mainfile(filepath={str(blend)!r}); "
             f"pathlib=__import__('pathlib'); pathlib.Path({str(output)!r}).write_text(json.dumps(payload))"
         )
@@ -106,6 +106,8 @@ def main() -> int:
     assert payload["surface_triangles"] == 1
     assert payload["cage_tetrahedra"] == 1
     assert payload["fallback_mode"] == "conventional_mesh"
+    assert payload["render_mode"] == "per_tet_triangle_instances"
+    assert payload["tet_objects"] == 1
     assert payload["pose_update_handler"] is True
     assert payload["pose_updated"] is True
     print("Blender tet-cage import contract: pass")
