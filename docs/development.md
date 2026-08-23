@@ -158,6 +158,8 @@ phase; `deformation_local_motion` exercises it and records the float-noise
 differential against ordinary Cycles.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
+For area-light sensitivity controls, set `TETCAGE_AREA_SIZE` (the default is
+`2.0`; values near zero provide a point-light-like precision control).
 The `normal`, `position`, `uv`, `texture`, `source_normal`, `source_primitive`, `owner_tet`,
 `material_attribute`, and `diffuse` modes expose shading/attribute-parity controls;
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse

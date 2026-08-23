@@ -37,7 +37,7 @@ def _camera_and_light(scene: bpy.types.Scene) -> bool:
     light.data.energy = 2.0 if light_type == "SUN" else (100.0 if light_type == "POINT" else 450.0)
     if light_type == "AREA":
         light.data.shape = "DISK"
-        light.data.size = 2.0
+        light.data.size = float(os.environ.get("TETCAGE_AREA_SIZE", "2.0"))
     if os.environ.get("TETCAGE_DISABLE_SHADOWS") == "1":
         light.data.use_shadow = False
     light.rotation_euler = (Vector((0.3, 0.3, 0.0)) - light.location).to_track_quat(
