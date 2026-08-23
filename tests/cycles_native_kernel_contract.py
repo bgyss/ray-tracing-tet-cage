@@ -32,6 +32,14 @@ def assert_local_branch_uses_projected_helper(root: pathlib.Path, relative: str)
     )
 
 
+def assert_local_runtime_table(root: pathlib.Path, kernel_relative: str, table_relative: str) -> None:
+    kernel = (root / kernel_relative).read_text()
+    table = (root / table_relative).read_text()
+    assert "__intersection__local_tetcage" in kernel
+    assert "add_intersection_functions(METALRT_TABLE_LOCAL" in table
+    assert '"__intersection__local_tetcage"' in table
+
+
 def main() -> int:
     cycles_path = pathlib.Path(
         os.environ.get("CYCLES_NATIVE_WORKTREE", "/Users/briangyss/src/cycles-tetcage-metalrt")
@@ -46,6 +54,14 @@ def main() -> int:
     blender = source_root("BLENDER_NATIVE_WORKTREE", str(blender_path))
     assert_local_branch_uses_projected_helper(cycles, "src/kernel/device/metal/bvh.h")
     assert_local_branch_uses_projected_helper(blender, "intern/cycles/kernel/device/metal/bvh.h")
+    assert_local_runtime_table(
+        cycles, "src/kernel/device/metal/kernel.metal", "src/device/metal/kernel.mm"
+    )
+    assert_local_runtime_table(
+        blender,
+        "intern/cycles/kernel/device/metal/kernel.metal",
+        "intern/cycles/device/metal/kernel.mm",
+    )
     print("Cycles native local-kernel contract: pass")
     return 0
 

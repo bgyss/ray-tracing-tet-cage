@@ -51,13 +51,13 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `4cedb6a79cf1` now recognizes that
+Blender sync. The isolated Blender branch at `cf324b80705f` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local triangle
 scan is compiled for tet objects, and the Metal shadow callback helper is compiled; the
-transparent and AO local probes are pixel-identical, while the closed-tet volume probe is
-numerically close but not exact. Mirrored or near-singular
+transparent and AO local probes are pixel-identical, while static SSS multi-hit now uses the native
+AABB local table and the closed-tet volume probe is numerically close but not exact. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 Its full Blender target, app-bundle install, direct importer probe, Cycles/UI

@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "4cedb6a79cf1b45a03f04b5fa22358c1e9878da7",
+      "revision": "cf324b80705fbab4e3dfbd2a7f5eacbf8f7fc886",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "d50e6b566b3a1744035161bc835f011407b7a5fb",
+    "implementation_revision": "3723557ae33a6738ffe29fea609a6a6991fceb72",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -350,6 +350,32 @@
       "local_query": "runtime static projected-axis triangle scan; max_hits=0",
       "result": "passed",
       "claim_boundary": "Measured the zero-hit local-ray path; SSS reservoir/multi-hit ordering and bevel local semantics remain open."
+    },
+    "native_local_sss_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... local",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Principled subsurface material",
+      "resolution": "16x16",
+      "samples": 1,
+      "local_intersection_table": true,
+      "area": {
+        "native_sha256": "304f0cf07f67c1706ad7ce5e137433909fde6b839d959a3013d2452b29cb9753",
+        "fallback_sha256": "60075b1be703e2083775177e62d684c055a2c60f472a1f3aee80f4df79eb52d9",
+        "pixel_differences": 104,
+        "max_abs_rgb_difference": 3.3495583534240723,
+        "sum_abs_rgb_difference": 34.161255772341974,
+        "result": "open_area_sampling_precision"
+      },
+      "point": {
+        "native_sha256": "991b8469e5426a3e664753e3901765bdbf426c842976efed58fa0d55521a047f",
+        "fallback_sha256": "dac8ee2fd9d85ea816f24a5342dcb1ab3d53a796ae84e6ae93322299e30a4af0",
+        "pixel_differences": 94,
+        "max_abs_rgb_difference": 1.9431114196777344e-05,
+        "sum_abs_rgb_difference": 0.0002824000839609653,
+        "result": "numeric_close"
+      },
+      "claim_boundary": "Static tet SSS multi-hit recording now uses the native AABB local table; point-light error is numeric-close and area-light sampling remains open."
     },
     "native_volume_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... volume",
