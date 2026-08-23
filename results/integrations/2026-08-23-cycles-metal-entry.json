@@ -608,7 +608,7 @@
       "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; the checker texture graph passes, while broader custom shader-node semantics remain open."
     },
     "native_shading_diagnostics": {
-      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|normal_transform|position|uv|texture|diffuse",
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|normal_transform|normal_transform+TETCAGE_MIRROR|position|uv|texture|diffuse",
       "device": "METAL Apple M1 Max",
       "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
       "normal": {
@@ -622,6 +622,15 @@
         "max_abs_difference": 0.0,
         "sum_abs_difference": 0.0,
         "transform": "nonuniform scale (1.7, 0.6, 1.2), shear xy=0.25, plus Euler rotation (0.2, -0.3, 0.15)",
+        "result": "passed"
+      },
+      "normal_mirror": {
+        "native_sha256": "8f52a218c882d359ed9d3e29074209ede189910db9df82195b413c910eb3022b",
+        "fallback_sha256": "12424a83dc23350b3cddcaa591487c5174cf9e0ecd75cf3dd187e611c9b5ef46",
+        "pixel_differences": 0,
+        "max_abs_difference": 0.0,
+        "sum_abs_difference": 0.0,
+        "transform": "negative scale x=-1.7, scale y/z=(0.6, 1.2), shear xy=0.25, plus Euler rotation (0.2, -0.3, 0.15)",
         "result": "passed"
       },
       "position": {

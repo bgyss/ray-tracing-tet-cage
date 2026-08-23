@@ -180,6 +180,8 @@ The `normal`, `normal_transform`, `position`, `uv`, `texture`, `source_normal`, 
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
 control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
 separates shadow traversal from primary/light-sampling precision.
+Set `TETCAGE_MIRROR=1` with `normal_transform` to exercise a negative-scale
+mirror in the same normal differential.
 
 ## Direct Nix workflow
 

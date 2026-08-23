@@ -394,7 +394,8 @@ def _setup_deformation_motion(scene: bpy.types.Scene) -> None:
 def _setup_nonuniform_transform(scene: bpy.types.Scene) -> None:
     for obj in scene.objects:
         if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
-            obj.scale = (1.7, 0.6, 1.2)
+            mirror = -1.0 if os.environ.get("TETCAGE_MIRROR") == "1" else 1.0
+            obj.scale = (mirror * 1.7, 0.6, 1.2)
             obj.rotation_euler = (0.2, -0.3, 0.15)
             matrix = obj.matrix_world.copy()
             matrix[0][1] += 0.25

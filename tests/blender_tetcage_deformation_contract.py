@@ -36,6 +36,7 @@ def main() -> int:
     assert "transparent_pure_motion" in probe_text
     assert "transparent_diffuse_motion" in probe_text
     assert "normal_transform" in probe_text
+    assert "TETCAGE_MIRROR" in probe_text
     print("Blender native deformation contract: pass")
     return 0
 
