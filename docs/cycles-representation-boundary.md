@@ -19,7 +19,7 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `b1b91459d005` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
+revision `ea919ccad4dd` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
 and includes self-filtered opaque-shadow and static local triangle-scan seams.

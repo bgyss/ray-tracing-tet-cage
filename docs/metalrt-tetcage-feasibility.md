@@ -36,7 +36,7 @@ verified in
 
 The production-native primitive is still open. An isolated exploratory Cycles
 branch now contains and builds a bounded `Mesh` adapter plus `TetCageGeometry`
-transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `b1b91459d005`, based on
+transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `ea919ccad4dd`, based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`). An XML-marked mesh builds a
 conservative AABB BLAS and uses `intersection_query<instancing>` to reconstruct
 an ordinary triangle hit; object visibility filtering and a static opaque-shadow
