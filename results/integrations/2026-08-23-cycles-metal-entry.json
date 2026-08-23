@@ -376,6 +376,10 @@
         "max_abs_difference": 5.960464477539063e-08,
         "result": "passed_with_float_noise"
       },
+      "source_normal": {
+        "pixel_differences": 0,
+        "result": "passed"
+      },
       "diffuse_controls": {
         "point": {"pixel_differences": 0, "result": "passed_with_float_noise"},
         "sun": {"pixel_differences": 0, "result": "passed"},

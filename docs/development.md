@@ -127,7 +127,7 @@ zero-hit local-ray path; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
-The `normal`, `position`, `uv`, and `diffuse` modes expose shading-parity controls;
+The `normal`, `position`, `uv`, `source_normal`, and `diffuse` modes expose shading-parity controls;
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
 control.
 
