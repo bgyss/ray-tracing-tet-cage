@@ -99,9 +99,10 @@ def main() -> int:
         )
 
     asset, output_image, output_json = args[:3]
-    mixed_scene = len(args) == 4 and args[3] == "mixed"
-    if len(args) == 4 and args[3] not in {"tet_only", "mixed"}:
+    probe_mode = args[3] if len(args) == 4 else "tet_only"
+    if probe_mode not in {"tet_only", "mixed"}:
         raise RuntimeError("probe mode must be tet_only or mixed")
+    mixed_scene = probe_mode == "mixed"
     payload = import_asset(asset)
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
@@ -140,6 +141,7 @@ def main() -> int:
         "native_candidate": payload.get("native_candidate", False),
         "native_contract": payload.get("native_contract"),
         "scene_mode": "mixed" if mixed_scene else "tet_only",
+        "probe_mode": probe_mode,
         "resolution": "16x16",
         "samples": 1,
         "output": str(pathlib.Path(output_image).resolve()),
