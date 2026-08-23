@@ -223,7 +223,7 @@ def main() -> int:
     _use_black_world(scene)
     if probe_mode in {"motion", "mixed_motion"}:
         _setup_motion(scene, float(os.environ.get("TETCAGE_MOTION_DELTA", "0.0")))
-    scene.cycles.samples = 1
+    scene.cycles.samples = int(os.environ.get("TETCAGE_SAMPLES", "1"))
     scene.cycles.use_adaptive_sampling = False
     scene.cycles.use_denoising = False
     scene.cycles.seed = 0
