@@ -235,3 +235,30 @@ def micro_triangle_uvs(
             )
         )
     return tuple(result)
+
+
+def micro_triangle_normals(
+    asset: dict[str, Any], triangle: dict[str, Any]
+) -> tuple[tuple[float, float, float], ...]:
+    """Interpolate source vertex normals onto one generated micro-triangle."""
+
+    source_by_primitive = {
+        source["primitive_id"]: source for source in asset["source_triangles"]
+    }
+    source_triangle = source_by_primitive.get(triangle["source_primitive"])
+    if source_triangle is None:
+        raise AssetFormatError("micro-triangle source primitive is missing")
+    source_normals = tuple(
+        asset["source_vertices"][vertex_index]["normal"]
+        for vertex_index in source_triangle["vertex_indices"]
+    )
+    result = []
+    for generated_index in triangle["vertex_indices"]:
+        barycentric = asset["generated_vertices"][generated_index]["source_barycentric"]
+        result.append(
+            tuple(
+                sum(barycentric[index] * source_normals[index][axis] for index in range(3))
+                for axis in range(3)
+            )
+        )
+    return tuple(result)

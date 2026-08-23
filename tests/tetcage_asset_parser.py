@@ -12,7 +12,7 @@ import tempfile
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from tetcage_asset import load_asset, micro_triangle_uvs  # noqa: E402
+from tetcage_asset import load_asset, micro_triangle_normals, micro_triangle_uvs  # noqa: E402
 
 
 def main() -> int:
@@ -46,6 +46,11 @@ def main() -> int:
         (0.0, 0.0),
         (1.0, 0.0),
         (0.0, 1.0),
+    )
+    assert micro_triangle_normals(asset, asset["micro_triangles"][0]) == (
+        (0.0, 0.0, 1.0),
+        (0.0, 0.0, 1.0),
+        (0.0, 0.0, 1.0),
     )
     with tempfile.TemporaryDirectory(prefix="tetcage-material-parser-") as raw:
         output = pathlib.Path(raw) / "two-material.tetcage"

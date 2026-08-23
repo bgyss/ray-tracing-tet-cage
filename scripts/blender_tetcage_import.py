@@ -18,7 +18,12 @@ from typing import Any
 import bpy
 from mathutils import Matrix
 
-from tetcage_asset import load_asset, micro_triangle_points, micro_triangle_uvs
+from tetcage_asset import (
+    load_asset,
+    micro_triangle_normals,
+    micro_triangle_points,
+    micro_triangle_uvs,
+)
 
 
 _IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
@@ -111,6 +116,7 @@ def _surface_objects(
     owner_by_tet: dict[int, list[int]] = {}
     materials_by_tet: dict[int, list[int]] = {}
     uvs_by_tet: dict[int, list[tuple[tuple[float, float], ...]]] = {}
+    normals_by_tet: dict[int, list[tuple[tuple[float, float, float], ...]]] = {}
     for triangle in asset["micro_triangles"]:
         tet_id = triangle["tet_id"]
         vertices = vertices_by_tet.setdefault(tet_id, [])
@@ -129,6 +135,7 @@ def _surface_objects(
         owner_by_tet.setdefault(tet_id, []).append(triangle["owner_tet"])
         materials_by_tet.setdefault(tet_id, []).append(triangle["material"])
         uvs_by_tet.setdefault(tet_id, []).append(micro_triangle_uvs(asset, triangle))
+        normals_by_tet.setdefault(tet_id, []).append(micro_triangle_normals(asset, triangle))
 
     surfaces: list[bpy.types.Object] = []
     pose = cage_vertices if cage_vertices is not None else asset["cage_vertices"]
@@ -142,6 +149,10 @@ def _surface_objects(
         for face_index, polygon in enumerate(mesh.polygons):
             for corner, loop_index in enumerate(polygon.loop_indices):
                 uv_layer.data[loop_index].uv = uvs_by_tet[tet_id][face_index][corner]
+        normal_attribute = mesh.attributes.new("tetcage_source_normal", "FLOAT_VECTOR", "CORNER")
+        for face_index, polygon in enumerate(mesh.polygons):
+            for corner, loop_index in enumerate(polygon.loop_indices):
+                normal_attribute.data[loop_index].vector = normals_by_tet[tet_id][face_index][corner]
         source_material_ids = sorted(set(materials_by_tet[tet_id]))
         for material_id in source_material_ids:
             mesh.materials.append(_ensure_source_material(material_id))
@@ -323,6 +334,9 @@ def import_asset(
         "native_contract": "cycles_tetcage_v1",
         "pose_update_handler": True,
         "uv_layer": all(bool(surface.data.uv_layers) for surface in surfaces),
+        "normal_attribute": all(
+            surface.data.attributes.get("tetcage_source_normal") is not None for surface in surfaces
+        ),
         "source_material_ids": sorted(
             {material_id for triangle in asset["micro_triangles"] for material_id in [triangle["material"]]}
         ),

@@ -23,6 +23,7 @@ def main() -> int:
     assert surface.get("tetcage_native_candidate") is True
     assert surface.data.get("tetcage_native_candidate") is True
     assert surface.data.uv_layers.get("UVMap") is not None
+    assert surface.data.attributes.get("tetcage_source_normal") is not None
     assert surface.data.materials
     assert surface.data.materials[0].get("tetcage_source_material_id") == 7
     before = tuple(surface.matrix_world.translation)
