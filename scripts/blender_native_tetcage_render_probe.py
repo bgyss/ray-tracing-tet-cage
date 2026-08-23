@@ -185,16 +185,25 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|transparent|local|ao|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|transparent|local|ao|volume]"
         )
 
     asset, output_image, output_json = args[:3]
     probe_mode = args[3] if len(args) == 4 else "tet_only"
-    if probe_mode not in {"tet_only", "mixed", "motion", "transparent", "local", "ao", "volume"}:
+    if probe_mode not in {
+        "tet_only",
+        "mixed",
+        "motion",
+        "mixed_motion",
+        "transparent",
+        "local",
+        "ao",
+        "volume",
+    }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, transparent, local, ao, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, transparent, local, ao, or volume"
         )
-    mixed_scene = probe_mode == "mixed"
+    mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
@@ -212,7 +221,7 @@ def main() -> int:
     else:
         _use_probe_emission_material(mixed_scene)
     _use_black_world(scene)
-    if probe_mode == "motion":
+    if probe_mode in {"motion", "mixed_motion"}:
         _setup_motion(scene, float(os.environ.get("TETCAGE_MOTION_DELTA", "0.0")))
     scene.cycles.samples = 1
     scene.cycles.use_adaptive_sampling = False

@@ -118,6 +118,8 @@ through ordinary triangle fallback. The checked-in probe uses a fixed emission
 shader and removes unrelated meshes in `tet_only` mode so the differential
 measures intersection rather than lighting noise. Pass `motion` instead of
 `mixed` and set `TETCAGE_MOTION_DELTA=0.15` to exercise object-transform motion;
+pass `mixed_motion` to retain the ordinary cube while exercising the same motion
+handoff;
 deformation-motion candidates remain on the ordinary fallback until their
 per-frame tet geometry is implemented. The `transparent` mode exercises the
 transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the

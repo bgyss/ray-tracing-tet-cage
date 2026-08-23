@@ -263,6 +263,20 @@
       "result": "passed",
       "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene; deformation-motion geometry frames, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
     },
+    "native_mixed_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "ordinary default cube plus moving tet-cage candidate",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "motion_delta": 0.15,
+      "native_sha256": "329e9b68701a319964d1ab9f23ef0c388dfc77c0b3790199cdba6eeb6b42b184",
+      "fallback_sha256": "9a05f195cd03f03bbab69dd0ecee2ab24af4ceac7facd473532a654bea39bd12",
+      "pixel_differences": 0,
+      "result": "passed",
+      "claim_boundary": "Measured mixed ordinary-triangle plus object-transform-motion tet traversal under fixed emission; deformation motion and broader material/visibility semantics remain open."
+    },
     "native_transparent_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... transparent",
       "device": "METAL Apple M1 Max",
