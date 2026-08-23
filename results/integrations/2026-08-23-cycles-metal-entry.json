@@ -56,6 +56,25 @@
     },
     "images_byte_identical": true
   },
+  "ordinary_nonopaque_scene_metalrt": {
+    "scene": "scene_caustics.xml",
+    "resolution": "16x16",
+    "samples": 1,
+    "off": {
+      "environment": "CYCLES_METALRT=0",
+      "result": "passed",
+      "acceleration_layout": "BVH2",
+      "image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a"
+    },
+    "on": {
+      "environment": "CYCLES_METALRT=1",
+      "result": "passed",
+      "acceleration_layout": "mesh BLAS plus TLAS",
+      "image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a"
+    },
+    "images_byte_identical": true,
+    "claim_boundary": "This is ordinary Cycles MetalRT coverage for glass/caustics and non-opaque traversal. It is not tet-cage semantic coverage."
+  },
   "tet_cage_procedural_path": {
     "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
     "command": "tetcage_metal_fast_path one-tet.tetcage --copies 1 --rays 64 --motion 0.0 --compact",

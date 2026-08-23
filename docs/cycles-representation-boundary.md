@@ -18,6 +18,10 @@ unmodified pinned Cycles MetalRT backend on the Apple M1 Max and the project's
 standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
+The same manifest includes an ordinary Cycles glass/caustics comparison. That
+closes only the upstream MetalRT non-opaque baseline; the tet-cage path still
+needs its own shadow, transparent, local-intersection, and mixed-scene tests.
+
 `tetcage_cycles_xml` now provides the explicit conventional-geometry fallback:
 it emits a small Cycles XML scene from the compiled micro-triangles, preserving
 the ordinary renderer path while the procedural primitive is incomplete. The
