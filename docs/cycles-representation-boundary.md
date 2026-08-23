@@ -19,7 +19,8 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `d50e6b566b3a` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
+revision `d681459a2aceeefb36764d636d0769e138bb9950` (based on
+`1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
 and includes self-filtered opaque-shadow, static local projected-axis triangle-scan, and native
@@ -51,7 +52,7 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `ca1768d89f4e9` now recognizes that
+Blender sync. The isolated Blender branch at `3650bd04de8` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local AABB

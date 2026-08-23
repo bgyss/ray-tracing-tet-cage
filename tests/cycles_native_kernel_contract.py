@@ -64,6 +64,12 @@ def main() -> int:
         "intern/cycles/kernel/device/metal/kernel.metal",
         "intern/cycles/device/metal/kernel.mm",
     )
+    assert "motion_triangle_vertices(kg, local_object, prim, ray->time" in (
+        (cycles / "src/kernel/device/metal/bvh.h").read_text()
+    )
+    assert "motion_triangle_vertices(kg, local_object, prim, ray->time" in (
+        (blender / "intern/cycles/kernel/device/metal/bvh.h").read_text()
+    )
     print("Cycles native local-kernel contract: pass")
     return 0
 

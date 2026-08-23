@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "ca1768d89f4e9e8bcab0475fb3d4c99a97533e07",
+      "revision": "3650bd04de8fd6dedac686fde210e7fcd10b211d",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "2fefa15ad30faf64631dda78d158cd08f4df4092",
+    "implementation_revision": "d681459a2aceeefb36764d636d0769e138bb9950",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -420,23 +420,24 @@
       "resolution": "16x16",
       "samples": 1,
       "motion_local_intersection_table": true,
+      "motion_local_normal_source": "motion_triangle_vertices at ray->time for local-hit Ng",
       "area": {
-        "native_sha256": "73465122802852c96d17fa8919b413ce7f18360d137cf9fdaaf3535d26c7236c",
-        "fallback_sha256": "da48b1cf04a73e5c7764b749acecb6195d546f20d25aa66a5166087a4c627e0d",
+        "native_sha256": "99234a07112d1ed1d6449cf4e4bfa973f70350cbcd8df18b9eca777692745199",
+        "fallback_sha256": "f6da056c9785517829b5db57cb5e4c3b17c67b67987d3a51f515de6f14566016",
         "pixel_differences": 109,
-        "max_abs_rgb_difference": 14.347710533067584,
-        "sum_abs_rgb_difference": 849.9367846820969,
+        "max_abs_rgb_difference": 14.347710533998907,
+        "sum_abs_rgb_difference": 849.9367401520722,
         "result": "open_motion_local_ordering"
       },
       "point": {
-        "native_sha256": "3527ea6dcddeb1291955bc70d7165f84a6c2de7d7f17700e91a3d7f6212bbb77",
-        "fallback_sha256": "b8c8180c12ba39746c98102286d611dd6713fb7bb0a19a530d4df584fefc2f98",
+        "native_sha256": "61c1b7ab842f3437a16184d41307e50ba3a0a3d4cc9f5120d66efd9d5df7b3fe",
+        "fallback_sha256": "2d38005bed243d6c70dd9c64493747c8e2c4e0b73640a4e05ab0fef54068e0c7",
         "pixel_differences": 109,
-        "max_abs_rgb_difference": 1.5817457268713042,
-        "sum_abs_rgb_difference": 101.62993625129457,
+        "max_abs_rgb_difference": 1.5817458460805938,
+        "sum_abs_rgb_difference": 101.6299308007001,
         "result": "open_motion_local_ordering"
       },
-      "claim_boundary": "The motion-local callback is compiled and exercised, but animated SSS hit ordering is not yet equivalent to ordinary Cycles."
+      "claim_boundary": "Motion-local geometric normals now come from the sampled motion frame; the differential is unchanged, so animated SSS hit ordering/closure remains open."
     },
     "native_volume_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... volume",
