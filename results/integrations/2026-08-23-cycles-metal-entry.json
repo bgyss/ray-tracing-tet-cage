@@ -487,7 +487,37 @@
         }
       },
       "result": "measured_with_native_volume_table; area_light_difference; point_and_sun_float_noise_only",
-      "claim_boundary": "Volume entry/exit query runs and remains numerically close to the ordinary Cycles path, but is not yet exact; volume precision and multi-object stack semantics remain open."
+      "multi_tet_stack": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "cage_tetrahedra": 2,
+        "native_volume_table": true,
+        "point": {
+          "native_sha256": "a1c3cf74ad296b69853871466d8e360ce9c9c500f7b77c1468a7f8e7cb4e74dd",
+          "fallback_sha256": "48d4208040c88b262e4e82e2fd61ccf29313d29003a9a54347ee1f48583f92fd",
+          "pixel_differences": 70,
+          "max_abs_rgb_difference": 3.501772880554199e-07,
+          "sum_abs_rgb_difference": 4.3720356188714504e-06,
+          "result": "float_noise"
+        },
+        "sun": {
+          "native_sha256": "4c7d1d6cacab9bebce5b931d45708fab3b3c4697fa36a1c76fb9935e1e81a053",
+          "fallback_sha256": "e675453b3724d24d715d30247fdcfb72a0837fc154fa9ecee9574b3ef1aeed0b",
+          "pixel_differences": 66,
+          "max_abs_rgb_difference": 1.9371509552001953e-07,
+          "sum_abs_rgb_difference": 2.4170440156012774e-06,
+          "result": "float_noise"
+        },
+        "area": {
+          "native_sha256": "f261d56d38947803d1831bf96dffcf153ac05ae99e7db6adc765169fdeddf01c",
+          "fallback_sha256": "c5808db7ec93183305f99d3a8271185dfb199b6844edc1de1c49eb9cb88870a1",
+          "pixel_differences": 76,
+          "max_abs_rgb_difference": 0.7615760564804077,
+          "sum_abs_rgb_difference": 1.961035904532764,
+          "result": "open_area_sampling_precision"
+        },
+        "result": "two_tet_stack_point_sun_float_noise; area_open"
+      },
+      "claim_boundary": "Volume entry/exit query runs for single and two-tet stacks; point/sun controls are float-noise-only, while area-light precision remains open."
     },
     "native_material_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... material",

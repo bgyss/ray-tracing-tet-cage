@@ -58,7 +58,7 @@ static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local AABB
 `ift_local` callback is compiled for tet objects, and the Metal shadow callback helper is compiled; the
 transparent and AO local probes are pixel-identical, while static SSS multi-hit now uses the native
-AABB local table and the closed-tet volume probe is numerically close but not exact. Mirrored or near-singular
+AABB local table and the single/two-tet volume probes are numerically close but not exact under area sampling. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 Its full Blender target, app-bundle install, direct importer probe, Cycles/UI

@@ -50,8 +50,8 @@ and sun controls but diverges under area sampling; static SSS multi-hit now uses
 the native AABB local intersection table, while animated SSS now uses a
 motion-aware native local narrow phase and matches the ordinary path to float
 noise on the declared fixture. Integer source-primitive, owner-tet,
-and material face attributes also match on the two-material fixture. The closed-tet volume probe
-is float-noise-only under point and sun controls and diverges only under area
+and material face attributes also match on the two-material fixture. The single- and two-tet
+volume probes are float-noise-only under point and sun controls and diverge only under area
 sampling. An isolated
 Blender branch (`c0d56cde6409`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
