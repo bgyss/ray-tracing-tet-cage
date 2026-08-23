@@ -91,7 +91,7 @@ def _use_transparent_probe_material() -> None:
     emission.inputs["Color"].default_value = (0.7, 0.15, 0.03, 1.0)
     emission.inputs["Strength"].default_value = 1.0
     mix = nodes.new("ShaderNodeMixShader")
-    mix.inputs[0].default_value = 0.5
+    mix.inputs[0].default_value = float(os.environ.get("TETCAGE_TRANSPARENT_MIX", "0.5"))
     links.new(transparent.outputs["BSDF"], mix.inputs[1])
     links.new(emission.outputs["Emission"], mix.inputs[2])
     links.new(mix.outputs[0], output.inputs["Surface"])
@@ -452,6 +452,7 @@ def main() -> int:
         "resolution": "16x16",
         "samples": 1,
         "shadows_enabled": shadows_enabled,
+        "transparent_mix": float(os.environ.get("TETCAGE_TRANSPARENT_MIX", "0.5")),
         "output": str(pathlib.Path(output_image).resolve()),
     }
     pathlib.Path(output_json).write_text(json.dumps(result, sort_keys=True) + "\n")

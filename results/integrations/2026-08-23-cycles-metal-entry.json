@@ -349,7 +349,16 @@
       "max_abs_difference": 0.3499999940395355,
       "sum_abs_difference": 15.839999880641699,
       "result": "open_motion_shadow_all_precision",
-      "claim_boundary": "The motion shadow-all callback runs, but animated transparent traversal is not yet equivalent to ordinary Cycles."
+      "emission_mix": {
+        "transparent_mix": 1.0,
+        "native_sha256": "b2306c2cb100679a729bba0f26937494c0b53b0d489563ec385656ee3ef4fc82",
+        "fallback_sha256": "7ef6e7b234612c62c056e83e5a1ccabd9dd26900d21db850cdee8da01bfeeb36",
+        "pixel_differences": 36,
+        "max_abs_difference": 0.699999988079071,
+        "sum_abs_difference": 31.679999761283398,
+        "result": "open_motion_shading_precision"
+      },
+      "claim_boundary": "The motion shadow-all callback runs, but animated transparent/emission traversal is not yet equivalent to ordinary Cycles; the residual persists with the transparent mix set to emission-only."
     },
     "native_local_ao_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... ao",
