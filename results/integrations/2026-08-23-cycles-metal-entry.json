@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "d4d3ec46c932da229b52ca3fd7874d1f9f0beb06",
+      "revision": "d3da8bef39b46e22a590656ef5203353a611951d",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -44,7 +44,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "bb95089371bb4aef813b336ae0987419e2490769",
+    "implementation_revision": "68ecd6550c6d0ae9ec2d6f0a3f5dbbe1c09371ab",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -69,6 +69,7 @@
       "query_tags": "intersection_query<instancing>",
       "aabb_blas": true,
       "shadow_query": "compiled_static_self_filtered; emission image regression passed; dedicated shadow image pending",
+      "local_query": "compiled_static_triangle_scan; runtime regression pending",
       "shader": "emission",
       "resolution": "8x8",
       "samples": 1,
@@ -77,7 +78,7 @@
       "file_bytes_identical": false,
       "pixel_differences": 0,
       "result": "passed",
-      "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering and a compiled self-filtered opaque-shadow seam; motion, transparent/shadow-all, local, volume, mixed-scene, and full Blender-native semantics remain open."
+      "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering, mixed triangle/AABB candidate handling, a compiled self-filtered opaque-shadow seam, and a compiled local triangle scan; motion, transparent/shadow-all, volume, runtime local regression, and full Blender-native semantics remain open."
     },
     "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
     "claim_boundary": "This is an experimental Mesh adapter and Metal AABB/query path, not production tet-cage Geometry semantics. It does not yet cover motion, record-all/local/volume traversal, complete shading attributes, or Blender-native Metal dispatch."

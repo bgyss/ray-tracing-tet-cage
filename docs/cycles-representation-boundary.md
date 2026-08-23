@@ -19,12 +19,13 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `bb9508937` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
+revision `68ecd6550c6d` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
-and includes a self-filtered opaque-shadow seam. It remains an adapter rather
-than a production tet-cage Geometry type; motion, record-all/local/volume,
-transparent, mixed-scene, and full shading semantics remain open.
+and includes self-filtered opaque-shadow and static local triangle-scan seams.
+It remains an adapter rather than a production tet-cage Geometry type; motion,
+record-all/transparent/volume, runtime local qualification, and full shading
+semantics remain open.
 
 The same manifest includes an ordinary Cycles glass/caustics comparison. That
 closes only the upstream MetalRT non-opaque baseline; the tet-cage path still
@@ -45,10 +46,12 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `d4d3ec46c93c` now recognizes that
+Blender sync. The isolated Blender branch at `d3da8bef39b4` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
-intersection queries while preserving ordinary mesh fallback by default. Mirrored or near-singular
+intersection queries while preserving ordinary mesh fallback by default. A static local triangle
+scan is compiled for tet objects, and the Metal shadow callback helper is compiled; runtime
+local/transparent/volume qualification remains pending. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 Its full Blender target, app-bundle install, direct importer probe, Cycles/UI
