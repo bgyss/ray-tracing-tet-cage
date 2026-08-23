@@ -349,6 +349,26 @@
           "result": "open_area_sampling_precision"
         }
       },
+      "sss_controls": {
+        "point": {
+          "pixel_differences": 167,
+          "max_abs_difference": 3.0159950256347656e-05,
+          "sum_abs_difference": 0.00029370791162364185,
+          "result": "numeric_close"
+        },
+        "sun": {
+          "pixel_differences": 166,
+          "max_abs_difference": 2.9206275939941406e-05,
+          "sum_abs_difference": 0.0002854950726032257,
+          "result": "numeric_close"
+        },
+        "area": {
+          "pixel_differences": 203,
+          "max_abs_difference": 3.3495712280273438,
+          "sum_abs_difference": 34.16148420760874,
+          "result": "open_area_sampling_precision"
+        }
+      },
       "claim_boundary": "Native normal and position handoff is measured; point/sun direct lighting matches, while area-light sampling remains an explicit parity gate."
     },
     "metal_render": {
