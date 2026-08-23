@@ -36,22 +36,27 @@ verified in
 
 The production-native primitive is still open. An isolated exploratory Cycles
 branch now contains and builds a bounded `Mesh` adapter plus `TetCageGeometry`
-transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `ccec7f0c3085`, based on
+transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `254981c6ff6d`, based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`). An XML-marked mesh builds a
 conservative AABB BLAS and uses `intersection_query<instancing>` to reconstruct
 an ordinary triangle hit; object visibility filtering and a static opaque-shadow
 query seam are compiled, and source primitive/triangle/micro IDs are packed for
 ShaderData. The static emission comparison is pixel-identical to the ordinary
-triangle reference on the M1 Max. Motion, shadow-all, local, transparent,
-volume, mixed-scene, full shading-attribute semantics, and Blender-native Metal
-dispatch remain unproven. An isolated Blender branch (`15e7cfa2b08b`) compiles
+triangle reference on the M1 Max. Object-transform motion, transparent/shadow
+traversal, and the zero-hit local-ray path now have native Blender differentials;
+the closed-tet volume probe is numerically close but not exact. An isolated
+Blender branch (`3b24eb4f0606`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds
 a native AABB BLAS, and passes tet-only and mixed ordinary-triangle/native-AABB
-native-vs-fallback emission differentials. Static local scanning and shadow
-callback seams compile in both native lanes. Its full Blender target, app-bundle
-install, direct importer probe, and Cycles/UI smoke also pass. Motion,
-transparent/shadow-all, local/volume, and full Principled shading semantics
+native-vs-fallback emission differentials. Its motion callback now carries the
+accepted tet barycentrics through the MetalRT payload, and an object-transform
+motion differential passes pixel-for-pixel; deformation motion remains on the
+ordinary mesh fallback. Static local scanning and shadow callback seams compile
+in both native lanes. Its full Blender target, app-bundle install, direct
+importer probe, real-window/background Cycles/UI smoke, and tet-only, mixed,
+motion, transparent, and AO-local probes also pass. SSS multi-hit ordering,
+exact volume precision, deformation motion, and full Principled shading semantics
 remain open.
 
 ## Scope and evidence snapshot
@@ -59,7 +64,7 @@ remain open.
 | Item | Observation |
 | --- | --- |
 | Standalone Cycles source | `$CYCLES_SOURCE_ROOT` at `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a` (2026-07-13), clean when inspected. |
-| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `15e7cfa2b08bdaf21a743b9ca797d5277307a7c5` compiles and verifies opt-in static native tet-cage dispatch without changing the source checkout. |
+| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `3b24eb4f0606bf610d9fe2e97008c8ed5d6ac690` compiles and verifies opt-in static plus object-transform-motion native tet-cage dispatch without changing the source checkout. |
 | Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. Ordinary Cycles MetalRT and the project's standalone tet-cage Metal path are separately evidenced; this is not a claim of native Cycles tet-cage rendering. |
 | Current toolchain boundary | Xcode 26.6 and the optional Metal Toolchain are installed; `xcrun metal -v` reports Apple metal `32023.883`. The pinned shader-bearing Cycles Metal build completes on arm64. |
 | Existing project Metal evidence | The repository's clean M5 record, `results/metal/2026-07-29-m5-clean-rerun.json`, identifies Apple M1 Max and clean commit `32af558`; it is evidence for this project's standalone declared corpus, not evidence that Cycles renders tet-cages. |

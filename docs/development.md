@@ -116,7 +116,13 @@ CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 \
 Unset `CYCLES_TETCAGE_NATIVE` (or set it to `0`) to render the same probe
 through ordinary triangle fallback. The checked-in probe uses a fixed emission
 shader and removes unrelated meshes in `tet_only` mode so the differential
-measures intersection rather than lighting noise.
+measures intersection rather than lighting noise. Pass `motion` instead of
+`mixed` and set `TETCAGE_MOTION_DELTA=0.15` to exercise object-transform motion;
+deformation-motion candidates remain on the ordinary fallback until their
+per-frame tet geometry is implemented. The `transparent` mode exercises the
+transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the
+zero-hit local-ray path; and `volume` on the same closed fixture records the
+current numeric volume differential rather than treating it as exact.
 
 ## Direct Nix workflow
 

@@ -6,11 +6,16 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import sys
 
 import bpy
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import blender_tetcage_import
+
 
 def main() -> int:
+    blender_tetcage_import.register_ui()
     build_options = bpy.app.build_options
     required_options = {
         "cycles": bool(getattr(build_options, "cycles", False)),
@@ -28,6 +33,8 @@ def main() -> int:
         "blender_version": bpy.app.version_string,
         "background": bool(bpy.app.background),
         "window_context": bool(bpy.context.window),
+        "tetcage_ui_registered": hasattr(bpy.types, "TETCAGE_PT_debug")
+        and hasattr(bpy.types, "TETCAGE_OT_validate_pose"),
         "build_options": required_options,
         "render_engine": scene.render.engine,
         "cycles_device": scene.cycles.device,
@@ -40,7 +47,7 @@ def main() -> int:
     if output_path:
         pathlib.Path(output_path).expanduser().write_text(encoded + "\n")
 
-    return 1 if missing_options else 0
+    return 1 if missing_options or not payload["tetcage_ui_registered"] else 0
 
 
 if __name__ == "__main__":

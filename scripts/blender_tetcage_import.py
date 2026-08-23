@@ -24,6 +24,66 @@ from tetcage_asset import load_asset, micro_triangle_points
 _IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
 
 
+class TETCAGE_OT_validate_pose(bpy.types.Operator):
+    """Validate the selected imported cage pose and refresh its fallback surfaces."""
+
+    bl_idname = "tetcage.validate_pose"
+    bl_label = "Validate Tet Cage Pose"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, _context: bpy.types.Context) -> set[str]:
+        cages = [obj for obj in bpy.context.scene.objects if obj.get("tetcage_debug_view")]
+        if not cages:
+            self.report({"WARNING"}, "No imported tet-cage debug object is present")
+            return {"CANCELLED"}
+        valid = all(update_surface_from_cage(cage) for cage in cages)
+        if valid:
+            self.report({"INFO"}, "Tet-cage pose is valid")
+            return {"FINISHED"}
+        self.report({"WARNING"}, "Tet-cage pose is invalid; fallback transforms were retained")
+        return {"CANCELLED"}
+
+
+class TETCAGE_PT_debug(bpy.types.Panel):
+    """Small debug panel for the imported tet-cage contract."""
+
+    bl_label = "Tet Cage Debug"
+    bl_idname = "TETCAGE_PT_debug"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Tet Cage"
+
+    def draw(self, context: bpy.types.Context) -> None:
+        layout = self.layout
+        scene = context.scene
+        layout.label(text=f"Contract: {scene.get('tetcage_native_contract', 'none')}")
+        layout.label(text=f"Mode: {scene.get('tetcage_fallback_mode', 'unknown')}")
+        layout.label(text=f"Native candidate: {bool(scene.get('tetcage_native_candidate'))}")
+        cage = next(
+            (obj for obj in scene.objects if obj.get("tetcage_debug_view")),
+            None,
+        )
+        if cage is not None:
+            layout.label(text=f"Pose generation: {cage.get('tetcage_pose_generation', 0)}")
+            layout.label(text=f"Reason: {cage.get('tetcage_fallback_reason', 'none')}")
+        layout.operator(TETCAGE_OT_validate_pose.bl_idname, icon="CHECKMARK")
+
+
+_UI_CLASSES = (TETCAGE_OT_validate_pose, TETCAGE_PT_debug)
+
+
+def register_ui() -> None:
+    for cls in _UI_CLASSES:
+        if getattr(bpy.types, cls.__name__, None) is None:
+            bpy.utils.register_class(cls)
+
+
+def unregister_ui() -> None:
+    for cls in reversed(_UI_CLASSES):
+        if getattr(bpy.types, cls.__name__, None) is not None:
+            bpy.utils.unregister_class(cls)
+
+
 def _tet_matrix(asset: dict[str, Any], cage_vertices: list[dict[str, Any]], tet_id: int) -> Any:
     tet = asset["cage_tetrahedra"][tet_id]
     p0, p1, p2, p3 = (cage_vertices[index]["position"] for index in tet)
@@ -188,6 +248,7 @@ def _depsgraph_update(_scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph) -
 def register_handlers() -> None:
     if _depsgraph_update not in bpy.app.handlers.depsgraph_update_post:
         bpy.app.handlers.depsgraph_update_post.append(_depsgraph_update)
+    register_ui()
 
 
 def import_asset(
