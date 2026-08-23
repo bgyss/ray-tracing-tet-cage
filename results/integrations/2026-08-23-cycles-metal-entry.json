@@ -17,7 +17,7 @@
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
       "revision": "c0d56cde64098166b2d9b5fdef0df48d5f0ef042",
-      "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
+      "working_tree": "clean; lib/macos_arm64 pinned at a76ef917b4849ba2b1b1deb1a643e131a884a63b",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
       "install": "passed",
