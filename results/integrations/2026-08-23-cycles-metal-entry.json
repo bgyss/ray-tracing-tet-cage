@@ -502,7 +502,7 @@
       "pixel_differences": 0,
       "source_material_ids": [7, 11],
       "result": "passed",
-      "claim_boundary": "Measured source material-slot selection through native and ordinary Cycles paths; full texture/custom-attribute semantics remain open."
+      "claim_boundary": "Measured source material-slot selection and a UV-driven checker texture node through native and ordinary Cycles paths; broader texture/custom-attribute semantics remain open."
     },
     "native_attribute_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... source_primitive|owner_tet|material_attribute",
@@ -528,10 +528,10 @@
         "pixel_differences": 0,
         "result": "passed"
       },
-      "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; texture/custom shader-node semantics remain open."
+      "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; the checker texture graph passes, while broader custom shader-node semantics remain open."
     },
     "native_shading_diagnostics": {
-      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|diffuse",
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|uv|texture|diffuse",
       "device": "METAL Apple M1 Max",
       "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
       "normal": {
@@ -547,6 +547,13 @@
         "pixel_differences": 0,
         "max_abs_difference": 5.960464477539063e-08,
         "result": "passed_with_float_noise"
+      },
+      "texture": {
+        "native_sha256": "6f439f8ab7a2ff4b88ccf11ed48196992f704b5216220eb4805101290f7f14ad",
+        "fallback_sha256": "6e5d0ac81855d765815a6a8d25446f40e3107bdb629e53fa26b8f03c0437624b",
+        "pixel_differences": 0,
+        "shader": "UV -> Checker Texture -> Emission",
+        "result": "passed"
       },
       "source_normal": {
         "pixel_differences": 0,

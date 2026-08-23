@@ -154,7 +154,7 @@ phase; `deformation_local_motion` exercises it and records the float-noise
 differential against ordinary Cycles.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
-The `normal`, `position`, `uv`, `source_normal`, `source_primitive`, `owner_tet`,
+The `normal`, `position`, `uv`, `texture`, `source_normal`, `source_primitive`, `owner_tet`,
 `material_attribute`, and `diffuse` modes expose shading/attribute-parity controls;
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
 control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
