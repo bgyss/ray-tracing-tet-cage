@@ -197,6 +197,8 @@
     "procedural_metalrt": false,
     "native_candidate": true,
     "native_contract": "cycles_tetcage_v1",
+    "uv_layer": true,
+    "source_material_ids": [7],
     "direct_probe": {
       "command": "$BLENDER_BINARY --background --factory-startup --python-exit-code 7 --python scripts/blender_import_contract_probe.py",
       "result": "passed",

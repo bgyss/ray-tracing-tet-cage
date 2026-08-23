@@ -142,8 +142,14 @@ def _surface_objects(
         for face_index, polygon in enumerate(mesh.polygons):
             for corner, loop_index in enumerate(polygon.loop_indices):
                 uv_layer.data[loop_index].uv = uvs_by_tet[tet_id][face_index][corner]
+        source_material_ids = sorted(set(materials_by_tet[tet_id]))
+        for material_id in source_material_ids:
+            mesh.materials.append(_ensure_source_material(material_id))
+        for polygon_index, polygon in enumerate(mesh.polygons):
+            polygon.material_index = source_material_ids.index(materials_by_tet[tet_id][polygon_index])
         mesh["tetcage_native_candidate"] = True
         mesh["tetcage_native_contract"] = "cycles_tetcage_v1"
+        mesh["tetcage_source_material_ids"] = source_material_ids
         primitive_attribute = mesh.attributes.new("tetcage_source_primitive", "INT", "FACE")
         owner_attribute = mesh.attributes.new("tetcage_owner_tet", "INT", "FACE")
         material_attribute = mesh.attributes.new("tetcage_material", "INT", "FACE")
@@ -193,6 +199,22 @@ def _ensure_surface_material() -> bpy.types.Material:
     material = bpy.data.materials.get("TetCage_Fallback_Material")
     if material is None:
         material = bpy.data.materials.new("TetCage_Fallback_Material")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled is not None:
+        principled.inputs["Base Color"].default_value = (0.15, 0.45, 0.8, 1.0)
+        principled.inputs["Roughness"].default_value = 0.35
+    return material
+
+
+def _ensure_source_material(material_id: int) -> bpy.types.Material:
+    name = f"TetCage_Source_Material_{material_id}"
+    material = bpy.data.materials.get(name)
+    if material is None:
+        material = bpy.data.materials.new(name)
+    material["tetcage_source_material_id"] = material_id
+    material["tetcage_material_role"] = "source"
     material.use_nodes = True
     nodes = material.node_tree.nodes
     principled = nodes.get("Principled BSDF")
@@ -268,9 +290,9 @@ def import_asset(
         scene.render.engine = "CYCLES"
     surfaces = _surface_objects(asset)
     cage = _cage_object(asset)
-    material = _ensure_surface_material()
     for surface in surfaces:
-        surface.data.materials.append(material)
+        if not surface.data.materials:
+            surface.data.materials.append(_ensure_surface_material())
     asset_path = str(pathlib.Path(asset_path).resolve())
     _IMPORTED_ASSETS[asset_path] = asset
     cage["tetcage_asset_path"] = asset_path
@@ -301,6 +323,9 @@ def import_asset(
         "native_contract": "cycles_tetcage_v1",
         "pose_update_handler": True,
         "uv_layer": all(bool(surface.data.uv_layers) for surface in surfaces),
+        "source_material_ids": sorted(
+            {material_id for triangle in asset["micro_triangles"] for material_id in [triangle["material"]]}
+        ),
     }
     register_handlers()
     if output_json is not None:
