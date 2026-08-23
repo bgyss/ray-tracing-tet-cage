@@ -142,6 +142,11 @@ if(TETCAGE_BUILD_TOOLS)
       COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_probe_contract.sh")
     add_test(NAME tetcage.cycles_verify_contract
       COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_verify_contract.py")
+    add_test(NAME tetcage.cycles_native_kernel_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_native_kernel_contract.py")
+    set_tests_properties(tetcage.cycles_native_kernel_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Cycles native local-kernel contract: (pass|skipped)")
     add_test(NAME tetcage.asset_inspector_cli
       COMMAND tetcage_inspect "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage")
     set_tests_properties(tetcage.asset_inspector_cli PROPERTIES

@@ -50,9 +50,9 @@ The first MetalRT entry proof, the standalone static native tet-cage path, and
 the isolated Blender candidate build are recorded in
 `results/integrations/2026-08-23-cycles-metal-entry.json`. This is a direct
 Metal baseline plus standalone AABB/custom-intersection evidence. Blender's
-embedded candidate recognizes the versioned ID-property contract but retains
-ordinary mesh fallback; native Blender tet-cage dispatch and UI/debug rendering
-remain later gates.
+embedded candidate recognizes the versioned ID-property contract, activates an
+opt-in native AABB/query path, and exposes the Tet Cage Debug UI; unsupported
+deformation and unqualified shading semantics retain ordinary mesh fallback.
 
 `cycles-verify` is read-only. It checks the pinned source and dependency
 revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
@@ -112,6 +112,16 @@ CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 \
   --python scripts/blender_native_tetcage_render_probe.py -- \
   build/one-tet.tetcage build/blender-native.exr build/blender-native.json mixed
 ```
+
+The native source contract can be checked without launching Blender:
+
+```sh
+python3 tests/cycles_native_kernel_contract.py
+```
+
+It verifies that both native Cycles lanes use the projected-axis tet predicate
+and the Cycles local hit-record policy; it skips when the isolated source
+worktrees are unavailable.
 
 Unset `CYCLES_TETCAGE_NATIVE` (or set it to `0`) to render the same probe
 through ordinary triangle fallback. The checked-in probe uses a fixed emission

@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "882b1483dcc6e2308d6ed09574c3e91e4205bf03",
+      "revision": "9f1267111935b86b349c52b223862a7047913e0b",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "8517d22ce10874c789d720cec1dfc1c47540365d",
+    "implementation_revision": "20a72619765e170ec2270c32af212581de034d7d",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -55,6 +55,21 @@
       "verified_cycles_build": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
       "verified_blender_build": "cmake --build $BLENDER_NATIVE_BUILD_DIR --target blender --parallel 8",
       "result": "passed"
+    },
+    "local_kernel_contract": {
+      "command": "python3 tests/cycles_native_kernel_contract.py",
+      "result": "passed",
+      "narrow_phase": "metal_tetcage_triangle_intersect_local uses projected-axis acceptance and Cycles local hit recording",
+      "self_filter": "Metal-safe ray->self.prim == prim policy",
+      "runtime_probe": {
+        "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+        "probe": "local",
+        "rgb_pixel_differences": 103,
+        "max_abs_rgb_difference": 3.349564552307129,
+        "sum_abs_rgb_difference": 34.16133675526362,
+        "result": "measured_area_sampling_difference",
+        "claim_boundary": "The local path now shares the projected tet predicate, but SSS multi-hit ordering and area-light parity remain open."
+      }
     },
     "contract": [
       "immutable provenance-bearing micro-triangles",
@@ -77,16 +92,16 @@
       "query_tags": "intersection_query<instancing>",
       "aabb_blas": true,
       "shadow_query": "compiled_static_self_filtered; emission image regression passed; dedicated shadow image pending",
-      "local_query": "compiled_static_triangle_scan; runtime regression pending",
+      "local_query": "compiled_static_projected_axis_triangle_scan; runtime SSS/area parity pending",
       "shader": "emission",
       "resolution": "8x8",
       "samples": 1,
-      "native_metalrt_sha256": "c3e717373169d9fc9e585226c14224d400c5aedcc25279f736943009583cc8af",
-      "ordinary_triangle_reference_sha256": "44846075a695f216fc3bd1e3c3d26cd893bc78e0083e817b9ec72aacaebbe01d",
+      "native_metalrt_sha256": "964c160c72c3ef1e0fb55d3fed29b737ee9f51c6d4d16570aa3db02012eda194",
+      "ordinary_triangle_reference_sha256": "3398c6a421a04194248d543f9a56b6acaf35735a7aaa0ce06082e46dd9191f3a",
       "file_bytes_identical": false,
       "pixel_differences": 0,
       "result": "passed",
-      "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering, mixed triangle/AABB candidate handling, a compiled self-filtered opaque-shadow seam, and a compiled local triangle scan; standalone deformation-motion, transparent/shadow-all, volume, runtime local regression, and full Blender-native semantics remain open."
+      "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering, mixed triangle/AABB candidate handling, a compiled self-filtered opaque-shadow seam, and a projected-axis local hit recorder; standalone deformation-motion, transparent/shadow-all, exact volume/SSS semantics, and full Blender-native semantics remain open."
     },
     "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
     "claim_boundary": "This is an experimental Mesh adapter and Metal AABB/query path, not production tet-cage Geometry semantics. It does not yet cover motion, record-all/local/volume traversal, complete shading attributes, or Blender-native Metal dispatch."
@@ -330,7 +345,7 @@
       "native_sha256": "2d2d0afa57571dc8ae64d90c7371e9763eb052413b8eee10116ae08f3ff19282",
       "fallback_sha256": "1ae13ddebf652500fe5c886d30ed17dcb05fec101f6cbcab6f67a142bed38a4c",
       "pixel_differences": 0,
-      "local_query": "runtime static triangle scan; max_hits=0",
+      "local_query": "runtime static projected-axis triangle scan; max_hits=0",
       "result": "passed",
       "claim_boundary": "Measured the zero-hit local-ray path; SSS reservoir/multi-hit ordering and bevel local semantics remain open."
     },
