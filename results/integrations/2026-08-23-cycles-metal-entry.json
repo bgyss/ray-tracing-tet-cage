@@ -321,6 +321,23 @@
       "result": "passed_native_multi_object_deformation",
       "claim_boundary": "Measured native motion AABB/time-interpolated deformation across two tet objects; broader topology and production clips remain open."
     },
+    "native_multi_object_deformation_local_motion": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_local_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with animated shape-key deformation and Principled subsurface",
+      "resolution": "16x16",
+      "samples": 1,
+      "cage_tetrahedra": 2,
+      "motion_local_dispatch": "motion-aware GPU local narrow phase with projected-axis tet scans",
+      "native_sha256": "e5f615c95c9eb0e54011e6539876fbc13fa67d4257efa096ab0bee91269abbc2",
+      "fallback_sha256": "6ac2861e22c33c57ba0c79007a6ce5cddcad196acb4190b481ae4c4546623f1f",
+      "pixel_differences": 106,
+      "max_abs_rgb_difference": 0.00017762184143066406,
+      "sum_abs_rgb_difference": 0.0010838370071724057,
+      "result": "numeric_close",
+      "claim_boundary": "Two-object animated SSS local scans match ordinary Cycles to float noise; broader topology and closure semantics remain open."
+    },
     "native_mixed_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",
       "device": "METAL Apple M1 Max",
