@@ -351,8 +351,13 @@ def _use_volume_probe_material() -> None:
 
 
 def _remove_non_tetcage_meshes() -> None:
+    selected_tet = os.environ.get("TETCAGE_TET_INDEX")
     for obj in list(bpy.context.scene.objects):
-        if obj.type == "MESH" and not obj.get("tetcage_native_candidate"):
+        if obj.type != "MESH":
+            continue
+        if not obj.get("tetcage_native_candidate"):
+            bpy.data.objects.remove(obj, do_unlink=True)
+        elif selected_tet is not None and int(obj.get("tetcage_tet_id", -1)) != int(selected_tet):
             bpy.data.objects.remove(obj, do_unlink=True)
 
 

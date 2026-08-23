@@ -25,6 +25,10 @@ def main() -> int:
     assert "attr_P->data_at_time_step<packed_float3>" in bvh
     assert "const float ray_time" in kernel
     assert "metalrt_tetcage_motion_vertices" in kernel
+    assert "allow_static_object_motion" in kernel
+    assert "SD_OBJECT_MOTION" in kernel
+    assert "SD_OBJECT_HAS_VERTEX_MOTION" in kernel
+    assert "hit_object" in kernel
     assert "has_transparent_surface" in mesh
     assert "has_surface_shadow_transparency" in mesh
     assert "has_nontransparent_surface" in mesh

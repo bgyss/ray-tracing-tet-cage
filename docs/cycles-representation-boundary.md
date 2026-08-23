@@ -26,8 +26,10 @@ path, applies object visibility filtering, packs source-owner IDs for ShaderData
 and includes self-filtered opaque-shadow, static local projected-axis triangle-scan, and native
 AABB volume-table seams.
 Its motion-tagged MetalRT callback now carries accepted tet barycentrics through
-the ray payload, closing the object-transform motion differential. A native
-motion-AABB/time-interpolated shape-key fixture also passes; broader deformation
+the ray payload, and the motion narrow phase distinguishes object-transform
+motion (static tet vertices plus TLAS transforms) from true geometry motion
+(time-interpolated vertices). One- and two-object rigid-motion fixtures and a
+native motion-AABB/time-interpolated shape-key fixture pass; broader deformation
 semantics remain open. It remains an adapter rather than
 a production tet-cage Geometry type; transparent/shadow traversal and the
 zero-hit local-ray path are measured, while SSS multi-hit ordering, exact
@@ -52,7 +54,7 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `b5c8ff2fceeb` now recognizes that
+Blender sync. The isolated Blender branch at `430b6987380` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local AABB
@@ -68,8 +70,10 @@ isolated build; broader deformation topology, SSS multi-hit/local ordering, exac
 volume precision, Principled shading, and broader traversal semantics remain open. Mixed
 transparent-closure motion explicitly retains ordinary Cycles fallback until its closure semantics
 are qualified; pure-transparent motion uses the native path; animated
-subsurface/BSSRDF motion now uses the motion-aware native local narrow phase. The
-older release-binary Python child-launch
+subsurface/BSSRDF motion uses the motion-aware native local narrow phase on the
+declared closed-tetrahedron fixture (point-light numeric-close; area-light
+sampling remains open). The open single-triangle SSS diagnostic is not promoted.
+The older release-binary Python child-launch
 path remains a separate host-startup limitation.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |

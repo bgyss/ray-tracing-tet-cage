@@ -169,8 +169,10 @@ fallback because the native motion closure path is not yet qualified;
 `transparent_diffuse_motion` probes the Transparent+Diffuse boundary. Pure transparency uses
 `transparent_pure_motion` and remains native.
 Animated subsurface/BSSRDF motion uses the native motion-aware local narrow
-phase; `deformation_local_motion` exercises it and records the float-noise
-differential against ordinary Cycles.
+phase; object-transform motion keeps static tet vertices while TLAS motion carries
+the transform. `deformation_local_motion` exercises the motion-local path on the
+closed-tetrahedron fixture and records the float-noise differential against
+ordinary Cycles; area-light sampling remains an explicit gate.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
 For area-light sensitivity controls, set `TETCAGE_AREA_SIZE` (the default is
@@ -182,6 +184,8 @@ control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
 separates shadow traversal from primary/light-sampling precision.
 Set `TETCAGE_MIRROR=1` with `normal_transform` to exercise a negative-scale
 mirror in the same normal differential.
+Set `TETCAGE_TET_INDEX` with a multi-tet asset to isolate one imported tet
+object during motion/BLAS diagnostics.
 
 ## Direct Nix workflow
 

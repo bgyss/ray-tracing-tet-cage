@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "b5c8ff2fceebbd973d80ee357f7d54c21be38339",
+      "revision": "430b698738058e2585a6bd18b75f2dc06356d11a",
       "working_tree": "clean; lib/macos_arm64 pinned at a76ef917b4849ba2b1b1deb1a643e131a884a63b",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -24,7 +24,7 @@
       "direct_probe": "passed",
       "ui_smoke": "passed",
       "gui_smoke": "passed; real window context and timer-exit probe",
-      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
     }
   },
   "toolchain": {
@@ -276,17 +276,33 @@
       "samples": 1,
       "shader": "fixed emission probe",
       "motion_delta": 0.15,
-      "native_sha256": "7138a087ee53c70ddf55c779246902e82b9685a693a026d6a85261bed24f1c91",
-      "fallback_sha256": "ff4fb3b10301b6947207804a9d409307351ca9ac2cdb95d7b6765fcb2040e890",
+      "native_sha256": "4360308fa4dfbc854c844ab6aa0eb5d3a47b01f49657309256ecfe81a4e488fa",
+      "fallback_sha256": "aff57e1ab1e6a638f78a939ab645cabd4e671fbf55b520c265542c2bc9e93db1",
       "pixel_differences": 0,
       "selection_log": [
         "Enabled static native tet-cage adapter cycles_tetcage_v1",
         "Use Pointclouds True",
         "Use Object Motion True",
-        "motion payload carries accepted tet object/primitive/barycentrics"
+        "motion payload carries accepted tet object/primitive/barycentrics",
+        "object-transform motion uses static tet vertices and TLAS transforms"
       ],
       "result": "passed",
-      "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene; broader deformation topology, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
+      "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene with the static-vertex/TLAS motion fix; broader deformation topology, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
+    },
+    "native_multi_object_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with object-transform keyframes and motion blur",
+      "resolution": "16x16",
+      "samples": 1,
+      "motion_delta": 0.15,
+      "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+      "native_sha256": "8350edc67b6e5839d079005b933482a8b08f2108ad4cc957a45667751bc8e68c",
+      "fallback_sha256": "be26d8ad83578f4e645c996d17c914fe95cab80c6fd49a393a7a675c11e2231d",
+      "pixel_differences": 0,
+      "result": "passed_native_multi_object_motion",
+      "claim_boundary": "Two-object rigid object-transform motion is pixel-exact under the fixed emission probe; deformation topology, closure semantics, and performance remain open."
     },
     "deformation_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
@@ -298,8 +314,8 @@
       "native_adapter_selected": true,
       "motion_aabb_blas": true,
       "motion_keyframes": 3,
-      "native_sha256": "2699a1bdf37d318107dcb93a1053e55f08d1fdbf748094909922c728f80d1d4d",
-      "fallback_sha256": "65efd940de6b7adb40ce5c2c39f03f9d552429aa13daa15e877c9bd90c92d5fd",
+      "native_sha256": "dbaae74fc7ac86b701ef510f3c51111eff919c7153592ba0a6399d9fe91de653",
+      "fallback_sha256": "eb20d0fcc60e45bf12151427af7bae86e7858b41714403ca89555dfb049c67b3",
       "pixel_differences": 0,
       "result": "passed_native_deformation",
       "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, and volume semantics remain open."
@@ -330,8 +346,8 @@
       "samples": 1,
       "cage_tetrahedra": 2,
       "motion_local_dispatch": "motion-aware GPU local narrow phase with projected-axis tet scans",
-      "native_sha256": "e5f615c95c9eb0e54011e6539876fbc13fa67d4257efa096ab0bee91269abbc2",
-      "fallback_sha256": "6ac2861e22c33c57ba0c79007a6ce5cddcad196acb4190b481ae4c4546623f1f",
+      "native_sha256": "71e8ac0c126e55087f9b0480cef903ca9cf5bff6554f6925e0a6b85e3d01e04a",
+      "fallback_sha256": "e2790686acee631e043ca27d50cde0ab97f22ced7e76478d986dc2659d02b924",
       "pixel_differences": 106,
       "max_abs_rgb_difference": 0.00017762184143066406,
       "sum_abs_rgb_difference": 0.0010838370071724057,
@@ -491,24 +507,24 @@
       "selection_log": ["Enabled deformation-capable native tet-cage adapter cycles_tetcage_v1", "motion-aware local tet scan"],
       "differential_harness": {
         "script": "scripts/blender_native_differential.py",
-        "native_elapsed_ms": 2996.366459003184,
-        "fallback_elapsed_ms": 3068.035458039958,
+        "native_elapsed_ms": 2995.838125003502,
+        "fallback_elapsed_ms": 3066.0089580342174,
         "comparison_max_abs_rgb_difference": 2.1457672119140625e-05,
         "comparison_sum_abs_rgb_difference": 0.0003098007582593709,
         "result": "numeric_close"
       },
       "area": {
-        "native_sha256": "893e45cd0cd4263c311474c2e41d95bc43384e1735f1018e649ddb7d489cde8c",
-        "fallback_sha256": "61422e88c21372cc7dbb54d28cafbc5f67a2d66b1ad9f5a71c1bdc54621173c3",
-        "pixel_differences": 116,
-        "max_abs_rgb_difference": 0.00022339820861816406,
-        "sum_abs_rgb_difference": 0.0028026094660162926,
-        "result": "numeric_close"
+        "native_sha256": "1ed3225271dacef07bacede3e8fae5390fe24e653be6c5251a116bac89670f62",
+        "fallback_sha256": "13fc43344c86d0b99dfe1f120d5cc5308894324e6be544987d88e8ce6e0703be",
+        "pixel_differences": 109,
+        "max_abs_rgb_difference": 0.00017213821411132812,
+        "sum_abs_rgb_difference": 0.0024523944593966007,
+        "result": "open_area_sampling_precision"
       },
       "point": {
-        "native_sha256": "52b5f71f0cdc038e1bfa427d2c22e1a12052a9ad202eddb467b0d8dccc067c3b",
-        "fallback_sha256": "63bd4c11d5173dfabb4cb3174717cb5cec6a905d5b961545cfd498929d073121",
-        "pixel_differences": 110,
+        "native_sha256": "0941a5652e0b6f757ea7454fd05c0559ecb42bc6f2321bf2f3caac9f2a89895a",
+        "fallback_sha256": "d1efb7284b1cf55945c1726c1379739bbd5e9b802fb761ae6ae66781a60e57cf",
+        "pixel_differences": 109,
         "max_abs_rgb_difference": 3.820657730102539e-05,
         "sum_abs_rgb_difference": 0.0003603170334827155,
         "result": "numeric_close"
@@ -529,7 +545,7 @@
         "sum_abs_rgb_difference": 101.6299308007001,
         "result": "open_motion_local_ordering"
       },
-      "claim_boundary": "Animated BSSRDF/SSS now uses the motion-aware native local narrow phase and matches ordinary Cycles to float noise on area and point controls; broader multi-object and closure semantics remain open."
+      "claim_boundary": "Animated BSSRDF/SSS uses the motion-aware native local narrow phase and matches ordinary Cycles to float noise on the declared closed-tetrahedron point-light fixture; area-light sampling and open single-triangle ordering remain open."
     },
     "native_volume_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... volume",
@@ -762,5 +778,5 @@
     },
     "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, the Tet Cage Debug UI/operator smoke, a CPU-disabled Cycles Metal render, and opt-in static, object-transform-motion, and one native shape-key deformation tet differential in the isolated branch; SSS, exact volume, broader deformation topology, and broader Principled semantics remain open."
   },
-  "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and proves opt-in static plus object-transform-motion native Blender tet ingestion in the isolated branch. Deformation motion, transparent/shadow-all, local/volume runtime, full shading/visibility semantics, OptiX, and complete Blender UI/debug integration remain open."
+  "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and proves opt-in static, one-/two-object object-transform motion, native shape-key deformation, and closed-tet motion-local SSS ingestion in the isolated Blender branch. Mixed transparent-closure motion, area-light parity, exact volume/closure semantics, broader deformation topology, full shading/visibility semantics, OptiX, and complete Blender UI/debug integration remain open."
 }
