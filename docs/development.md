@@ -148,9 +148,10 @@ multi-hit callback; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact. The
 two-closed-tets fixture exercises the same volume mode across two native tet
 objects and records the multi-object stack result in the integration manifest.
-Mixed Transparent+Emission object motion currently retains ordinary Cycles
+Mixed transparent-closure object motion currently retains ordinary Cycles
 fallback because the native motion closure path is not yet qualified;
-`transparent_motion` probes that boundary explicitly. Pure transparency uses
+`transparent_motion` probes the Transparent+Emission boundary explicitly and
+`transparent_diffuse_motion` probes the Transparent+Diffuse boundary. Pure transparency uses
 `transparent_pure_motion` and remains native.
 Animated subsurface/BSSRDF motion uses the native motion-aware local narrow
 phase; `deformation_local_motion` exercises it and records the float-noise

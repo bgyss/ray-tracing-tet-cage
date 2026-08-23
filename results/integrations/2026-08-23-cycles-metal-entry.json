@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "c5b2d220da620e2a4f042cb3b5ef4d0829d8a35b",
+      "revision": "b5c8ff2fceebbd973d80ee357f7d54c21be38339",
       "working_tree": "clean; lib/macos_arm64 pinned at a76ef917b4849ba2b1b1deb1a643e131a884a63b",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -24,7 +24,7 @@
       "direct_probe": "passed",
       "ui_smoke": "passed",
       "gui_smoke": "passed; real window context and timer-exit probe",
-      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed Transparent+Emission closure candidates retain ordinary Cycles fallback"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
     }
   },
   "toolchain": {
@@ -344,13 +344,13 @@
       "samples": 1,
       "shadow_all_motion_callback": true,
       "native_adapter_selected": false,
-      "fallback_reason": "mixed Transparent+Emission motion is not yet native",
+      "fallback_reason": "mixed transparent-closure motion is not yet native",
       "native_sha256": "9d569e050e3a6fcc332c7bbd4f3d61e97777a004be9ca02c6f86f849b0f4306f",
       "fallback_sha256": "4268e5196833928d5b9f183a48fd08ef2dd6936313c64c9f0185a12710dd1619",
       "pixel_differences": 0,
       "max_abs_difference": 0.0,
       "sum_abs_difference": 0.0,
-      "selection_log": ["transparent_surface=1", "surface_emission=1", "scene_motion=2", "ordinary Cycles mesh fallback"],
+      "selection_log": ["transparent_surface=1", "transparent_closure=1", "nontransparent_surface=1", "scene_motion=2", "ordinary Cycles mesh fallback"],
       "result": "passed_fallback_boundary",
       "raw_native_experiment_emission_mix": {
         "transparent_mix": 1.0,
@@ -369,7 +369,7 @@
         "result": "passed",
         "diagnostic": "Fully transparent material matches; the residual is tied to emission/transparent closure interaction in the motion path."
       },
-      "claim_boundary": "Mixed Transparent+Emission motion refuses the unqualified native adapter and matches ordinary Cycles through explicit fallback; the raw native experiment remains recorded for future closure work."
+      "claim_boundary": "Mixed transparent-closure motion refuses the unqualified native adapter and matches ordinary Cycles through explicit fallback; the raw native experiment remains recorded for future closure work."
     },
     "native_transparent_pure_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_pure_motion",
@@ -385,6 +385,22 @@
       "selection_log": ["transparent_surface=1", "surface_emission=0", "scene_motion=2", "native Mesh adapter"],
       "result": "passed",
       "claim_boundary": "Pure-transparent object motion uses the native MetalRT path and matches ordinary Cycles for the declared fixture; mixed closure graphs remain gated."
+    },
+    "native_transparent_diffuse_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_diffuse_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated object transform and mixed Transparent BSDF/Diffuse BSDF material",
+      "resolution": "16x16",
+      "native_adapter_selected": false,
+      "fallback_reason": "mixed transparent-closure motion is not yet native",
+      "native_sha256": "6eba20d346439ee75b73f73e7daf4207c09a18f0fe0ca5be76588b4d8fa18fbe",
+      "fallback_sha256": "0396e6db7035a16d5694f4b1b0b7334bfcdf0123963dca4292923c14681afdae",
+      "pixel_differences": 0,
+      "max_abs_difference": 0.0,
+      "sum_abs_difference": 0.0,
+      "selection_log": ["transparent_surface=1", "transparent_closure=1", "nontransparent_surface=1", "ordinary Cycles mesh fallback"],
+      "result": "passed_fallback_boundary",
+      "claim_boundary": "Mixed Transparent+Diffuse motion matches ordinary Cycles through explicit fallback; the native mixed-closure path remains open."
     },
     "native_local_ao_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... ao",

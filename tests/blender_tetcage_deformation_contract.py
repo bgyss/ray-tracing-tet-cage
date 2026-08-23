@@ -27,11 +27,14 @@ def main() -> int:
     assert "metalrt_tetcage_motion_vertices" in kernel
     assert "has_transparent_surface" in mesh
     assert "has_surface_shadow_transparency" in mesh
-    assert "has_surface_emission" in mesh
+    assert "has_nontransparent_surface" in mesh
+    assert "has_transparent_closure" in mesh
     assert "shader->graph" in mesh
     assert "Scene::MOTION_BLUR" in mesh
-    assert "transparent/emission motion" in mesh
-    assert "transparent_pure_motion" in probe.read_text()
+    assert "mixed transparent closure motion" in mesh
+    probe_text = probe.read_text()
+    assert "transparent_pure_motion" in probe_text
+    assert "transparent_diffuse_motion" in probe_text
     print("Blender native deformation contract: pass")
     return 0
 
