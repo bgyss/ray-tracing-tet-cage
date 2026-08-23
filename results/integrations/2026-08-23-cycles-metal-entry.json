@@ -302,7 +302,24 @@
       "fallback_sha256": "65efd940de6b7adb40ce5c2c39f03f9d552429aa13daa15e877c9bd90c92d5fd",
       "pixel_differences": 0,
       "result": "passed_native_deformation",
-      "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, volume, and multi-object motion semantics remain open."
+      "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, and volume semantics remain open."
+    },
+    "native_multi_object_deformation_motion": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with animated Blender shape-key deformation",
+      "resolution": "16x16",
+      "samples": 1,
+      "cage_tetrahedra": 2,
+      "native_adapter_selected": true,
+      "motion_aabb_blas": true,
+      "motion_keyframes": 3,
+      "native_sha256": "2b6da2d931eb0ba5e47105417655db1b8abf5387e7e0caf7b52c326b061c596f",
+      "fallback_sha256": "61e94f1842e164bfd203d1c9cb0b48d5e0f424ec7a10b05187fc32d2a6d25e69",
+      "pixel_differences": 0,
+      "result": "passed_native_multi_object_deformation",
+      "claim_boundary": "Measured native motion AABB/time-interpolated deformation across two tet objects; broader topology and production clips remain open."
     },
     "native_mixed_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",
