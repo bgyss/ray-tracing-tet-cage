@@ -84,5 +84,16 @@
     "images_byte_identical": true,
     "claim_boundary": "This proves a compiled asset can enter the standalone Cycles renderer through the ordinary triangle fallback. It does not prove procedural tet-cage geometry inside Cycles."
   },
+  "blender_fallback_import": {
+    "contract": "tests/blender_import_contract.py",
+    "binary": "$BLENDER_BINARY",
+    "result": "passed",
+    "render_engine": "CYCLES",
+    "surface_triangles": 1,
+    "cage_tetrahedra": 1,
+    "fallback_mode": "conventional_mesh",
+    "procedural_metalrt": false,
+    "claim_boundary": "This proves the version-1 asset parser and Blender mesh/wireframe debug fallback. It does not prove Blender-native procedural tet-cage MetalRT ingestion."
+  },
   "claim_boundary": "This closes the unmodified Cycles MetalRT entry gate and proves the project's static procedural Metal AABB path on the Apple M1 Max. It does not prove Cycles tet-cage ingestion, Cycles renderer shading integration, motion semantics, or Blender UI support."
 }

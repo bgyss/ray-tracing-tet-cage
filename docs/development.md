@@ -80,6 +80,17 @@ For an isolated windowed UI launch, point `BLENDER_USER_CONFIG` and
 `scripts/blender_ui_smoke.py`. The smoke switches a fresh scene to the Cycles
 engine and verifies the Cycles/OSL build options without touching user files.
 
+To exercise the Blender-side asset parser and ordinary mesh/wireframe fallback:
+
+```sh
+BLENDER_BINARY=/path/to/Blender \
+python3 tests/blender_import_contract.py
+```
+
+The importer creates a normal Cycles mesh and a visible wireframe cage. It is
+an authoring/debug fallback; it does not claim that the procedural MetalRT
+primitive is active in Blender.
+
 ## Direct Nix workflow
 
 Enter an interactive shell:

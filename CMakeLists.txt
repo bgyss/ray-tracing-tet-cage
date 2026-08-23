@@ -122,6 +122,11 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.cycles_xml_fallback PROPERTIES
       FIXTURES_REQUIRED compiled_asset
       PASS_REGULAR_EXPRESSION "wrote Cycles fallback scene")
+    add_test(NAME tetcage.asset_parser_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/tetcage_asset_parser.py"
+        "$<TARGET_FILE:tetcage_asset_compiler>")
+    set_tests_properties(tetcage.asset_parser_contract PROPERTIES
+      PASS_REGULAR_EXPRESSION "tetcage asset parser contract: pass")
     add_test(NAME tetcage.asset_cache_smoke
       COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/asset_cache_smoke.sh"
         "$<TARGET_FILE:tetcage_asset_compiler>"

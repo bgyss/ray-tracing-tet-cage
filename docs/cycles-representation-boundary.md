@@ -24,6 +24,13 @@ the ordinary renderer path while the procedural primitive is incomplete. The
 fallback is intentionally labeled in the XML and is not evidence that the
 tet-cage AABB primitive is active inside Cycles.
 
+`scripts/blender_tetcage_import.py` provides the corresponding Blender-side
+fallback/debug view: it parses the version-1 asset, creates an ordinary surface
+mesh plus a wireframe cage, attaches source/tet face attributes, and selects
+Cycles as the scene engine. Its contract test accepts an explicit
+`BLENDER_BINARY` so it can use a release binary when the large pinned Debug
+executable cannot start under current host memory pressure.
+
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |
 | Immutable payload | compiled clipped micro-triangles, source primitive ID, source triangle barycentrics, material/shader ID | one immutable geometry/BLAS payload per compatible source mesh |
