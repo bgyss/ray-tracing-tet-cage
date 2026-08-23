@@ -51,8 +51,8 @@ support.
 | --- | --- |
 | Standalone Cycles source | `$CYCLES_SOURCE_ROOT` at `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a` (2026-07-13), clean when inspected. |
 | Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. Its embedded Cycles code has the same relevant Metal implementation. |
-| Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. This is host availability, not a claim that Cycles MetalRT or a tet-cage render was run today. |
-| Current toolchain boundary | Xcode 26.6 is installed, but `xcrun metal -v` fails because the optional Metal Toolchain component is missing. A new shader-bearing Cycles build cannot be claimed until that component is installed and a clean build succeeds. |
+| Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. Ordinary Cycles MetalRT and the project's standalone tet-cage Metal path are separately evidenced; this is not a claim of native Cycles tet-cage rendering. |
+| Current toolchain boundary | Xcode 26.6 and the optional Metal Toolchain are installed; `xcrun metal -v` reports Apple metal `32023.883`. The pinned shader-bearing Cycles Metal build completes on arm64. |
 | Existing project Metal evidence | The repository's clean M5 record, `results/metal/2026-07-29-m5-clean-rerun.json`, identifies Apple M1 Max and clean commit `32af558`; it is evidence for this project's standalone declared corpus, not evidence that Cycles renders tet-cages. |
 
 Apple documents the needed primitives: acceleration structures can contain
@@ -159,7 +159,7 @@ solely from a Metal BVH patch.
 | --- | --- |
 | Runtime capability is per device | Gate the path on macOS availability *and* `MTLDevice.supportsRaytracing`, exactly as Cycles does. Do not treat SDK headers, the M1 Max label, or a successful CPU render as capability proof. |
 | Apple-family availability | Apple's May 2026 feature tables list M1 as Apple7 and list ray tracing in compute/render pipelines starting at Apple6; Apple9 adds per-component motion interpolation. Use an Apple7/M1 baseline for the procedural path; treat PCMI as an Apple9/macOS 15.6 optimization only. [Apple: Metal Feature Set Tables](https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf) |
-| OS/Xcode gate in Cycles | This checkout compiles the runtime support check only when the SDK exposes `MAC_OS_VERSION_14_0` and runs it under macOS 14 availability (`device.mm:90-100`). Its current shader compiler is blocked by the missing Xcode Metal Toolchain component. |
+| OS/Xcode gate in Cycles | This checkout compiles the runtime support check only when the SDK exposes `MAC_OS_VERSION_14_0` and runs it under macOS 14 availability (`device.mm:90-100`). The installed Metal Toolchain now compiles the shader-bearing target; runtime selection remains per-device. |
 | AS hierarchy | The known Cycles construction is BLAS plus TLAS. The proposed mapping must flatten per-tet/asset records into that model unless a minimal real device build proves another hierarchy. |
 | Standard limits | Cycles enables MetalRT extended limits past `2^28` primitives or `2^24` instances and requires rebuilding BVHs when the mode changes (`device_impl.mm:937-963`). A tet-cage path must measure real builds in both applicable modes; a descriptor-size query is not enough. |
 | Visibility | The present TLAS truncates the MetalRT visibility mask to eight bits (`bvh.mm:1153-1159`). Preserve Cycles' established visibility behavior or add a reviewed mapping—do not silently widen the tet-cage semantic contract. |
@@ -173,7 +173,7 @@ The following stages respect that boundary; stages 0–1 are design/probe work,
 not authorization to claim the renderer path complete.
 
 1. **Close the entry gate.** Pin these two source revisions and record the
-   Xcode/SDK version; install the missing Metal Toolchain component; configure
+   Xcode/SDK version; install the optional Metal Toolchain component; configure
    and build the existing Cycles Metal target; record `supportsRaytracing`,
    selected backend, GPU family, and the MetalRT on/off state. Stop if the
    device cannot compile and dispatch the unmodified MetalRT kernel.
