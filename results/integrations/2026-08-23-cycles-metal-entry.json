@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "6f188797d690fc90560c63ca10271487aac4ae99",
+      "revision": "c49ca600a9fb481e44e9d618e2fadfd5483b09c4",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -265,6 +265,20 @@
       ],
       "result": "passed",
       "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene; deformation-motion geometry frames, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
+    },
+    "deformation_motion_fallback": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated Blender shape-key deformation",
+      "resolution": "16x16",
+      "samples": 1,
+      "native_gate_requested": true,
+      "native_adapter_selected": false,
+      "native_sha256": "2332eed4d7ab52d2a9b040e66978bef920c91891e4628717e1c483ba6a54f11f",
+      "fallback_sha256": "9dbd8491b5adba9ae43216011ea45210b05fdc4eafdabca4163a5487849b9ba9",
+      "pixel_differences": 0,
+      "result": "passed_fallback_boundary",
+      "claim_boundary": "Shape-key deformation is explicitly retained on ordinary Cycles fallback; native deformation frames remain unimplemented."
     },
     "native_mixed_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",

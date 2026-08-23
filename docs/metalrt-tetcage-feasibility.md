@@ -56,6 +56,7 @@ a native AABB BLAS, and passes tet-only and mixed ordinary-triangle/native-AABB
 native-vs-fallback emission differentials. Its motion callback now carries the
 accepted tet barycentrics through the MetalRT payload, and an object-transform
 motion differential passes pixel-for-pixel; deformation motion remains on the
+ordinary mesh fallback. Shape-key deformation is explicitly detected and kept on
 ordinary mesh fallback. Static local scanning and shadow callback seams compile
 in both native lanes. Its full Blender target, app-bundle install, direct
 importer probe, real-window/background Cycles/UI smoke, and tet-only, mixed,

@@ -121,7 +121,8 @@ measures intersection rather than lighting noise. Pass `motion` instead of
 pass `mixed_motion` to retain the ordinary cube while exercising the same motion
 handoff;
 deformation-motion candidates remain on the ordinary fallback until their
-per-frame tet geometry is implemented. The `transparent` mode exercises the
+per-frame tet geometry is implemented. Pass `deformation_motion` to verify the
+shape-key fallback boundary. The `transparent` mode exercises the
 transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the
 zero-hit local-ray path; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact.
