@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "254981c6ff6d3bc52627c08e86fcc5e6f5f1935e",
+    "implementation_revision": "fe8889a8a338b08464693493851f7cc81cb44f01",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
