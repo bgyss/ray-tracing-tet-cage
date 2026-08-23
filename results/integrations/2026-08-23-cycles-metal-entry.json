@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "0e320b809962c8ed6a3b1bb7b27c14c729bb5423",
+      "revision": "4cedb6a79cf1b45a03f04b5fa22358c1e9878da7",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "eff24a3102562fc1e57b0fa2d021316a142152da",
+    "implementation_revision": "d50e6b566b3a1744035161bc835f011407b7a5fb",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -104,7 +104,7 @@
       "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering, mixed triangle/AABB candidate handling, a compiled self-filtered opaque-shadow seam, and a projected-axis local hit recorder; standalone deformation-motion, transparent/shadow-all, exact volume/SSS semantics, and full Blender-native semantics remain open."
     },
     "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
-    "claim_boundary": "This is an experimental Mesh adapter and Metal AABB/query path, not production tet-cage Geometry semantics. It does not yet cover motion, record-all/local/volume traversal, complete shading attributes, or Blender-native Metal dispatch."
+    "claim_boundary": "This is an experimental Mesh adapter and Metal AABB/query path, not production tet-cage Geometry semantics. It does not yet cover broader motion topology, record-all/local ordering, exact volume-stack semantics, complete shading attributes, or Blender-native Metal dispatch."
   },
   "device": {
     "command": "$CYCLES_BINARY --list-devices",
@@ -298,8 +298,8 @@
       "native_adapter_selected": true,
       "motion_aabb_blas": true,
       "motion_keyframes": 3,
-      "native_sha256": "47f9d3bc3218f6842f27f09d0c60ca6ecdfbb6e55c2917ef32cc1b8450321451",
-      "fallback_sha256": "d693f83bbc08f1899a857488939e2037033c87279acb1f778897e2de0ab14aa1",
+      "native_sha256": "2699a1bdf37d318107dcb93a1053e55f08d1fdbf748094909922c728f80d1d4d",
+      "fallback_sha256": "65efd940de6b7adb40ce5c2c39f03f9d552429aa13daa15e877c9bd90c92d5fd",
       "pixel_differences": 0,
       "result": "passed_native_deformation",
       "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, volume, and multi-object motion semantics remain open."
@@ -359,8 +359,9 @@
       "resolution": "16x16",
       "samples": 1,
       "shader": "Principled Volume",
-      "native_sha256": "f80eced8c8ebbf3d619935f1142fa8c80ffd25041f6dc3cc14311bca2be60bc7",
-      "fallback_sha256": "cddc5f45110d34a19c64777ef98ba88982508703750690af9b334308f76b054d",
+      "volume_intersection_table": true,
+      "native_sha256": "c1b82d0757d6dc11220c6d01444fbdb40c02ef6dcb156a80740b6aa4b9e55d49",
+      "fallback_sha256": "2ca997a08de7aa9d74efd1cb779fd04c8535434c3898eed60535da9032556445",
       "pixel_differences": 35,
       "max_abs_rgb_difference": 0.022648286074399948,
       "sum_abs_rgb_difference": 0.02848556899698451,
@@ -378,7 +379,7 @@
           "result": "float_noise"
         }
       },
-      "result": "measured_with_area_light_difference; point_and_sun_float_noise_only",
+      "result": "measured_with_native_volume_table; area_light_difference; point_and_sun_float_noise_only",
       "claim_boundary": "Volume entry/exit query runs and remains numerically close to the ordinary Cycles path, but is not yet exact; volume precision and multi-object stack semantics remain open."
     },
     "native_material_render": {
