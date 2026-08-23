@@ -455,6 +455,14 @@
       "motion_local_dispatch": "motion-aware GPU local narrow phase with projected-axis tet scans and Cycles hit-record policy",
       "native_adapter_selected": true,
       "selection_log": ["Enabled deformation-capable native tet-cage adapter cycles_tetcage_v1", "motion-aware local tet scan"],
+      "differential_harness": {
+        "script": "scripts/blender_native_differential.py",
+        "native_elapsed_ms": 2996.366459003184,
+        "fallback_elapsed_ms": 3068.035458039958,
+        "comparison_max_abs_rgb_difference": 2.1457672119140625e-05,
+        "comparison_sum_abs_rgb_difference": 0.0003098007582593709,
+        "result": "numeric_close"
+      },
       "area": {
         "native_sha256": "893e45cd0cd4263c311474c2e41d95bc43384e1735f1018e649ddb7d489cde8c",
         "fallback_sha256": "61422e88c21372cc7dbb54d28cafbc5f67a2d66b1ad9f5a71c1bdc54621173c3",
@@ -498,6 +506,14 @@
       "samples": 1,
       "shader": "Principled Volume",
       "volume_intersection_table": true,
+      "differential_harness": {
+        "script": "scripts/blender_native_differential.py",
+        "native_elapsed_ms": 3016.626750002615,
+        "fallback_elapsed_ms": 3088.7214170070365,
+        "comparison_max_abs_rgb_difference": 1.8440186977386475e-07,
+        "comparison_sum_abs_rgb_difference": 1.7144775483757257e-06,
+        "result": "numeric_close"
+      },
       "native_sha256": "c1b82d0757d6dc11220c6d01444fbdb40c02ef6dcb156a80740b6aa4b9e55d49",
       "fallback_sha256": "2ca997a08de7aa9d74efd1cb779fd04c8535434c3898eed60535da9032556445",
       "pixel_differences": 35,

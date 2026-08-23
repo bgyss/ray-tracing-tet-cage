@@ -13,6 +13,7 @@ def main() -> int:
     assert "CYCLES_TETCAGE_NATIVE" in runner
     assert "elapsed_ms" in runner
     assert "image_sha256" in runner
+    assert "numeric_close" in runner
     assert "pixel_differences" in compare
     assert "max_abs_rgb_difference" in compare
     print("Blender native differential contract: pass")

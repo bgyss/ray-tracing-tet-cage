@@ -82,6 +82,7 @@ def main() -> int:
     parser.add_argument("--light-mode", default=None)
     parser.add_argument("--area-size", default=None)
     parser.add_argument("--samples", default=None)
+    parser.add_argument("--numeric-tolerance", type=float, default=1.0e-4)
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -121,6 +122,15 @@ def main() -> int:
             raise RuntimeError(f"EXR comparison failed:\n{completed.stdout}\n{completed.stderr}")
         comparison = json.loads(compare_json.read_text())
 
+    comparison_result = (
+        "exact"
+        if comparison["pixel_differences"] == 0
+        else (
+            "numeric_close"
+            if comparison["max_abs_rgb_difference"] <= args.numeric_tolerance
+            else "open"
+        )
+    )
     result = {
         "schema_version": 1,
         "kind": "blender_native_tetcage_differential",
@@ -128,10 +138,11 @@ def main() -> int:
         "asset": str(args.asset),
         "mode": args.mode,
         "options": options,
+        "numeric_tolerance": args.numeric_tolerance,
         "native": {**native, "image_sha256": sha256(native_image)},
         "fallback": {**fallback, "image_sha256": sha256(fallback_image)},
         "comparison": comparison,
-        "result": "exact" if comparison["pixel_differences"] == 0 else "numeric_or_open",
+        "result": comparison_result,
     }
     output_json = args.output_dir / "differential.json"
     output_json.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
