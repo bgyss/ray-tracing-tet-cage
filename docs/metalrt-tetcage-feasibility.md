@@ -47,7 +47,8 @@ traversal, and the zero-hit local-ray path now have native Blender differentials
 normal/position/UV/source-normal and source material-slot handoff and point/sun lighting controls match, while the native AABB volume-table path runs; area-light
 sampling remains an explicit parity gate. SSS is numerically close under point
 and sun controls but diverges under area sampling; static SSS multi-hit now uses
-the native AABB local intersection table. The closed-tet volume probe
+the native AABB local intersection table. Integer source-primitive, owner-tet,
+and material face attributes also match on the two-material fixture. The closed-tet volume probe
 is float-noise-only under point and sun controls and diverges only under area
 sampling. An isolated
 Blender branch (`7add5059ffbf`) compiles

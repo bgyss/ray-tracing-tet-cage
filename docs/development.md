@@ -148,7 +148,8 @@ multi-hit callback; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
-The `normal`, `position`, `uv`, `source_normal`, and `diffuse` modes expose shading-parity controls;
+The `normal`, `position`, `uv`, `source_normal`, `source_primitive`, `owner_tet`,
+`material_attribute`, and `diffuse` modes expose shading/attribute-parity controls;
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
 control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
 separates shadow traversal from primary/light-sampling precision.

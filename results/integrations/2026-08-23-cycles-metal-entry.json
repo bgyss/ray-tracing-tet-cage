@@ -336,6 +336,21 @@
       "result": "passed",
       "claim_boundary": "Measured transparent camera/shadow traversal for the fixed probe; arbitrary Principled transparency and material/attribute semantics remain open."
     },
+    "native_transparent_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated object transform and Transparent BSDF/emission material",
+      "resolution": "16x16",
+      "samples": 1,
+      "shadow_all_motion_callback": true,
+      "native_sha256": "b9a735ab2f447158eb0ed490333754fce7b6a7e6d6660aed4ca561258a0f210d",
+      "fallback_sha256": "889ce6ce395d054aa6698415ccafcdac08b2ec4a6ad9b870bd8e1a5201954a38",
+      "pixel_differences": 36,
+      "max_abs_difference": 0.3499999940395355,
+      "sum_abs_difference": 15.839999880641699,
+      "result": "open_motion_shadow_all_precision",
+      "claim_boundary": "The motion shadow-all callback runs, but animated transparent traversal is not yet equivalent to ordinary Cycles."
+    },
     "native_local_ao_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... ao",
       "device": "METAL Apple M1 Max",
@@ -448,6 +463,32 @@
       "source_material_ids": [7, 11],
       "result": "passed",
       "claim_boundary": "Measured source material-slot selection through native and ordinary Cycles paths; full texture/custom-attribute semantics remain open."
+    },
+    "native_attribute_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... source_primitive|owner_tet|material_attribute",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-material.obj + tests/assets/two-material.cage",
+      "resolution": "16x16",
+      "samples": 1,
+      "source_primitive": {
+        "native_sha256": "6b41c2d82298b42437bbeb8e36edd69f4ac994b0cd8451ef341dea232fa23d5c",
+        "fallback_sha256": "ce625e1ef0f01417f859ab6e6da5193cd0556ba9a7277a27c0454fbce738c8a3",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "owner_tet": {
+        "native_sha256": "ebc4787da0016dda8064d021642cc13338a687d584dd8e0016a41e2c4fd91118",
+        "fallback_sha256": "f9e5d58921d25f294a409f928201925892d579b00dbf1629dc7f200671610bce",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "material_attribute": {
+        "native_sha256": "1fe099862360c2860bdc45978d5bbb79cb690512751074db34c305e63a446747",
+        "fallback_sha256": "4f6bef9abd2bed731838f2825808ffb40f4ea9d7e9676bb61f19ef45a62fc3ca",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; texture/custom shader-node semantics remain open."
     },
     "native_shading_diagnostics": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|diffuse",
