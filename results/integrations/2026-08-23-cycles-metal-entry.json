@@ -360,7 +360,13 @@
           "pixel_differences": 13,
           "max_abs_difference": 1.1339759826660156,
           "sum_abs_difference": 3.445928178727627,
-          "result": "open_area_sampling_precision"
+          "result": "open_area_sampling_precision",
+          "samples_64": {
+            "rgb_mean_abs_difference": 0.011133820163498362,
+            "rgb_rms_difference": 0.03456117222319741,
+            "rgb_max_abs_difference": 0.19240713119506836,
+            "rgb_sum_abs_difference": 8.550773885566741
+          }
         }
       },
       "sss_controls": {
