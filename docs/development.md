@@ -46,11 +46,13 @@ XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
 jq . results/integrations/2026-08-09-cycles-verification.json
 ```
 
-The first MetalRT entry proof and the repository-side procedural tet-cage path
-are recorded in
+The first MetalRT entry proof, the standalone static native tet-cage path, and
+the isolated Blender candidate build are recorded in
 `results/integrations/2026-08-23-cycles-metal-entry.json`. This is a direct
-Metal baseline plus standalone AABB/custom-intersection evidence; Cycles
-renderer ingestion and Blender asset UI remain later gates.
+Metal baseline plus standalone AABB/custom-intersection evidence. Blender's
+embedded candidate recognizes the versioned ID-property contract but retains
+ordinary mesh fallback; native Blender tet-cage dispatch and UI/debug rendering
+remain later gates.
 
 `cycles-verify` is read-only. It checks the pinned source and dependency
 revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
@@ -93,7 +95,9 @@ a dependency-graph update handler for cage edits, and supports save/reload of
 the fallback scene. It also records `tetcage_native_candidate` and the
 `cycles_tetcage_v1` contract on the mesh/object/scene. It remains an
 authoring/debug fallback; it does not claim that the procedural MetalRT
-primitive is active in Blender.
+primitive is active in Blender. The isolated candidate branch also passes the
+full `blender` build, app-bundle install, direct importer probe, and Cycles/UI
+smoke; the release-binary child-launch harness remains separately host-limited.
 
 ## Direct Nix workflow
 

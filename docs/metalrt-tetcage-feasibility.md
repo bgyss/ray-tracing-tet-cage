@@ -1,8 +1,8 @@
 # MetalRT tet-cage feasibility in Cycles on macOS
 
 **Finding date:** 2026-08-22
-**Decision:** technically feasible as a scoped Cycles Metal backend extension, but not
-implemented or production-proven. The viable implementation is a *procedural
+**Decision:** technically feasible as a scoped Cycles Metal backend extension, with an
+experimental static native landing now implemented but not production-proven. The viable implementation is a *procedural
 MetalRT* path: immutable compiled tet-cage micro-geometry/provenance plus
 per-frame cage pose data, conservative AABB BLAS primitives, and Metal
 intersection functions that perform the tet-cage narrow phase and reconstruct
@@ -35,24 +35,28 @@ verified in
   and renders with CPU disabled on Metal.
 
 The production-native primitive is still open. An isolated exploratory Cycles
-branch now contains and builds a bounded scene-side `TetCageGeometry` transport
-contract (`$CYCLES_NATIVE_WORKTREE`, revision `018653fbf`, based on
-`1059d3e590045c008cb69e8e82c2b97554278c77`) and a follow-up static query
-landing: an XML-marked mesh builds a conservative AABB BLAS and uses
-`intersection_query<instancing>` to reconstruct an ordinary triangle hit. The
-static emission comparison is pixel-identical to the ordinary triangle
-reference on the M1 Max. This is not yet a `Geometry` subclass, and motion,
-primitive visibility, shadow-all, local, transparent, volume, source
-provenance, mixed-scene, and Blender-native semantics remain unproven. The
-evidence manifest keeps these claims separate rather than promoting the static
-slice to complete Cycles support.
+branch now contains and builds a bounded `Mesh` adapter plus `TetCageGeometry`
+transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `bb9508937`, based on
+`1059d3e590045c008cb69e8e82c2b97554278c77`). An XML-marked mesh builds a
+conservative AABB BLAS and uses `intersection_query<instancing>` to reconstruct
+an ordinary triangle hit; object visibility filtering and a static opaque-shadow
+query seam are compiled, and source primitive/triangle/micro IDs are packed for
+ShaderData. The static emission comparison is pixel-identical to the ordinary
+triangle reference on the M1 Max. Motion, shadow-all, local, transparent,
+volume, mixed-scene, full shading-attribute semantics, and Blender-native Metal
+dispatch remain unproven. An isolated Blender branch (`6c3b190fd0a`) compiles
+the scene/device/CPU-kernel/bridge targets and recognizes the
+`cycles_tetcage_v1` ID-property candidate while retaining ordinary mesh
+fallback; its full Blender target, app-bundle install, direct importer probe,
+and Cycles/UI smoke pass. It does not yet enable native tet-cage dispatch in
+Blender.
 
 ## Scope and evidence snapshot
 
 | Item | Observation |
 | --- | --- |
 | Standalone Cycles source | `$CYCLES_SOURCE_ROOT` at `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a` (2026-07-13), clean when inspected. |
-| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. Its embedded Cycles code has the same relevant Metal implementation. |
+| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `6c3b190fd0a9f53aad1008e35ae4b8d08938dabc` compiles the embedded Cycles contract and candidate recognition without changing the source checkout. |
 | Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. Ordinary Cycles MetalRT and the project's standalone tet-cage Metal path are separately evidenced; this is not a claim of native Cycles tet-cage rendering. |
 | Current toolchain boundary | Xcode 26.6 and the optional Metal Toolchain are installed; `xcrun metal -v` reports Apple metal `32023.883`. The pinned shader-bearing Cycles Metal build completes on arm64. |
 | Existing project Metal evidence | The repository's clean M5 record, `results/metal/2026-07-29-m5-clean-rerun.json`, identifies Apple M1 Max and clean commit `32af558`; it is evidence for this project's standalone declared corpus, not evidence that Cycles renders tet-cages. |

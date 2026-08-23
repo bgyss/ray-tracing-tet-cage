@@ -19,10 +19,12 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `018653fbf` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its static experimental
-adapter now reaches the Cycles Metal AABB BLAS and query path, but it is
-intentionally not a `Geometry` subclass and does not yet carry source-owner
-provenance through shading or motion/visibility semantics.
+revision `bb9508937` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
+experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
+path, applies object visibility filtering, packs source-owner IDs for ShaderData,
+and includes a self-filtered opaque-shadow seam. It remains an adapter rather
+than a production tet-cage Geometry type; motion, record-all/local/volume,
+transparent, mixed-scene, and full shading semantics remain open.
 
 The same manifest includes an ordinary Cycles glass/caustics comparison. That
 closes only the upstream MetalRT non-opaque baseline; the tet-cage path still
@@ -43,9 +45,14 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. Mirrored or near-singular
+Blender sync. The isolated Blender branch at `6c3b190fd0a` now recognizes that
+marker in embedded Cycles and compiles the scene/device/CPU-kernel/bridge
+targets while deliberately retaining ordinary mesh fallback. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
+Its full Blender target, app-bundle install, direct importer probe, and Cycles/UI
+smoke pass in the isolated build; the older release-binary Python child-launch
+path remains a separate host-startup limitation.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |
@@ -74,7 +81,7 @@ It must not add tet-specific branches through SVM/OSL attribute evaluation.
   derivatives. The adapter's only shared output is this normalized source-hit
   identity.
 
-The standalone tree is sufficient for these core/device seams. It cannot prove
-Blender import, UI, or debug views; those stay scoped to a clean pinned Blender
-source checkout. OptiX remains unimplemented and unmeasured until a qualified
-NVIDIA host is available.
+The standalone tree is sufficient for these core/device seams. The Blender
+candidate branch proves C++ ingestion recognition and build compatibility, but
+not native tet-cage Metal dispatch or UI/debug rendering. OptiX remains
+unimplemented and unmeasured until a qualified NVIDIA host is available.
