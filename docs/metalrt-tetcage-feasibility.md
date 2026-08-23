@@ -13,6 +13,34 @@ This report uses the pinned local Cycles and Blender checkouts, this project's
 direct evidence, and Apple primary documentation only. Local source paths are
 intentional reproducibility references for this development machine.
 
+## Implementation progress (2026-08-23)
+
+The entry and fallback stages are now implemented in the project checkout and
+verified in
+[`results/integrations/2026-08-23-cycles-metal-entry.json`](../results/integrations/2026-08-23-cycles-metal-entry.json):
+
+- the missing Xcode Metal Toolchain was installed;
+- the pinned Cycles Metal build enumerates the Apple M1 Max and renders ordinary
+  scenes with MetalRT disabled and forced on, with byte-identical images;
+- `include/tetcage/cycles_bridge.h` defines deterministic per-tet transforms,
+  conservative bounds, provenance index streams, hit normalization, and
+  explicit fallback reasons;
+- the repository's procedural AABB/custom-intersection Metal path consumes that
+  contract and passes CPU/reference validation across static, motion, TLAS
+  refit/rebuild, and GPU-instance runs;
+- compiled assets enter standalone Cycles through an explicitly labeled ordinary
+  triangle XML fallback; and
+- Blender imports the asset as immutable per-tet triangle instances, updates
+  affine transforms from cage edits, rejects invalid poses, survives save/reload,
+  and renders with CPU disabled on Metal.
+
+The native procedural primitive is still open: the isolated exploratory Cycles
+worktree is prepared, but no `TetCageGeometry` has yet been added to Cycles'
+scene/geometry pipeline, and tet-specific shadow-all, local, transparent,
+volume, and mixed-scene semantics remain unproven. The evidence manifest keeps
+these claims separate rather than promoting the fallback path to native Cycles
+support.
+
 ## Scope and evidence snapshot
 
 | Item | Observation |

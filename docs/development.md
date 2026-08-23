@@ -65,13 +65,14 @@ the external build tree is read-only, the verifier records the permission
 boundary and runs the same generated `cycles_version` test metadata in a
 writable temporary mirror.
 
-The macOS app-bundle lane is built and installed with:
+Set `BLENDER_BUILD_DIR` to the external Blender build directory, then build and
+install the macOS app bundle with:
 
 ```sh
-cmake --build /Users/briangyss/src/build_blender_tetcage_debug_make \
+cmake --build "$BLENDER_BUILD_DIR" \
   --target blender --parallel 8
-cmake --install /Users/briangyss/src/build_blender_tetcage_debug_make \
-  --config Debug --prefix /Users/briangyss/src/build_blender_tetcage_debug_make/bin
+cmake --install "$BLENDER_BUILD_DIR" \
+  --config Debug --prefix "$BLENDER_BUILD_DIR/bin"
 ```
 
 For an isolated windowed UI launch, point `BLENDER_USER_CONFIG` and
