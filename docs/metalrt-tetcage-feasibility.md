@@ -230,13 +230,16 @@ not authorization to claim the renderer path complete.
 - **Supported conclusion:** the pinned Cycles Metal backend and Apple's API
   expose a technically credible procedural-AABB/custom-intersection integration
   route for tet-cage rendering on a capable macOS Metal device.
-- **Not established:** that a tet-cage primitive compiles in Cycles, that the
-  current M1 Max selects/runs Cycles MetalRT, that the Blender bridge can load
-  tet-cage assets, or that generated images/shading match the portable oracle.
-- **Not established:** watertightness, stable ownership, transparent-shadow
-  correctness, motion correctness, memory behavior, real AS limits, or
-  performance on Cycles scenes. The repository's standalone Metal evidence is
-  not a renderer benchmark or cross-device result.
+- **Not established:** that a production tet-cage primitive exists in upstream
+  Cycles or that the default M1 Max preference selects it. The isolated Blender
+  bridge does load the project asset and the env-forced native candidate matches
+  the ordinary path for the measured probe matrix; full shading/attribute
+  equivalence is still open.
+- **Not established:** watertightness beyond the declared fixtures, SSS
+  multi-hit ordering, exact closed-volume precision, deformation motion,
+  memory behavior, real AS limits, or performance on Cycles scenes. The
+  repository's standalone Metal evidence is not a renderer benchmark or
+  cross-device result.
 - **Out of scope:** OptiX/NVIDIA implementation and any claim of an
   integration-ready cross-platform backend. Those need a qualified NVIDIA host
   and their own device evidence.
