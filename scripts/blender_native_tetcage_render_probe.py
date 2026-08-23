@@ -19,7 +19,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from blender_tetcage_import import import_asset
 
 
-def _camera_and_light(scene: bpy.types.Scene) -> None:
+def _camera_and_light(scene: bpy.types.Scene) -> bool:
     bpy.ops.object.camera_add(location=(0.5, 0.5, 2.5))
     camera = bpy.context.object
     camera.data.type = "ORTHO"
@@ -38,9 +38,12 @@ def _camera_and_light(scene: bpy.types.Scene) -> None:
     if light_type == "AREA":
         light.data.shape = "DISK"
         light.data.size = 2.0
+    if os.environ.get("TETCAGE_DISABLE_SHADOWS") == "1":
+        light.data.use_shadow = False
     light.rotation_euler = (Vector((0.3, 0.3, 0.0)) - light.location).to_track_quat(
         "-Z", "Y"
     ).to_euler()
+    return bool(light.data.use_shadow)
 
 
 def _enable_metal(scene: bpy.types.Scene) -> str:
@@ -326,7 +329,7 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|transparent|local|ao|normal|position|uv|source_normal|diffuse|material|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|deformation_local_motion|transparent|local|ao|normal|position|uv|source_normal|diffuse|material|volume]"
         )
 
     asset, output_image, output_json = args[:3]
@@ -337,6 +340,7 @@ def main() -> int:
         "motion",
         "mixed_motion",
         "deformation_motion",
+        "deformation_local_motion",
         "transparent",
         "local",
         "ao",
@@ -349,7 +353,7 @@ def main() -> int:
         "volume",
     }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, transparent, local, ao, normal, position, uv, source_normal, diffuse, material, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, deformation_local_motion, transparent, local, ao, normal, position, uv, source_normal, diffuse, material, or volume"
         )
     mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
@@ -360,7 +364,7 @@ def main() -> int:
     compute_device_type = _enable_metal(scene)
     if probe_mode == "transparent":
         _use_transparent_probe_material()
-    elif probe_mode == "local":
+    elif probe_mode in {"local", "deformation_local_motion"}:
         _use_local_probe_material()
     elif probe_mode == "ao":
         _use_ao_probe_material()
@@ -383,14 +387,14 @@ def main() -> int:
     _use_black_world(scene)
     if probe_mode in {"motion", "mixed_motion"}:
         _setup_motion(scene, float(os.environ.get("TETCAGE_MOTION_DELTA", "0.0")))
-    elif probe_mode == "deformation_motion":
+    elif probe_mode in {"deformation_motion", "deformation_local_motion"}:
         _setup_deformation_motion(scene)
     scene.cycles.samples = int(os.environ.get("TETCAGE_SAMPLES", "1"))
     scene.cycles.use_adaptive_sampling = False
     scene.cycles.use_denoising = False
     scene.cycles.seed = 0
     scene.cycles.use_animated_seed = False
-    scene.cycles.max_bounces = 4 if probe_mode in {"transparent", "local"} else 1
+    scene.cycles.max_bounces = 4 if probe_mode in {"transparent", "local", "deformation_local_motion"} else 1
     scene.cycles.diffuse_bounces = 0
     scene.cycles.glossy_bounces = 0
     scene.cycles.transmission_bounces = 0
@@ -402,7 +406,7 @@ def main() -> int:
     scene.render.image_settings.file_format = "OPEN_EXR"
     scene.render.filepath = str(pathlib.Path(output_image).resolve())
     scene.world.color = (0.02, 0.02, 0.02)
-    _camera_and_light(scene)
+    shadows_enabled = _camera_and_light(scene)
 
     bpy.ops.render.render(write_still=True)
     result = {
@@ -419,6 +423,7 @@ def main() -> int:
         "probe_mode": probe_mode,
         "resolution": "16x16",
         "samples": 1,
+        "shadows_enabled": shadows_enabled,
         "output": str(pathlib.Path(output_image).resolve()),
     }
     pathlib.Path(output_json).write_text(json.dumps(result, sort_keys=True) + "\n")

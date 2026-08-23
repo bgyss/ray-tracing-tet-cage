@@ -36,8 +36,10 @@ def assert_local_runtime_table(root: pathlib.Path, kernel_relative: str, table_r
     kernel = (root / kernel_relative).read_text()
     table = (root / table_relative).read_text()
     assert "__intersection__local_tetcage" in kernel
+    assert "__intersection__local_tetcage_mblur" in kernel
     assert "add_intersection_functions(METALRT_TABLE_LOCAL" in table
     assert '"__intersection__local_tetcage"' in table
+    assert '"__intersection__local_tetcage_mblur"' in table
 
 
 def main() -> int:
