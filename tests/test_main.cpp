@@ -1383,6 +1383,26 @@ void test_cycles_hit_normalization_rejects_unknown_backend_hits() {
                            .has_value());
 }
 
+void test_cycles_xml_export_preserves_compiled_microgeometry() {
+  constexpr const char *test = "Cycles XML export preserves compiled microgeometry";
+  const auto mesh = single_triangle_mesh({0.1, 0.1, 0.1}, {0.7, 0.1, 0.1}, {0.1, 0.7, 0.1});
+  const auto compiled = tetcage::compile_asset(mesh, single_tet_cage(), {});
+  CHECK_IN(test, compiled.asset.has_value());
+  if (!compiled.asset) {
+    return;
+  }
+  const auto path = std::filesystem::temp_directory_path() / "tetcage-cycles-fallback.xml";
+  const auto error = tetcage::write_cycles_xml(path.string(), *compiled.asset);
+  CHECK_IN(test, error.empty());
+  std::ifstream input(path);
+  const std::string xml((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+  CHECK_IN(test, xml.find("<cycles>") != std::string::npos);
+  CHECK_IN(test, xml.find("<mesh") != std::string::npos);
+  CHECK_IN(test, xml.find("nverts=\"3\"") != std::string::npos);
+  CHECK_IN(test, xml.find("tet_cage_fallback") != std::string::npos);
+  std::filesystem::remove(path);
+}
+
 } // namespace
 
 int main() {
@@ -1432,6 +1452,7 @@ int main() {
   test_cycles_hit_normalization_reconstructs_source_identity();
   test_cycles_frame_explicitly_falls_back_for_invalid_pose();
   test_cycles_hit_normalization_rejects_unknown_backend_hits();
+  test_cycles_xml_export_preserves_compiled_microgeometry();
   if (failures != 0) {
     const std::filesystem::path corpus =
         std::filesystem::path(TETCAGE_SOURCE_DIR) / "results/generated/cpu-failure-corpus.json";

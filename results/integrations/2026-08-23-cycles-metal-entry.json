@@ -72,5 +72,17 @@
     "gpu_attribute_reconstruction": true,
     "claim_boundary": "This is direct Metal proof for the project's standalone procedural AABB path, now consuming the Cycles tet-cage frame contract. It is not yet proof that Blender/Cycles can ingest or render a .tetcage asset."
   },
+  "cycles_conventional_fallback": {
+    "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+    "xml_export_command": "tetcage_cycles_xml one-tet.tetcage cycles-fallback.xml",
+    "xml_export_result": "passed",
+    "render_command": "$CYCLES_BINARY --background --device METAL --samples 1 --width 16 --height 16 cycles-fallback.xml",
+    "metalrt_on_result": "passed",
+    "metalrt_off_result": "passed",
+    "metalrt_on_image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a",
+    "metalrt_off_image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a",
+    "images_byte_identical": true,
+    "claim_boundary": "This proves a compiled asset can enter the standalone Cycles renderer through the ordinary triangle fallback. It does not prove procedural tet-cage geometry inside Cycles."
+  },
   "claim_boundary": "This closes the unmodified Cycles MetalRT entry gate and proves the project's static procedural Metal AABB path on the Apple M1 Max. It does not prove Cycles tet-cage ingestion, Cycles renderer shading integration, motion semantics, or Blender UI support."
 }

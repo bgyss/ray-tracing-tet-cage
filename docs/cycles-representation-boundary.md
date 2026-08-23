@@ -18,6 +18,12 @@ unmodified pinned Cycles MetalRT backend on the Apple M1 Max and the project's
 standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
+`tetcage_cycles_xml` now provides the explicit conventional-geometry fallback:
+it emits a small Cycles XML scene from the compiled micro-triangles, preserving
+the ordinary renderer path while the procedural primitive is incomplete. The
+fallback is intentionally labeled in the XML and is not evidence that the
+tet-cage AABB primitive is active inside Cycles.
+
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |
 | Immutable payload | compiled clipped micro-triangles, source primitive ID, source triangle barycentrics, material/shader ID | one immutable geometry/BLAS payload per compatible source mesh |
