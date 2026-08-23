@@ -16,14 +16,14 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "6c3b190fd0a9f53aad1008e35ae4b8d08938dabc",
+      "revision": "d4d3ec46c932da229b52ca3fd7874d1f9f0beb06",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
       "install": "passed",
       "direct_probe": "passed",
       "ui_smoke": "passed",
-      "candidate_behavior": "ID-property recognition with ordinary-mesh fallback; native Blender Metal query not yet enabled"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the static Mesh adapter, Metal AABB BLAS, and triangle/AABB intersection query; ordinary mesh fallback remains the default"
     }
   },
   "toolchain": {
@@ -209,6 +209,20 @@
       "command": "BLENDER_BINARY=$BLENDER_NATIVE_BINARY python3 tests/blender_import_contract.py",
       "result": "passed"
     },
+    "native_static_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "native_sha256": "3d85e666da55e6da0400871d2d52763b8836b60673e9deae6e162726c50ad800",
+      "fallback_sha256": "b8257fca00349a97ac355b1f40f9a38e8b3a66d25ef5dd4359d09b14ade2c944",
+      "pixel_differences": 0,
+      "selection_log": ["Enabled static native tet-cage adapter cycles_tetcage_v1", "Use Pointclouds True", "Building tet-cage AABB BLAS"],
+      "result": "passed",
+      "claim_boundary": "Static tet-only native Blender Metal intersection proof; mixed ordinary geometry, motion, transparent/shadow-all, local, volume, and full Principled shading semantics remain open."
+    },
     "metal_render": {
       "binary": "$BLENDER_BINARY",
       "cpu_device": false,
@@ -219,7 +233,7 @@
       "result": "passed",
       "image_sha256": "0b59c4ef02b733bb4634de92f55157d2884581cf170520ffc7efdbf50f761fdc"
     },
-    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, and a CPU-disabled Cycles Metal render. It does not prove Blender-native procedural tet-cage MetalRT ingestion."
+    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, and a CPU-disabled Cycles Metal render. The isolated branch additionally proves opt-in static tet-only native Metal ingestion; broader Blender-native semantics remain open."
   },
-  "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and compiles Blender-side candidate recognition in an isolated branch. It does not prove production Cycles tet-cage shading/motion semantics or Blender-native MetalRT ingestion/UI execution."
+  "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and proves opt-in static tet-only native Blender Metal ingestion in the isolated branch. Production motion, mixed-scene, full shading/visibility semantics, OptiX, and complete Blender UI/debug integration remain open."
 }

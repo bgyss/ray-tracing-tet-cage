@@ -44,19 +44,21 @@ query seam are compiled, and source primitive/triangle/micro IDs are packed for
 ShaderData. The static emission comparison is pixel-identical to the ordinary
 triangle reference on the M1 Max. Motion, shadow-all, local, transparent,
 volume, mixed-scene, full shading-attribute semantics, and Blender-native Metal
-dispatch remain unproven. An isolated Blender branch (`6c3b190fd0a`) compiles
-the scene/device/CPU-kernel/bridge targets and recognizes the
-`cycles_tetcage_v1` ID-property candidate while retaining ordinary mesh
-fallback; its full Blender target, app-bundle install, direct importer probe,
-and Cycles/UI smoke pass. It does not yet enable native tet-cage dispatch in
-Blender.
+dispatch remain unproven. An isolated Blender branch (`d4d3ec46c93c`) compiles
+the scene/device/CPU-kernel/bridge targets and, with
+`CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds
+a native AABB BLAS, and passes a tet-only native-vs-fallback emission
+differential. Its full Blender target, app-bundle install, direct importer
+probe, and Cycles/UI smoke also pass. Mixed ordinary geometry, motion,
+transparent/shadow-all, local/volume, and full Principled shading semantics
+remain open.
 
 ## Scope and evidence snapshot
 
 | Item | Observation |
 | --- | --- |
 | Standalone Cycles source | `$CYCLES_SOURCE_ROOT` at `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a` (2026-07-13), clean when inspected. |
-| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `6c3b190fd0a9f53aad1008e35ae4b8d08938dabc` compiles the embedded Cycles contract and candidate recognition without changing the source checkout. |
+| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `d4d3ec46c932da229b52ca3fd7874d1f9f0beb06` compiles and verifies opt-in static native tet-cage dispatch without changing the source checkout. |
 | Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. Ordinary Cycles MetalRT and the project's standalone tet-cage Metal path are separately evidenced; this is not a claim of native Cycles tet-cage rendering. |
 | Current toolchain boundary | Xcode 26.6 and the optional Metal Toolchain are installed; `xcrun metal -v` reports Apple metal `32023.883`. The pinned shader-bearing Cycles Metal build completes on arm64. |
 | Existing project Metal evidence | The repository's clean M5 record, `results/metal/2026-07-29-m5-clean-rerun.json`, identifies Apple M1 Max and clean commit `32af558`; it is evidence for this project's standalone declared corpus, not evidence that Cycles renders tet-cages. |

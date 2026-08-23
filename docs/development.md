@@ -95,9 +95,11 @@ a dependency-graph update handler for cage edits, and supports save/reload of
 the fallback scene. It also records `tetcage_native_candidate` and the
 `cycles_tetcage_v1` contract on the mesh/object/scene. It remains an
 authoring/debug fallback; it does not claim that the procedural MetalRT
-primitive is active in Blender. The isolated candidate branch also passes the
-full `blender` build, app-bundle install, direct importer probe, and Cycles/UI
-smoke; the release-binary child-launch harness remains separately host-limited.
+primitive is active in Blender by default. Set `CYCLES_TETCAGE_NATIVE=1` for the
+isolated static native path. The candidate branch passes the full `blender`
+build, app-bundle install, direct importer probe, Cycles/UI smoke, and a
+tet-only native-vs-fallback emission differential; the release-binary
+child-launch harness remains separately host-limited.
 
 ## Direct Nix workflow
 

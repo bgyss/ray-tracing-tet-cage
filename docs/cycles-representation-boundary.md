@@ -45,14 +45,17 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `6c3b190fd0a` now recognizes that
-marker in embedded Cycles and compiles the scene/device/CPU-kernel/bridge
-targets while deliberately retaining ordinary mesh fallback. Mirrored or near-singular
+Blender sync. The isolated Blender branch at `d4d3ec46c93c` now recognizes that
+marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
+static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
+intersection queries while preserving ordinary mesh fallback by default. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
-Its full Blender target, app-bundle install, direct importer probe, and Cycles/UI
-smoke pass in the isolated build; the older release-binary Python child-launch
-path remains a separate host-startup limitation.
+Its full Blender target, app-bundle install, direct importer probe, Cycles/UI
+smoke, and tet-only native-vs-fallback emission differential pass in the isolated
+build; mixed ordinary geometry and broader traversal/shading semantics remain
+open. The older release-binary Python child-launch path remains a separate
+host-startup limitation.
 
 | Boundary | Tet-cage side owns | Cycles side consumes or reconstructs |
 | --- | --- | --- |

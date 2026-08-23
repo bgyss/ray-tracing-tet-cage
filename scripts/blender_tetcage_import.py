@@ -81,10 +81,14 @@ def _surface_objects(
         primitive_attribute = mesh.attributes.new("tetcage_source_primitive", "INT", "FACE")
         owner_attribute = mesh.attributes.new("tetcage_owner_tet", "INT", "FACE")
         material_attribute = mesh.attributes.new("tetcage_material", "INT", "FACE")
+        native_candidate_attribute = mesh.attributes.new(
+            "tetcage_native_candidate", "BOOLEAN", "FACE"
+        )
         for index, polygon in enumerate(mesh.polygons):
             primitive_attribute.data[index].value = source_by_tet[tet_id][index]
             owner_attribute.data[index].value = owner_by_tet[tet_id][index]
             material_attribute.data[index].value = materials_by_tet[tet_id][index]
+            native_candidate_attribute.data[index].value = True
 
         obj = bpy.data.objects.new(f"TetCage_Tet_{tet_id:04d}", mesh)
         bpy.context.collection.objects.link(obj)
