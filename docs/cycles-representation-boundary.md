@@ -19,13 +19,14 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `20a72619765e` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
+revision `eff24a310256` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
 and includes self-filtered opaque-shadow and static local projected-axis triangle-scan seams.
 Its motion-tagged MetalRT callback now carries accepted tet barycentrics through
-the ray payload, closing the object-transform motion differential; deformation
-motion remains on the ordinary mesh fallback. It remains an adapter rather than
+the ray payload, closing the object-transform motion differential. A native
+motion-AABB/time-interpolated shape-key fixture also passes; broader deformation
+semantics remain open. It remains an adapter rather than
 a production tet-cage Geometry type; transparent/shadow traversal and the
 zero-hit local-ray path are measured, while SSS multi-hit ordering, exact
 volume precision, record-all, and full shading semantics remain open.
@@ -49,7 +50,7 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `9f1267111935` now recognizes that
+Blender sync. The isolated Blender branch at `0e320b809962` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local triangle
@@ -59,10 +60,10 @@ numerically close but not exact. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
 place; the CPU-disabled Metal render proof is recorded in the entry manifest.
 Its full Blender target, app-bundle install, direct importer probe, Cycles/UI
-smoke, and tet-only, mixed, plus object-transform-motion ordinary-triangle/
-native-AABB emission differentials pass in the isolated build; deformation
-deformation motion, SSS multi-hit/local ordering, exact volume precision, Principled shading,
-and broader traversal semantics remain open. The
+smoke, and tet-only, mixed, object-transform-motion, plus one native shape-key
+deformation ordinary-triangle/native-AABB emission differentials pass in the
+isolated build; broader deformation topology, SSS multi-hit/local ordering, exact
+volume precision, Principled shading, and broader traversal semantics remain open. The
 older release-binary Python child-launch
 path remains a separate host-startup limitation.
 

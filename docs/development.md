@@ -123,6 +123,15 @@ It verifies that both native Cycles lanes use the projected-axis tet predicate
 and the Cycles local hit-record policy; it skips when the isolated source
 worktrees are unavailable.
 
+The deformation-specific source contract is checked with:
+
+```sh
+python3 tests/blender_tetcage_deformation_contract.py
+```
+
+It guards the motion AABB descriptor, Blender position-motion upload, and
+time-interpolated native tet narrow phase.
+
 Unset `CYCLES_TETCAGE_NATIVE` (or set it to `0`) to render the same probe
 through ordinary triangle fallback. The checked-in probe uses a fixed emission
 shader and removes unrelated meshes in `tet_only` mode so the differential
@@ -130,9 +139,9 @@ measures intersection rather than lighting noise. Pass `motion` instead of
 `mixed` and set `TETCAGE_MOTION_DELTA=0.15` to exercise object-transform motion;
 pass `mixed_motion` to retain the ordinary cube while exercising the same motion
 handoff;
-deformation-motion candidates remain on the ordinary fallback until their
-per-frame tet geometry is implemented. Pass `deformation_motion` to verify the
-shape-key fallback boundary. The `transparent` mode exercises the
+deformation-motion candidates use the native motion-AABB/time-interpolated path
+when the opt-in branch is enabled; unsupported topology still falls back. Pass
+`deformation_motion` to verify the native shape-key differential. The `transparent` mode exercises the
 transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the
 zero-hit local-ray path; and `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact.

@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "9f1267111935b86b349c52b223862a7047913e0b",
+      "revision": "0e320b809962c8ed6a3b1bb7b27c14c729bb5423",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -24,7 +24,7 @@
       "direct_probe": "passed",
       "ui_smoke": "passed",
       "gui_smoke": "passed; real window context and timer-exit probe",
-      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, Metal AABB BLAS, triangle/AABB intersection query, and object-transform motion payload handoff; deformation-motion candidates retain ordinary mesh fallback"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, and time-interpolated shape-key deformation"
     }
   },
   "toolchain": {
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "20a72619765e170ec2270c32af212581de034d7d",
+    "implementation_revision": "eff24a3102562fc1e57b0fa2d021316a142152da",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -286,21 +286,23 @@
         "motion payload carries accepted tet object/primitive/barycentrics"
       ],
       "result": "passed",
-      "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene; deformation-motion geometry frames, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
+      "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene; broader deformation topology, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
     },
-    "deformation_motion_fallback": {
+    "deformation_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
       "device": "METAL Apple M1 Max",
       "scene": "one tet-cage candidate with animated Blender shape-key deformation",
       "resolution": "16x16",
       "samples": 1,
       "native_gate_requested": true,
-      "native_adapter_selected": false,
-      "native_sha256": "2332eed4d7ab52d2a9b040e66978bef920c91891e4628717e1c483ba6a54f11f",
-      "fallback_sha256": "9dbd8491b5adba9ae43216011ea45210b05fdc4eafdabca4163a5487849b9ba9",
+      "native_adapter_selected": true,
+      "motion_aabb_blas": true,
+      "motion_keyframes": 3,
+      "native_sha256": "47f9d3bc3218f6842f27f09d0c60ca6ecdfbb6e55c2917ef32cc1b8450321451",
+      "fallback_sha256": "d693f83bbc08f1899a857488939e2037033c87279acb1f778897e2de0ab14aa1",
       "pixel_differences": 0,
-      "result": "passed_fallback_boundary",
-      "claim_boundary": "Shape-key deformation is explicitly retained on ordinary Cycles fallback; native deformation frames remain unimplemented."
+      "result": "passed_native_deformation",
+      "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, volume, and multi-object motion semantics remain open."
     },
     "native_mixed_motion_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",
@@ -314,7 +316,7 @@
       "fallback_sha256": "9a05f195cd03f03bbab69dd0ecee2ab24af4ceac7facd473532a654bea39bd12",
       "pixel_differences": 0,
       "result": "passed",
-      "claim_boundary": "Measured mixed ordinary-triangle plus object-transform-motion tet traversal under fixed emission; deformation motion and broader material/visibility semantics remain open."
+      "claim_boundary": "Measured mixed ordinary-triangle plus object-transform-motion tet traversal under fixed emission; shape-key deformation is covered by the native deformation probe, while broader material/visibility semantics remain open."
     },
     "native_transparent_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... transparent",
@@ -464,7 +466,7 @@
       "result": "passed",
       "image_sha256": "0b59c4ef02b733bb4634de92f55157d2884581cf170520ffc7efdbf50f761fdc"
     },
-    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, the Tet Cage Debug UI/operator smoke, a CPU-disabled Cycles Metal render, and opt-in static plus object-transform-motion native tet ingestion in the isolated branch; SSS/deformation-motion, exact volume, and broader Principled semantics remain open."
+    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, the Tet Cage Debug UI/operator smoke, a CPU-disabled Cycles Metal render, and opt-in static, object-transform-motion, and one native shape-key deformation tet differential in the isolated branch; SSS, exact volume, broader deformation topology, and broader Principled semantics remain open."
   },
   "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and proves opt-in static plus object-transform-motion native Blender tet ingestion in the isolated branch. Deformation motion, transparent/shadow-all, local/volume runtime, full shading/visibility semantics, OptiX, and complete Blender UI/debug integration remain open."
 }

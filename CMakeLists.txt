@@ -147,6 +147,11 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.cycles_native_kernel_contract PROPERTIES
       SKIP_RETURN_CODE 77
       PASS_REGULAR_EXPRESSION "Cycles native local-kernel contract: (pass|skipped)")
+    add_test(NAME tetcage.blender_native_deformation_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_tetcage_deformation_contract.py")
+    set_tests_properties(tetcage.blender_native_deformation_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Blender native deformation contract: (pass|skipped)")
     add_test(NAME tetcage.asset_inspector_cli
       COMMAND tetcage_inspect "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage")
     set_tests_properties(tetcage.asset_inspector_cli PROPERTIES
