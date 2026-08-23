@@ -173,6 +173,16 @@ CyclesTetCageFrame build_cycles_tet_cage_frame(const CompiledAsset &asset,
         primitive.bounds_max.z = std::max(primitive.bounds_max.z, point.z);
       }
     }
+    const double scale = std::max({1.0,
+                                   std::abs(primitive.bounds_min.x),
+                                   std::abs(primitive.bounds_min.y),
+                                   std::abs(primitive.bounds_min.z),
+                                   std::abs(primitive.bounds_max.x),
+                                   std::abs(primitive.bounds_max.y),
+                                   std::abs(primitive.bounds_max.z)});
+    const double margin = 32.0 * std::numeric_limits<double>::epsilon() * scale;
+    primitive.bounds_min = primitive.bounds_min - Vec3{margin, margin, margin};
+    primitive.bounds_max = primitive.bounds_max + Vec3{margin, margin, margin};
     frame.primitives.push_back(primitive);
   }
 

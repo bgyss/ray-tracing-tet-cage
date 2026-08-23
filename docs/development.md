@@ -87,9 +87,10 @@ BLENDER_BINARY=/path/to/Blender \
 python3 tests/blender_import_contract.py
 ```
 
-The importer creates a normal Cycles mesh and a visible wireframe cage. It is
-an authoring/debug fallback; it does not claim that the procedural MetalRT
-primitive is active in Blender.
+The importer creates a normal Cycles mesh and a visible wireframe cage, installs
+a dependency-graph update handler for cage edits, and supports save/reload of
+the fallback scene. It is an authoring/debug fallback; it does not claim that
+the procedural MetalRT primitive is active in Blender.
 
 ## Direct Nix workflow
 

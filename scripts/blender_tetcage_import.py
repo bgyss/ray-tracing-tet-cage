@@ -17,6 +17,9 @@ import bpy
 from tetcage_asset import load_asset, micro_triangle_points
 
 
+_IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
+
+
 def _surface_object(asset: dict[str, Any]) -> bpy.types.Object:
     vertices: list[tuple[float, float, float]] = []
     faces: list[tuple[int, int, int]] = []
@@ -69,6 +72,48 @@ def _cage_object(asset: dict[str, Any]) -> bpy.types.Object:
     return obj
 
 
+def update_surface_from_cage(cage: bpy.types.Object) -> bool:
+    """Update fallback surface vertices after a cage edit.
+
+    The handler intentionally updates only the compiled micro-triangle surface
+    representation. It is a debug/fallback path, not the future procedural
+    MetalRT update contract.
+    """
+
+    asset_path = str(cage.get("tetcage_asset_path", ""))
+    surface_name = str(cage.get("tetcage_surface_object", ""))
+    asset = _IMPORTED_ASSETS.get(asset_path)
+    surface = bpy.data.objects.get(surface_name)
+    if asset is None or surface is None or surface.type != "MESH":
+        return False
+    posed_vertices = [
+        {"position": tuple(vertex.co), "stable_id": 0}
+        for vertex in cage.data.vertices
+    ]
+    surface_vertex = 0
+    for triangle in asset["micro_triangles"]:
+        for point in micro_triangle_points(asset, triangle, posed_vertices):
+            surface.data.vertices[surface_vertex].co = point
+            surface_vertex += 1
+    surface.data.update()
+    generation = int(surface.get("tetcage_pose_generation", 0)) + 1
+    surface["tetcage_pose_generation"] = generation
+    cage["tetcage_pose_generation"] = generation
+    return True
+
+
+def _depsgraph_update(_scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph) -> None:
+    for update in depsgraph.updates:
+        obj = update.id
+        if isinstance(obj, bpy.types.Object) and obj.get("tetcage_debug_view"):
+            update_surface_from_cage(obj)
+
+
+def register_handlers() -> None:
+    if _depsgraph_update not in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.append(_depsgraph_update)
+
+
 def import_asset(
     asset_path: str | pathlib.Path,
     output_json: str | pathlib.Path | None = None,
@@ -81,6 +126,10 @@ def import_asset(
     surface = _surface_object(asset)
     cage = _cage_object(asset)
     surface.parent = cage
+    asset_path = str(pathlib.Path(asset_path).resolve())
+    _IMPORTED_ASSETS[asset_path] = asset
+    cage["tetcage_asset_path"] = asset_path
+    cage["tetcage_surface_object"] = surface.name
     scene["tetcage_fallback_mode"] = "conventional_mesh"
     scene["tetcage_asset_format_version"] = asset["format_version"]
     scene["tetcage_source_triangles"] = len(asset["source_triangles"])
@@ -97,7 +146,9 @@ def import_asset(
         "surface_object": surface.name,
         "cage_object": cage.name,
         "procedural_metalrt": False,
+        "pose_update_handler": True,
     }
+    register_handlers()
     if output_json is not None:
         pathlib.Path(output_json).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     if output_blend is not None:

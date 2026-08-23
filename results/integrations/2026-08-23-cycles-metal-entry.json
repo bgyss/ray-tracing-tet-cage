@@ -92,6 +92,9 @@
     "surface_triangles": 1,
     "cage_tetrahedra": 1,
     "fallback_mode": "conventional_mesh",
+    "pose_update_handler": true,
+    "pose_updated": true,
+    "save_reload": true,
     "procedural_metalrt": false,
     "claim_boundary": "This proves the version-1 asset parser and Blender mesh/wireframe debug fallback. It does not prove Blender-native procedural tet-cage MetalRT ingestion."
   },
