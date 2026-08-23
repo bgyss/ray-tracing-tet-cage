@@ -47,6 +47,21 @@ def main() -> int:
         (1.0, 0.0),
         (0.0, 1.0),
     )
+    with tempfile.TemporaryDirectory(prefix="tetcage-material-parser-") as raw:
+        output = pathlib.Path(raw) / "two-material.tetcage"
+        subprocess.run(
+            [
+                str(compiler),
+                str(REPO_ROOT / "tests/assets/two-material.obj"),
+                str(REPO_ROOT / "tests/assets/two-material.cage"),
+                str(output),
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        material_asset = load_asset(output)
+    assert [triangle["material"] for triangle in material_asset["micro_triangles"]] == [7, 11]
     print("tetcage asset parser contract: pass")
     return 0
 
