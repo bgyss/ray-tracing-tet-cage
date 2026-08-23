@@ -16,7 +16,7 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "3650bd04de8fd6dedac686fde210e7fcd10b211d",
+      "revision": "dae69152c89e8150d4463cbc39b7f9b47f41b13f",
       "working_tree": "top_level_clean; lib/macos_arm64 pinned; submodule status command is LFS-temp-permission limited",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
@@ -24,7 +24,7 @@
       "direct_probe": "passed",
       "ui_smoke": "passed",
       "gui_smoke": "passed; real window context and timer-exit probe",
-      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, and time-interpolated shape-key deformation"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion payload handoff, and time-interpolated shape-key deformation; animated transparent and BSSRDF closure candidates retain ordinary Cycles fallback"
     }
   },
   "toolchain": {
@@ -421,7 +421,26 @@
       "samples": 1,
       "motion_local_intersection_table": true,
       "motion_local_normal_source": "motion_triangle_vertices at ray->time for local-hit Ng",
+      "native_adapter_selected": false,
+      "fallback_reason": "subsurface motion is not yet native",
+      "selection_log": ["subsurface_motion=1", "ordinary Cycles mesh fallback"],
       "area": {
+        "native_sha256": "8b43b6f501b71db056767860c09de75e6db414768e069904b1c5f7f88540de34",
+        "fallback_sha256": "4dbce0eafaaf0029055f5cb7201e9d109e3bf211fcfb7a28d5d4c026de1e6256",
+        "pixel_differences": 0,
+        "max_abs_rgb_difference": 0.0,
+        "sum_abs_rgb_difference": 0.0,
+        "result": "passed_fallback_boundary"
+      },
+      "point": {
+        "native_sha256": "9aa526b7f2d3fd080496a56e1eda3e39371ae01fed9ca26f877f6d3050648d3a",
+        "fallback_sha256": "f3f33f13492015d5e946dbd8dd901dead714e9048a6d5a0a109d9b5b383ec8db",
+        "pixel_differences": 0,
+        "max_abs_rgb_difference": 0.0,
+        "sum_abs_rgb_difference": 0.0,
+        "result": "passed_fallback_boundary"
+      },
+      "raw_native_experiment_area": {
         "native_sha256": "99234a07112d1ed1d6449cf4e4bfa973f70350cbcd8df18b9eca777692745199",
         "fallback_sha256": "f6da056c9785517829b5db57cb5e4c3b17c67b67987d3a51f515de6f14566016",
         "pixel_differences": 109,
@@ -429,7 +448,7 @@
         "sum_abs_rgb_difference": 849.9367401520722,
         "result": "open_motion_local_ordering"
       },
-      "point": {
+      "raw_native_experiment_point": {
         "native_sha256": "61c1b7ab842f3437a16184d41307e50ba3a0a3d4cc9f5120d66efd9d5df7b3fe",
         "fallback_sha256": "2d38005bed243d6c70dd9c64493747c8e2c4e0b73640a4e05ab0fef54068e0c7",
         "pixel_differences": 109,
@@ -437,7 +456,7 @@
         "sum_abs_rgb_difference": 101.6299308007001,
         "result": "open_motion_local_ordering"
       },
-      "claim_boundary": "Motion-local geometric normals now come from the sampled motion frame; the differential is unchanged, so animated SSS hit ordering/closure remains open."
+      "claim_boundary": "Animated BSSRDF/SSS now refuses the unqualified native adapter and matches ordinary Cycles through explicit fallback; the raw motion-local experiment remains recorded for future closure work."
     },
     "native_volume_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... volume",

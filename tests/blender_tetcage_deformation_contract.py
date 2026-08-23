@@ -26,8 +26,12 @@ def main() -> int:
     assert "metalrt_tetcage_motion_vertices" in kernel
     assert "has_transparent_surface" in mesh
     assert "has_surface_shadow_transparency" in mesh
+    assert "has_surface_bssrdf" in mesh
+    assert "shader->graph" in mesh
+    assert "has_surface_bssrdf()" in mesh
     assert "Scene::MOTION_BLUR" in mesh
     assert "transparent motion" in mesh
+    assert "subsurface motion" in mesh
     print("Blender native deformation contract: pass")
     return 0
 
