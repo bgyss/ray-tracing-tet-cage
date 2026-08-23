@@ -34,16 +34,18 @@ verified in
   affine transforms from cage edits, rejects invalid poses, survives save/reload,
   and renders with CPU disabled on Metal.
 
-The native procedural primitive is still open. An isolated exploratory Cycles
+The production-native primitive is still open. An isolated exploratory Cycles
 branch now contains and builds a bounded scene-side `TetCageGeometry` transport
-contract (`$CYCLES_NATIVE_WORKTREE`, revision
-`1059d3e590045c008cb69e8e82c2b97554278c77`): immutable provenance-bearing
-micro-triangles, complete per-tet affine frame snapshots, and explicit fallback
-state. It is not a `Geometry` subclass and is not consumed by a BVH, kernel, or
-Metal backend yet. Tet-specific shadow-all, local, transparent, volume, and
-mixed-scene semantics therefore remain unproven. The evidence manifest keeps
-these claims separate rather than promoting the fallback path to native Cycles
-support.
+contract (`$CYCLES_NATIVE_WORKTREE`, revision `5efddfd32`, based on
+`1059d3e590045c008cb69e8e82c2b97554278c77`) and a follow-up static query
+landing: an XML-marked mesh builds a conservative AABB BLAS and uses
+`intersection_query<instancing>` to reconstruct an ordinary triangle hit. The
+static emission comparison is pixel-identical to the ordinary triangle
+reference on the M1 Max. This is not yet a `Geometry` subclass, and motion,
+primitive visibility, shadow-all, local, transparent, volume, source
+provenance, mixed-scene, and Blender-native semantics remain unproven. The
+evidence manifest keeps these claims separate rather than promoting the static
+slice to complete Cycles support.
 
 ## Scope and evidence snapshot
 
