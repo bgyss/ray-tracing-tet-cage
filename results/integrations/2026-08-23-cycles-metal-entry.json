@@ -32,7 +32,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "5efddfd3283d5e257952156e9aead42fb46a845f",
+    "implementation_revision": "151e3c0a1ac7a4c070fd0ecc1678aa0a4181829f",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -55,6 +55,7 @@
       "device": "METAL Apple M1 Max",
       "query_tags": "intersection_query<instancing>",
       "aabb_blas": true,
+      "shadow_query": "compiled_static_self_filtered; image regression pending",
       "shader": "emission",
       "resolution": "8x8",
       "samples": 1,

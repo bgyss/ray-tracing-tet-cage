@@ -36,7 +36,7 @@ verified in
 
 The production-native primitive is still open. An isolated exploratory Cycles
 branch now contains and builds a bounded scene-side `TetCageGeometry` transport
-contract (`$CYCLES_NATIVE_WORKTREE`, revision `5efddfd32`, based on
+contract (`$CYCLES_NATIVE_WORKTREE`, revision `151e3c0a1`, based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`) and a follow-up static query
 landing: an XML-marked mesh builds a conservative AABB BLAS and uses
 `intersection_query<instancing>` to reconstruct an ordinary triangle hit. The

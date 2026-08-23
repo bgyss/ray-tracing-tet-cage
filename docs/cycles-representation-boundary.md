@@ -19,7 +19,7 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `5efddfd32` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its static experimental
+revision `151e3c0a1` (based on `1059d3e590045c008cb69e8e82c2b97554278c77`). Its static experimental
 adapter now reaches the Cycles Metal AABB BLAS and query path, but it is
 intentionally not a `Geometry` subclass and does not yet carry source-owner
 provenance through shading or motion/visibility semantics.
