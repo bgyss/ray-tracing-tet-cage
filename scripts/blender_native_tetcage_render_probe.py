@@ -13,7 +13,7 @@ import pathlib
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from blender_tetcage_import import import_asset
@@ -396,6 +396,9 @@ def _setup_nonuniform_transform(scene: bpy.types.Scene) -> None:
         if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
             obj.scale = (1.7, 0.6, 1.2)
             obj.rotation_euler = (0.2, -0.3, 0.15)
+            matrix = obj.matrix_world.copy()
+            matrix[0][1] += 0.25
+            obj.matrix_world = Matrix(matrix)
             obj.update_tag()
 
 
