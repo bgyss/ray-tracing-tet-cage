@@ -15,7 +15,7 @@ Compilation alone never promotes a row to measured.
 | Requirement | Planned implementation | Required proof | Current status |
 | --- | --- | --- | --- |
 | Canonical tet barycentrics and affine deformation | `tetcage_core` math kernel | analytical, all-permutation, seeded differential tests | implemented |
-| Full inverse-transpose normals | `transform_normal` | nonuniform scale/shear orthogonality tests and renderer differential | implemented on CPU; renderer proof pending |
+| Full inverse-transpose normals | `transform_normal` | nonuniform scale/shear orthogonality tests and renderer differential | CPU and Blender native/fallback nonuniform-scale/rotation differential pass; broader shear corpus pending |
 | Determinant, mirror, inversion, and degeneration | tet diagnostics plus backend fallback policy | adversarial pose corpus with no NaN/singular API submission | implemented on CPU; GPU proof pending |
 | Robust clipping | deterministic half-space clipping with explicit tolerance policy | containment, area, feature, and scale tests | implemented for portable baseline; broader corpus pending |
 | Shared-boundary identity and ownership | stable cage/source feature IDs and lowest-owner rule | two-tet fixtures plus watertight boundary corpus | implemented for coplanar ownership; full corpus pending |

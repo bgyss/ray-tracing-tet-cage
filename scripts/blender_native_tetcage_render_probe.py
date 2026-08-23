@@ -389,6 +389,16 @@ def _setup_deformation_motion(scene: bpy.types.Scene) -> None:
         deform.value = 1.0
         deform.keyframe_insert(data_path="value", frame=2)
     scene.frame_set(1)
+
+
+def _setup_nonuniform_transform(scene: bpy.types.Scene) -> None:
+    for obj in scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.scale = (1.7, 0.6, 1.2)
+            obj.rotation_euler = (0.2, -0.3, 0.15)
+            obj.update_tag()
+
+
 def _use_black_world(scene: bpy.types.Scene) -> None:
     scene.world.use_nodes = True
     background = scene.world.node_tree.nodes.get("Background")
@@ -406,7 +416,7 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|deformation_local_motion|transparent|transparent_pure|transparent_diffuse_motion|transparent_motion|transparent_pure_motion|local|ao|normal|position|uv|texture|source_normal|source_primitive|owner_tet|material_attribute|diffuse|material|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|deformation_local_motion|transparent|transparent_pure|transparent_diffuse_motion|transparent_motion|transparent_pure_motion|local|ao|normal|normal_transform|position|uv|texture|source_normal|source_primitive|owner_tet|material_attribute|diffuse|material|volume]"
         )
 
     asset, output_image, output_json = args[:3]
@@ -426,6 +436,7 @@ def main() -> int:
         "local",
         "ao",
         "normal",
+        "normal_transform",
         "position",
         "uv",
         "texture",
@@ -438,7 +449,7 @@ def main() -> int:
         "volume",
     }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, deformation_local_motion, transparent, transparent_pure, transparent_diffuse_motion, transparent_motion, transparent_pure_motion, local, ao, normal, position, uv, texture, source_normal, source_primitive, owner_tet, material_attribute, diffuse, material, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, deformation_local_motion, transparent, transparent_pure, transparent_diffuse_motion, transparent_motion, transparent_pure_motion, local, ao, normal, normal_transform, position, uv, texture, source_normal, source_primitive, owner_tet, material_attribute, diffuse, material, or volume"
         )
     mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
@@ -458,6 +469,8 @@ def main() -> int:
     elif probe_mode == "ao":
         _use_ao_probe_material()
     elif probe_mode == "normal":
+        _use_normal_probe_material()
+    elif probe_mode == "normal_transform":
         _use_normal_probe_material()
     elif probe_mode == "position":
         _use_position_probe_material()
@@ -486,6 +499,8 @@ def main() -> int:
         _setup_motion(scene, float(os.environ.get("TETCAGE_MOTION_DELTA", "0.0")))
     elif probe_mode in {"deformation_motion", "deformation_local_motion"}:
         _setup_deformation_motion(scene)
+    if probe_mode == "normal_transform":
+        _setup_nonuniform_transform(scene)
     scene.cycles.samples = int(os.environ.get("TETCAGE_SAMPLES", "1"))
     scene.cycles.use_adaptive_sampling = False
     scene.cycles.use_denoising = False

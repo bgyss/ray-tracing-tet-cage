@@ -592,11 +592,20 @@
       "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; the checker texture graph passes, while broader custom shader-node semantics remain open."
     },
     "native_shading_diagnostics": {
-      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|uv|texture|diffuse",
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|normal_transform|position|uv|texture|diffuse",
       "device": "METAL Apple M1 Max",
       "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
       "normal": {
         "pixel_differences": 0,
+        "result": "passed"
+      },
+      "normal_transform": {
+        "native_sha256": "be1b375c5a593020e41b36c46105f5691c4266119d2480fffed03d4a13ee15ae",
+        "fallback_sha256": "b3cb958453f1bdc2598eafa1e53abca720f008263008b57fd7d6fe87bb3160c7",
+        "pixel_differences": 0,
+        "max_abs_difference": 0.0,
+        "sum_abs_difference": 0.0,
+        "transform": "nonuniform scale (1.7, 0.6, 1.2) plus Euler rotation (0.2, -0.3, 0.15)",
         "result": "passed"
       },
       "position": {
