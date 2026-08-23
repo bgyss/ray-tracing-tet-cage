@@ -342,6 +342,21 @@
       "result": "measured_with_area_light_difference; point_and_sun_float_noise_only",
       "claim_boundary": "Volume entry/exit query runs and remains numerically close to the ordinary Cycles path, but is not yet exact; volume precision and multi-object stack semantics remain open."
     },
+    "native_material_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... material",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-material.obj + tests/assets/two-material.cage",
+      "scene": "one tet with source material IDs 7 and 11",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "per-source-material emission colors",
+      "native_sha256": "26e456c4b92b6242ba0c270e051a31baeadbb1482a63c52c5cda098fb8b7c2fc",
+      "fallback_sha256": "8315d8b3dfabf4b442e73556c475a4b0487ee81fc1decb626e473fd9903a3226",
+      "pixel_differences": 0,
+      "source_material_ids": [7, 11],
+      "result": "passed",
+      "claim_boundary": "Measured source material-slot selection through native and ordinary Cycles paths; full texture/custom-attribute semantics remain open."
+    },
     "native_shading_diagnostics": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|diffuse",
       "device": "METAL Apple M1 Max",

@@ -44,7 +44,7 @@ query seam are compiled, and source primitive/triangle/micro IDs are packed for
 ShaderData. The static emission comparison is pixel-identical to the ordinary
 triangle reference on the M1 Max. Object-transform motion, transparent/shadow
 traversal, and the zero-hit local-ray path now have native Blender differentials;
-normal/position/UV handoff and point/sun lighting controls match, while area-light
+normal/position/UV and source material-slot handoff and point/sun lighting controls match, while area-light
 sampling remains an explicit parity gate. SSS is numerically close under point
 and sun controls but diverges under area sampling; the closed-tet volume probe
 is float-noise-only under point and sun controls and diverges only under area
