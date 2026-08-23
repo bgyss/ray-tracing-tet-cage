@@ -344,10 +344,10 @@
       "resolution": "16x16",
       "samples": 1,
       "shader": "Ambient Occlusion to emission",
-      "native_sha256": "2d2d0afa57571dc8ae64d90c7371e9763eb052413b8eee10116ae08f3ff19282",
-      "fallback_sha256": "1ae13ddebf652500fe5c886d30ed17dcb05fec101f6cbcab6f67a142bed38a4c",
+      "native_sha256": "c39a2de0870870516b3b7576bb157c25a58b3ed4d083f71c2208f1bd89aa26d0",
+      "fallback_sha256": "ea523cc7f6fb6ee755f523f98601238e56b171e08cf46130ecd7762a54b310a3",
       "pixel_differences": 0,
-      "local_query": "runtime static projected-axis triangle scan; max_hits=0",
+      "local_query": "runtime static projected-axis AABB ift_local callback; max_hits=0",
       "result": "passed",
       "claim_boundary": "Measured the zero-hit local-ray path; SSS reservoir/multi-hit ordering and bevel local semantics remain open."
     },

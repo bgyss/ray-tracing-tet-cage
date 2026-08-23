@@ -54,8 +54,8 @@ their affine object transforms when the cage changes. It records the
 Blender sync. The isolated Blender branch at `cf324b80705f` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
-intersection queries while preserving ordinary mesh fallback by default. A static local triangle
-scan is compiled for tet objects, and the Metal shadow callback helper is compiled; the
+intersection queries while preserving ordinary mesh fallback by default. A static local AABB
+`ift_local` callback is compiled for tet objects, and the Metal shadow callback helper is compiled; the
 transparent and AO local probes are pixel-identical, while static SSS multi-hit now uses the native
 AABB local table and the closed-tet volume probe is numerically close but not exact. Mirrored or near-singular
 poses are rejected with `invalid_pose` and leave the last valid transforms in
