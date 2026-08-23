@@ -71,6 +71,16 @@ class TETCAGE_PT_debug(bpy.types.Panel):
         if cage is not None:
             layout.label(text=f"Pose generation: {cage.get('tetcage_pose_generation', 0)}")
             layout.label(text=f"Reason: {cage.get('tetcage_fallback_reason', 'none')}")
+        surface = next(
+            (obj for obj in scene.objects if obj.get("tetcage_native_candidate")),
+            None,
+        )
+        if surface is not None:
+            layout.label(text=f"Material slots: {len(surface.data.materials)}")
+            layout.label(text=f"UV layer: {bool(surface.data.uv_layers)}")
+            layout.label(
+                text=f"Source normal: {surface.data.attributes.get('tetcage_source_normal') is not None}"
+            )
         layout.operator(TETCAGE_OT_validate_pose.bl_idname, icon="CHECKMARK")
 
 
