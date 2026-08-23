@@ -19,7 +19,7 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `d681459a2aceeefb36764d636d0769e138bb9950` (based on
+revision `643723d1ee1ef43beb0cba4650ef561a8e2c0bf9` (based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
@@ -52,7 +52,7 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `dae69152c89` now recognizes that
+Blender sync. The isolated Blender branch at `c0d56cde6409` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. A static local AABB
@@ -66,8 +66,8 @@ smoke, and tet-only, mixed, object-transform-motion, plus one native shape-key
 deformation ordinary-triangle/native-AABB emission differentials pass in the
 isolated build; broader deformation topology, SSS multi-hit/local ordering, exact
 volume precision, Principled shading, and broader traversal semantics remain open. Transparent motion
-explicitly retains ordinary Cycles fallback until its closure semantics are qualified, and animated
-subsurface/BSSRDF motion follows the same fallback boundary. The
+explicitly retains ordinary Cycles fallback until its closure semantics are qualified; animated
+subsurface/BSSRDF motion now uses the motion-aware native local narrow phase. The
 older release-binary Python child-launch
 path remains a separate host-startup limitation.
 

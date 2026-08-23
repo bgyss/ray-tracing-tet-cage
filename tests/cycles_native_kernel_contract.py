@@ -70,6 +70,13 @@ def main() -> int:
     assert "motion_triangle_vertices(kg, local_object, prim, ray->time" in (
         (blender / "intern/cycles/kernel/device/metal/bvh.h").read_text()
     )
+    for root, relative in (
+        (cycles, "src/kernel/device/metal/bvh.h"),
+        (blender, "intern/cycles/kernel/device/metal/bvh.h"),
+    ):
+        text = (root / relative).read_text()
+        assert "metal_tetcage_triangle_intersect_local_vertices" in text
+        assert "bvh_instance_motion_push(nullptr, local_object, ray" in text
     print("Cycles native local-kernel contract: pass")
     return 0
 

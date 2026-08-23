@@ -149,9 +149,9 @@ current numeric volume differential rather than treating it as exact.
 Transparent object motion currently retains ordinary Cycles fallback because
 the native motion closure path is not yet qualified; `transparent_motion` probes
 that boundary explicitly.
-Animated subsurface/BSSRDF motion likewise retains ordinary Cycles fallback;
-`deformation_local_motion` records that boundary and keeps the raw native
-motion-local experiment separate from the qualified result.
+Animated subsurface/BSSRDF motion uses the native motion-aware local narrow
+phase; `deformation_local_motion` exercises it and records the float-noise
+differential against ordinary Cycles.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
 count; the checked-in evidence uses the deterministic default of one sample.
 The `normal`, `position`, `uv`, `source_normal`, `source_primitive`, `owner_tet`,
