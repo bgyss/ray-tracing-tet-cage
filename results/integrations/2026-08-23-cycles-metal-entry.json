@@ -326,6 +326,31 @@
       "result": "measured_with_numeric_difference",
       "claim_boundary": "Volume entry/exit query runs and remains numerically close to the ordinary Cycles path, but is not yet exact; volume precision and multi-object stack semantics remain open."
     },
+    "native_shading_diagnostics": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|position|diffuse",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+      "normal": {
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "position": {
+        "pixel_differences": 0,
+        "max_abs_difference": 5.960464477539063e-08,
+        "result": "passed_with_float_noise"
+      },
+      "diffuse_controls": {
+        "point": {"pixel_differences": 0, "result": "passed_with_float_noise"},
+        "sun": {"pixel_differences": 0, "result": "passed"},
+        "area": {
+          "pixel_differences": 13,
+          "max_abs_difference": 1.1339759826660156,
+          "sum_abs_difference": 3.445928178727627,
+          "result": "open_area_sampling_precision"
+        }
+      },
+      "claim_boundary": "Native normal and position handoff is measured; point/sun direct lighting matches, while area-light sampling remains an explicit parity gate."
+    },
     "metal_render": {
       "binary": "$BLENDER_BINARY",
       "cpu_device": false,

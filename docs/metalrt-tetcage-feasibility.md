@@ -44,7 +44,9 @@ query seam are compiled, and source primitive/triangle/micro IDs are packed for
 ShaderData. The static emission comparison is pixel-identical to the ordinary
 triangle reference on the M1 Max. Object-transform motion, transparent/shadow
 traversal, and the zero-hit local-ray path now have native Blender differentials;
-the closed-tet volume probe is numerically close but not exact. An isolated
+normal/position handoff and point/sun lighting controls match, while area-light
+sampling remains an explicit parity gate and the closed-tet volume probe is
+numerically close but not exact. An isolated
 Blender branch (`6f188797d690`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds

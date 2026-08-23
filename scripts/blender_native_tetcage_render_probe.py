@@ -29,11 +29,15 @@ def _camera_and_light(scene: bpy.types.Scene) -> None:
     ).to_euler()
     scene.camera = camera
 
-    bpy.ops.object.light_add(type="AREA", location=(1.2, 0.8, 2.0))
+    light_type = os.environ.get("TETCAGE_LIGHT_MODE", "area").upper()
+    if light_type not in {"AREA", "SUN", "POINT"}:
+        light_type = "AREA"
+    bpy.ops.object.light_add(type=light_type, location=(1.2, 0.8, 2.0))
     light = bpy.context.object
-    light.data.energy = 450.0
-    light.data.shape = "DISK"
-    light.data.size = 2.0
+    light.data.energy = 2.0 if light_type == "SUN" else (100.0 if light_type == "POINT" else 450.0)
+    if light_type == "AREA":
+        light.data.shape = "DISK"
+        light.data.size = 2.0
     light.rotation_euler = (Vector((0.3, 0.3, 0.0)) - light.location).to_track_quat(
         "-Z", "Y"
     ).to_euler()
@@ -130,6 +134,65 @@ def _use_ao_probe_material() -> None:
             obj.data.materials.append(material)
 
 
+def _use_normal_probe_material() -> None:
+    material = bpy.data.materials.new("TetCage_Native_Probe_Normal")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    geometry = nodes.new("ShaderNodeNewGeometry")
+    scale = nodes.new("ShaderNodeVectorMath")
+    scale.operation = "SCALE"
+    scale.inputs["Scale"].default_value = 0.5
+    add = nodes.new("ShaderNodeVectorMath")
+    add.operation = "ADD"
+    add.inputs[1].default_value = (0.5, 0.5, 0.5)
+    emission = nodes.new("ShaderNodeEmission")
+    links.new(geometry.outputs["Normal"], scale.inputs[0])
+    links.new(scale.outputs[0], add.inputs[0])
+    links.new(add.outputs[0], emission.inputs["Color"])
+    links.new(emission.outputs["Emission"], output.inputs["Surface"])
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+
+
+def _use_position_probe_material() -> None:
+    material = bpy.data.materials.new("TetCage_Native_Probe_Position")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    geometry = nodes.new("ShaderNodeNewGeometry")
+    emission = nodes.new("ShaderNodeEmission")
+    links.new(geometry.outputs["Position"], emission.inputs["Color"])
+    links.new(emission.outputs["Emission"], output.inputs["Surface"])
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+
+
+def _use_diffuse_probe_material() -> None:
+    material = bpy.data.materials.new("TetCage_Native_Probe_Diffuse")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    diffuse = nodes.new("ShaderNodeBsdfDiffuse")
+    diffuse.inputs["Color"].default_value = (0.7, 0.15, 0.03, 1.0)
+    diffuse.inputs["Roughness"].default_value = 0.25
+    links.new(diffuse.outputs["BSDF"], output.inputs["Surface"])
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+
+
 def _use_volume_probe_material() -> None:
     material = bpy.data.materials.new("TetCage_Native_Probe_Volume")
     material.use_nodes = True
@@ -185,7 +248,7 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|transparent|local|ao|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|transparent|local|ao|normal|position|diffuse|volume]"
         )
 
     asset, output_image, output_json = args[:3]
@@ -198,10 +261,13 @@ def main() -> int:
         "transparent",
         "local",
         "ao",
+        "normal",
+        "position",
+        "diffuse",
         "volume",
     }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, mixed_motion, transparent, local, ao, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, transparent, local, ao, normal, position, diffuse, or volume"
         )
     mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
@@ -216,6 +282,12 @@ def main() -> int:
         _use_local_probe_material()
     elif probe_mode == "ao":
         _use_ao_probe_material()
+    elif probe_mode == "normal":
+        _use_normal_probe_material()
+    elif probe_mode == "position":
+        _use_position_probe_material()
+    elif probe_mode == "diffuse":
+        _use_diffuse_probe_material()
     elif probe_mode == "volume":
         _use_volume_probe_material()
     else:
