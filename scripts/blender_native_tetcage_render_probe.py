@@ -101,6 +101,21 @@ def _use_transparent_probe_material() -> None:
             obj.data.materials.append(material)
 
 
+def _use_pure_transparent_probe_material() -> None:
+    material = bpy.data.materials.new("TetCage_Native_Probe_PureTransparent")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    transparent = nodes.new("ShaderNodeBsdfTransparent")
+    links.new(transparent.outputs["BSDF"], output.inputs["Surface"])
+    for obj in bpy.context.scene.objects:
+        if obj.type == "MESH" and obj.get("tetcage_native_candidate"):
+            obj.data.materials.clear()
+            obj.data.materials.append(material)
+
+
 def _use_local_probe_material() -> None:
     material = bpy.data.materials.new("TetCage_Native_Probe_Subsurface")
     material.use_nodes = True
@@ -370,7 +385,7 @@ def main() -> int:
     if len(args) not in {3, 4}:
         raise RuntimeError(
             "usage: blender --python blender_native_tetcage_render_probe.py "
-            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|deformation_local_motion|transparent|transparent_motion|local|ao|normal|position|uv|texture|source_normal|source_primitive|owner_tet|material_attribute|diffuse|material|volume]"
+            "-- asset output.exr result.json [tet_only|mixed|motion|mixed_motion|deformation_motion|deformation_local_motion|transparent|transparent_pure|transparent_motion|transparent_pure_motion|local|ao|normal|position|uv|texture|source_normal|source_primitive|owner_tet|material_attribute|diffuse|material|volume]"
         )
 
     asset, output_image, output_json = args[:3]
@@ -383,7 +398,9 @@ def main() -> int:
         "deformation_motion",
         "deformation_local_motion",
         "transparent",
+        "transparent_pure",
         "transparent_motion",
+        "transparent_pure_motion",
         "local",
         "ao",
         "normal",
@@ -399,7 +416,7 @@ def main() -> int:
         "volume",
     }:
         raise RuntimeError(
-            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, deformation_local_motion, transparent, transparent_motion, local, ao, normal, position, uv, texture, source_normal, source_primitive, owner_tet, material_attribute, diffuse, material, or volume"
+            "probe mode must be tet_only, mixed, motion, mixed_motion, deformation_motion, deformation_local_motion, transparent, transparent_pure, transparent_motion, transparent_pure_motion, local, ao, normal, position, uv, texture, source_normal, source_primitive, owner_tet, material_attribute, diffuse, material, or volume"
         )
     mixed_scene = probe_mode in {"mixed", "mixed_motion"}
     payload = import_asset(asset)
@@ -410,6 +427,8 @@ def main() -> int:
     compute_device_type = _enable_metal(scene)
     if probe_mode in {"transparent", "transparent_motion"}:
         _use_transparent_probe_material()
+    elif probe_mode in {"transparent_pure", "transparent_pure_motion"}:
+        _use_pure_transparent_probe_material()
     elif probe_mode in {"local", "deformation_local_motion"}:
         _use_local_probe_material()
     elif probe_mode == "ao":
@@ -439,7 +458,7 @@ def main() -> int:
     else:
         _use_probe_emission_material(mixed_scene)
     _use_black_world(scene)
-    if probe_mode in {"motion", "mixed_motion", "transparent_motion"}:
+    if probe_mode in {"motion", "mixed_motion", "transparent_motion", "transparent_pure_motion"}:
         _setup_motion(scene, float(os.environ.get("TETCAGE_MOTION_DELTA", "0.0")))
     elif probe_mode in {"deformation_motion", "deformation_local_motion"}:
         _setup_deformation_motion(scene)
@@ -448,7 +467,7 @@ def main() -> int:
     scene.cycles.use_denoising = False
     scene.cycles.seed = 0
     scene.cycles.use_animated_seed = False
-    scene.cycles.max_bounces = 4 if probe_mode in {"transparent", "transparent_motion", "local", "deformation_local_motion"} else 1
+    scene.cycles.max_bounces = 4 if probe_mode in {"transparent", "transparent_pure", "transparent_motion", "transparent_pure_motion", "local", "deformation_local_motion"} else 1
     scene.cycles.diffuse_bounces = 0
     scene.cycles.glossy_bounces = 0
     scene.cycles.transmission_bounces = 0

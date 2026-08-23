@@ -18,6 +18,7 @@ def main() -> int:
     mesh = (root / "intern/cycles/blender/mesh.cpp").read_text()
     bvh = (root / "intern/cycles/device/metal/bvh.mm").read_text()
     kernel = (root / "intern/cycles/kernel/device/metal/kernel.metal").read_text()
+    probe = pathlib.Path(__file__).resolve().parents[1] / "scripts/blender_native_tetcage_render_probe.py"
 
     assert "!has_deformation_motion && !has_shape_keys" not in mesh
     assert "MTLAccelerationStructureMotionBoundingBoxGeometryDescriptor" in bvh
@@ -26,8 +27,11 @@ def main() -> int:
     assert "metalrt_tetcage_motion_vertices" in kernel
     assert "has_transparent_surface" in mesh
     assert "has_surface_shadow_transparency" in mesh
+    assert "has_surface_emission" in mesh
+    assert "shader->graph" in mesh
     assert "Scene::MOTION_BLUR" in mesh
-    assert "transparent motion" in mesh
+    assert "transparent/emission motion" in mesh
+    assert "transparent_pure_motion" in probe.read_text()
     print("Blender native deformation contract: pass")
     return 0
 
