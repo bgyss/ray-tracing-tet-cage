@@ -91,6 +91,29 @@
     "gpu_attribute_reconstruction": true,
     "claim_boundary": "This is direct Metal proof for the project's standalone procedural AABB path, now consuming the Cycles tet-cage frame contract. It is not yet proof that Blender/Cycles can ingest or render a .tetcage asset."
   },
+  "tet_cage_motion_instances": {
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 2 --rays 128 --motion 0.05 --frames 3 --rebuild-period 2 --compact",
+    "result": "passed",
+    "rays": 384,
+    "frames_completed": 3,
+    "tlas_refit_frames": 1,
+    "tlas_rebuild_frames": 1,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "position_error_max": 1.686830675140527e-10,
+    "attribute_error_max": 5.128715840907461e-08,
+    "claim_boundary": "This proves the standalone procedural path's motion/refit/rebuild behavior, not Cycles renderer motion-blur semantics."
+  },
+  "tet_cage_gpu_instance_generation": {
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 2 --rays 128 --motion 0.05 --frames 2 --compact --gpu-instances",
+    "result": "passed",
+    "rays": 256,
+    "frames_completed": 2,
+    "gpu_instance_generation": true,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "claim_boundary": "This proves GPU-generated instance descriptors for the standalone procedural path, not Cycles scene synchronization."
+  },
   "cycles_conventional_fallback": {
     "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
     "xml_export_command": "tetcage_cycles_xml one-tet.tetcage cycles-fallback.xml",
