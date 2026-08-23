@@ -41,6 +41,14 @@
       "complete per-tetrahedron affine frame snapshots",
       "explicit NONE/REQUESTED/ACTIVE fallback state"
     ],
+    "ordinary_metalrt_smoke": {
+      "scene": "scene_cube_surface.xml",
+      "resolution": "16x16",
+      "samples": 1,
+      "metalrt_off_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311",
+      "metalrt_on_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311",
+      "images_byte_identical": true
+    },
     "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
     "claim_boundary": "This proves the native Cycles scene library compiles with the tet-cage transport contract. It does not add a Geometry subclass, BVH builder, kernel primitive, Metal intersection function, or Blender importer."
   },
