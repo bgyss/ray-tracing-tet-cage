@@ -405,6 +405,8 @@
       "raw_native_experiment_emission_mix": {
         "transparent_mix": 1.0,
         "force_native_diagnostic": true,
+        "diagnostic_source_revision": "430b6987380",
+        "temporary_gate_bypass": true,
         "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
         "lighting_controls": ["point", "area"],
         "point_native_sha256": "64f67abce580c5ffb63acfccbfa29ff25e59239f979cab5bb78375a9c5c63083",
@@ -457,6 +459,8 @@
       "result": "passed_fallback_boundary",
       "raw_native_experiment": {
         "force_native_diagnostic": true,
+        "diagnostic_source_revision": "430b6987380",
+        "temporary_gate_bypass": true,
         "lighting_controls": ["point", "area"],
         "point_native_sha256": "66441e187133925d78421f182aecd9ebd844bf964a8e4f2a875394510e1400dc",
         "point_fallback_sha256": "6fd230badda5ae18a65d08fc1ac2c7acf535346ab1777e5dc37cc83435e28cfc",
