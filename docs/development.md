@@ -168,6 +168,9 @@ fallback because the native motion closure path is not yet qualified;
 `transparent_motion` probes the Transparent+Emission boundary explicitly and
 `transparent_diffuse_motion` probes the Transparent+Diffuse boundary. Pure transparency uses
 `transparent_pure_motion` and remains native.
+The manifest also records a forced-native diagnostic of the motion-vertex fix
+for those mixed closures; it is evidence for follow-up qualification, not a
+production dispatch override.
 Animated subsurface/BSSRDF motion uses the native motion-aware local narrow
 phase; object-transform motion keeps static tet vertices while TLAS motion carries
 the transform. `deformation_local_motion` exercises the motion-local path on the

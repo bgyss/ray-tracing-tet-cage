@@ -404,12 +404,17 @@
       "result": "passed_fallback_boundary",
       "raw_native_experiment_emission_mix": {
         "transparent_mix": 1.0,
-        "native_sha256": "b2306c2cb100679a729bba0f26937494c0b53b0d489563ec385656ee3ef4fc82",
-        "fallback_sha256": "7ef6e7b234612c62c056e83e5a1ccabd9dd26900d21db850cdee8da01bfeeb36",
-        "pixel_differences": 36,
-        "max_abs_difference": 0.699999988079071,
-        "sum_abs_difference": 31.679999761283398,
-        "result": "open_motion_shading_precision"
+        "force_native_diagnostic": true,
+        "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+        "lighting_controls": ["point", "area"],
+        "point_native_sha256": "64f67abce580c5ffb63acfccbfa29ff25e59239f979cab5bb78375a9c5c63083",
+        "point_fallback_sha256": "7a55d91415be3943ab8d836988b2896f5cc9e5afeaed5323c9625bcf1e6b2027",
+        "point_pixel_differences": 0,
+        "area_native_sha256": "a828d13546646d5a25b03bbec7d1b7fac93c8bbeb765941527001e52fa2a8f77",
+        "area_fallback_sha256": "abb40f9613eec9a60c2d9697fae6b775586f894705577a2a7ba67cb473f960a2",
+        "area_pixel_differences": 0,
+        "result": "passed_raw_native_motion_vertex_fix",
+        "claim_boundary": "Forced-native diagnostic only; the production mixed-closure adapter remains gated pending broader closure and sample-count qualification."
       },
       "raw_native_experiment_transparent_mix": {
         "transparent_mix": 0.0,
@@ -450,6 +455,22 @@
       "sum_abs_difference": 0.0,
       "selection_log": ["transparent_surface=1", "transparent_closure=1", "nontransparent_surface=1", "ordinary Cycles mesh fallback"],
       "result": "passed_fallback_boundary",
+      "raw_native_experiment": {
+        "force_native_diagnostic": true,
+        "lighting_controls": ["point", "area"],
+        "point_native_sha256": "66441e187133925d78421f182aecd9ebd844bf964a8e4f2a875394510e1400dc",
+        "point_fallback_sha256": "6fd230badda5ae18a65d08fc1ac2c7acf535346ab1777e5dc37cc83435e28cfc",
+        "point_pixel_differences": 3,
+        "point_max_abs_difference": 8.940696716308594e-08,
+        "point_sum_abs_difference": 1.7508864402770996e-07,
+        "area_native_sha256": "cc63c808e5b86bc5682cc2aa58cdf9779a967c2e591f28506d7b9d116055aaa8",
+        "area_fallback_sha256": "c46caf6ae9ec0d11f9f5dee7cbd5052a72768df9cb3caadbf4a80b2c5c09408b",
+        "area_pixel_differences": 4,
+        "area_max_abs_difference": 7.152557373046875e-07,
+        "area_sum_abs_difference": 2.9206275939941406e-06,
+        "result": "numeric_close_raw_native_motion_vertex_fix",
+        "claim_boundary": "Forced-native diagnostic only; the production mixed-closure adapter remains gated pending broader closure and sample-count qualification."
+      },
       "claim_boundary": "Mixed Transparent+Diffuse motion matches ordinary Cycles through explicit fallback; the native mixed-closure path remains open."
     },
     "native_local_ao_render": {
