@@ -36,7 +36,7 @@ verified in
 
 The production-native primitive is still open. An isolated exploratory Cycles
 branch now contains and builds a bounded `Mesh` adapter plus `TetCageGeometry`
-transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `643723d1ee1e`, based on
+transport contract (`$CYCLES_NATIVE_WORKTREE`, revision `0b4e499570f3`, based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`). An XML-marked mesh builds a
 conservative AABB BLAS and uses `intersection_query<instancing>` to reconstruct
 an ordinary triangle hit; object visibility filtering and a static opaque-shadow
@@ -55,7 +55,7 @@ and material face attributes also match on the two-material fixture. Static and
 object-transform-motion closed-tet volume probes are numeric-close under point,
 sun, and area controls; the two-tet static stack remains float-noise-only under
 point and sun and open under area sampling. An isolated
-Blender branch (`430b6987380`) compiles
+Blender branch (`d92d347fdc75`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds
 a native AABB BLAS, and passes tet-only and mixed ordinary-triangle/native-AABB
@@ -75,7 +75,7 @@ broader deformation topology, and full Principled shading semantics remain open.
 | Item | Observation |
 | --- | --- |
 | Standalone Cycles source | `$CYCLES_SOURCE_ROOT` at `97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a` (2026-07-13), clean when inspected. |
-| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `430b698738058e2585a6bd18b75f2dc06356d11a` compiles and verifies opt-in static, one- and two-object object-transform motion, native shape-key deformation, AABB volume-table, static local-table, closed-tet motion-local SSS, pure-transparent motion, and mixed-closure fallback tet-cage dispatch without changing the source checkout. |
+| Blender source | `$BLENDER_SOURCE_ROOT` at `4a09c19bea7bd2800d85f018280b2dc62e654e51` (2026-08-09), clean when inspected. The isolated candidate branch at `d92d347fdc754094e814e0f10fc314e82dc1d031` compiles and verifies opt-in static, one- and two-object object-transform motion, native shape-key deformation, static and motion volume-table dispatch, static local-table, closed-tet motion-local SSS, pure-transparent motion, and mixed-closure fallback tet-cage dispatch without changing the source checkout. |
 | Current development hardware | `system_profiler` identifies a 32-core Apple M1 Max with Metal support. Ordinary Cycles MetalRT and the project's standalone tet-cage Metal path are separately evidenced; this is not a claim of native Cycles tet-cage rendering. |
 | Current toolchain boundary | Xcode 26.6 and the optional Metal Toolchain are installed; `xcrun metal -v` reports Apple metal `32023.883`. The pinned shader-bearing Cycles Metal build completes on arm64. |
 | Existing project Metal evidence | The repository's clean M5 record, `results/metal/2026-07-29-m5-clean-rerun.json`, identifies Apple M1 Max and clean commit `32af558`; it is evidence for this project's standalone declared corpus, not evidence that Cycles renders tet-cages. |

@@ -19,7 +19,7 @@ standalone procedural AABB path using this contract. It does not yet claim
 that Cycles itself loads `.tetcage` assets.
 
 The isolated Cycles branch also contains a scene-side transport contract at
-revision `643723d1ee1ef43beb0cba4650ef561a8e2c0bf9` (based on
+revision `0b4e499570f3acff4f018a0bcf089456ff686bb4` (based on
 `1059d3e590045c008cb69e8e82c2b97554278c77`). Its
 experimental `Mesh` adapter reaches the Cycles Metal AABB BLAS and static query
 path, applies object visibility filtering, packs source-owner IDs for ShaderData,
@@ -54,11 +54,12 @@ executable cannot start under current host memory pressure. The importer now
 creates one immutable canonical mesh object per occupied tet and updates only
 their affine object transforms when the cage changes. It records the
 `tetcage_native_candidate`/`cycles_tetcage_v1` marker for the future native
-Blender sync. The isolated Blender branch at `430b6987380` now recognizes that
+Blender sync. The isolated Blender branch at `d92d347fdc75` now recognizes that
 marker in embedded Cycles and, with `CYCLES_TETCAGE_NATIVE=1`, activates a
 static `Mesh` adapter, builds a Metal AABB BLAS, and routes triangle/AABB
 intersection queries while preserving ordinary mesh fallback by default. Static and
-object-transform-motion volume probes use the native AABB volume table. A static local AABB
+object-transform-motion volume probes use the native AABB volume table; static
+volume dispatch now uses the direct intersection-query helper. A static local AABB
 `ift_local` callback is compiled for tet objects, and the Metal shadow callback helper is compiled; the
 transparent and AO local probes are pixel-identical, while static SSS multi-hit now uses the native
 AABB local table and the single/two-tet volume probes are numerically close but not exact under area sampling. Mirrored or near-singular

@@ -40,6 +40,7 @@ def main() -> int:
         (blender, "intern/cycles/kernel/device/metal/bvh.h"),
     ):
         text = (source_root / relative).read_text()
+        assert "scene_intersect_tetcage_query_volume(kg, ray, isect, visibility)" in text
         assert "intersection_type::bounding_box" in text
         assert "payload.tet_object" in text
 

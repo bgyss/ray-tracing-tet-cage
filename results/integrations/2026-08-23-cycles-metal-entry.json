@@ -16,15 +16,15 @@
     "blender_embedded_candidate": {
       "root": "$BLENDER_NATIVE_WORKTREE",
       "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
-      "revision": "430b698738058e2585a6bd18b75f2dc06356d11a",
+      "revision": "d92d347fdc754094e814e0f10fc314e82dc1d031",
       "working_tree": "clean; lib/macos_arm64 pinned at a76ef917b4849ba2b1b1deb1a643e131a884a63b",
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
       "install": "passed",
-      "direct_probe": "passed; import/save/reload/pose/invalid-pose contract on candidate 430b6987380",
-      "ui_smoke": "passed; rebuilt candidate 430b6987380; window_context=true; tetcage_ui_registered=true",
+      "direct_probe": "passed; import/save/reload/pose/invalid-pose contract on candidate d92d347fdc75",
+      "ui_smoke": "passed; rebuilt candidate d92d347fdc75; window_context=true; tetcage_ui_registered=true",
       "gui_smoke": "passed; real window context and timer-exit probe",
-      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, static tet volume query dispatch, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
     }
   },
   "toolchain": {
@@ -45,7 +45,7 @@
   "cycles_native_scene_contract": {
     "worktree": "$CYCLES_NATIVE_WORKTREE",
     "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
-    "implementation_revision": "643723d1ee1ef43beb0cba4650ef561a8e2c0bf9",
+    "implementation_revision": "0b4e499570f3acff4f018a0bcf089456ff686bb4",
     "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
     "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
     "result": "passed",
@@ -581,17 +581,18 @@
       "samples": 1,
       "shader": "Principled Volume",
       "volume_intersection_table": true,
+      "static_query_dispatch": true,
       "differential_harness": {
         "script": "scripts/blender_native_differential.py",
-        "native_elapsed_ms": 3016.626750002615,
-        "fallback_elapsed_ms": 3088.7214170070365,
+        "native_elapsed_ms": 12345.30437499052,
+        "fallback_elapsed_ms": 3395.2096659922972,
         "comparison_max_abs_rgb_difference": 1.8440186977386475e-07,
         "comparison_sum_abs_rgb_difference": 1.7144775483757257e-06,
         "result": "numeric_close"
       },
-      "native_sha256": "c1b82d0757d6dc11220c6d01444fbdb40c02ef6dcb156a80740b6aa4b9e55d49",
-      "fallback_sha256": "2ca997a08de7aa9d74efd1cb779fd04c8535434c3898eed60535da9032556445",
-      "pixel_differences": 35,
+      "native_sha256": "c1c1877783a1e8ede7cfc1e6fd787a1f06656d355ccff9ec31bc9de9435e58e1",
+      "fallback_sha256": "7c9ed16833683737326583861909aca0791c0fbc86dcca8904eb693b53f77a1b",
+      "pixel_differences": 55,
       "max_abs_rgb_difference": 0.022648286074399948,
       "sum_abs_rgb_difference": 0.02848556899698451,
       "light_controls": {
@@ -614,8 +615,8 @@
         "cage_tetrahedra": 2,
         "native_volume_table": true,
         "point": {
-          "native_sha256": "a1c3cf74ad296b69853871466d8e360ce9c9c500f7b77c1468a7f8e7cb4e74dd",
-          "fallback_sha256": "48d4208040c88b262e4e82e2fd61ccf29313d29003a9a54347ee1f48583f92fd",
+          "native_sha256": "4acda8bcbb1763b26699ab538c867c6a2f2fb4cc6e965e0b9839567f0253695e",
+          "fallback_sha256": "f87b23226c56d650565235aa14ce41a54a09eda527a993df1f44636e7b24d7f4",
           "pixel_differences": 70,
           "max_abs_rgb_difference": 3.501772880554199e-07,
           "sum_abs_rgb_difference": 4.3720356188714504e-06,
@@ -630,8 +631,8 @@
           "result": "float_noise"
         },
         "area": {
-          "native_sha256": "f261d56d38947803d1831bf96dffcf153ac05ae99e7db6adc765169fdeddf01c",
-          "fallback_sha256": "c5808db7ec93183305f99d3a8271185dfb199b6844edc1de1c49eb9cb88870a1",
+          "native_sha256": "d209f1f88eb3a8d373bc5f88cf3a3540fddc9e1a5c6755ab2b2b0fb8780288a2",
+          "fallback_sha256": "43dba91d00b38fa0dedba7d18e609522102a2a5957c66c8a8c735c9e23d688d9",
           "pixel_differences": 76,
           "max_abs_rgb_difference": 0.7615760564804077,
           "sum_abs_rgb_difference": 1.961035904532764,
