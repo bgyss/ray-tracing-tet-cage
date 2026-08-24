@@ -1,0 +1,653 @@
+diff --git a/intern/cycles/blender/mesh.cpp b/intern/cycles/blender/mesh.cpp
+index 91fc5f1edb022ee6de67275942670649e24abb9d..8a642f3aedeb8724d5470240b87f35f5b5e2a9c0 100644
+--- a/intern/cycles/blender/mesh.cpp
++++ b/intern/cycles/blender/mesh.cpp
+@@ -31,6 +31,7 @@
+ #include "BKE_attribute.hh"
+ #include "BKE_attribute_math.hh"
+ #include "BKE_customdata.hh"
++#include "BKE_idprop.hh"
+ #include "BKE_mesh.hh"
+ 
+ #include "GEO_mesh_split_edges.hh"
+@@ -39,6 +40,28 @@ using blender::Attribute;
+ 
+ CCL_NAMESPACE_BEGIN
+ 
++static bool blender_mesh_has_native_tetcage_candidate(const blender::Mesh &b_mesh)
++{
++  const blender::IDProperty *properties = b_mesh.id.properties;
++  if (properties == nullptr) {
++    return false;
++  }
++
++  return blender::IDP_group_lookup_int(*properties, "tetcage_native_candidate").value_or(0) != 0;
++}
++
++static std::string blender_mesh_tetcage_contract(const blender::Mesh &b_mesh)
++{
++  const blender::IDProperty *properties = b_mesh.id.properties;
++  if (properties == nullptr) {
++    return {};
++  }
++
++  return std::string(blender::IDP_group_lookup_string(*properties, "tetcage_native_contract")
++                         .value_or("")
++                         .c_str());
++}
++
+ static void attr_create_motion_from_velocity(Mesh *mesh,
+                                              const blender::Span<blender::float3> b_attr,
+                                              const float motion_scale)
+@@ -970,6 +993,15 @@ void BlenderSync::sync_mesh(BObjectInfo &b_ob_info, Mesh *mesh)
+                     false);
+       }
+ 
++      if (blender_mesh_has_native_tetcage_candidate(*b_mesh)) {
++        const std::string contract = blender_mesh_tetcage_contract(*b_mesh);
++        LOG_DEBUG << "Tet-cage native candidate "
++                  << (contract.empty() ? "(unversioned)" : contract) << " on mesh "
++                  << b_mesh->id.name
++                  << "; retaining ordinary Cycles mesh fallback until native Blender geometry is "
++                     "enabled.";
++      }
++
+       free_object_to_mesh(b_ob_info, const_cast<blender::Mesh &>(*b_mesh));
+     }
+ 
+diff --git a/intern/cycles/kernel/data_arrays.h b/intern/cycles/kernel/data_arrays.h
+index 766f1971fbf7b78ed8804a58b6207709997f3a58..0a7a7225ea1863acea08c80192313c7f17c22a95 100644
+--- a/intern/cycles/kernel/data_arrays.h
++++ b/intern/cycles/kernel/data_arrays.h
+@@ -35,6 +35,7 @@ KERNEL_DATA_ARRAY(DecomposedTransform, camera_motion)
+ KERNEL_DATA_ARRAY(uint, tri_shader)
+ KERNEL_DATA_ARRAY(packed_uint3, tri_vindex)
+ KERNEL_DATA_ARRAY(packed_float3, tri_verts)
++KERNEL_DATA_ARRAY(KernelTetCagePrimitive, tetcage_primitives)
+ 
+ /* curves */
+ KERNEL_DATA_ARRAY(KernelCurve, curves)
+diff --git a/intern/cycles/kernel/data_template.h b/intern/cycles/kernel/data_template.h
+index 6088415a916a12f3c52e8c03cb220d0e7820d5b0..5fee66b1e388ac5408489e87ad8f306a527bbcb3 100644
+--- a/intern/cycles/kernel/data_template.h
++++ b/intern/cycles/kernel/data_template.h
+@@ -53,6 +53,7 @@ KERNEL_STRUCT_MEMBER(bvh, int, root)
+ KERNEL_STRUCT_MEMBER(bvh, int, have_motion)
+ KERNEL_STRUCT_MEMBER(bvh, int, have_curves)
+ KERNEL_STRUCT_MEMBER(bvh, int, have_points)
++KERNEL_STRUCT_MEMBER(bvh, int, have_tetcage)
+ KERNEL_STRUCT_MEMBER(bvh, int, have_volumes)
+ KERNEL_STRUCT_MEMBER(bvh, int, bvh_layout)
+ KERNEL_STRUCT_MEMBER(bvh, int, use_bvh_steps)
+diff --git a/intern/cycles/kernel/geom/shader_data.h b/intern/cycles/kernel/geom/shader_data.h
+index 202d178e216a15a7dac61381b095dca3e172de73..8ef6a269f0d27fb3b4a4f1ea4adefdb92d7fa2f8 100644
+--- a/intern/cycles/kernel/geom/shader_data.h
++++ b/intern/cycles/kernel/geom/shader_data.h
+@@ -61,6 +61,11 @@ ccl_device_inline
+   sd->object = isect->object;
+   sd->object_flag = kernel_data_fetch(object_flag, sd->object);
+   sd->prim = isect->prim;
++  sd->tetcage_source_primitive = sd->prim;
++  if (sd->object_flag & SD_OBJECT_TETCAGE) {
++    sd->tetcage_source_primitive =
++        kernel_data_fetch(tetcage_primitives, sd->prim).source_primitive;
++  }
+   sd->runtime_flag = 0;
+   sd->shader_flag = 0;
+ 
+@@ -171,6 +176,7 @@ ccl_device_inline void shader_setup_from_sample(KernelGlobals kg,
+   sd->object = object;
+   /* Currently no access to bvh prim index for strand sd->prim. */
+   sd->prim = prim;
++  sd->tetcage_source_primitive = sd->prim;
+   sd->u = u;
+   sd->v = v;
+   sd->time = time;
+@@ -180,6 +186,10 @@ ccl_device_inline void shader_setup_from_sample(KernelGlobals kg,
+   sd->object_flag = 0;
+   if (sd->object != OBJECT_NONE) {
+     sd->object_flag |= kernel_data_fetch(object_flag, sd->object);
++    if ((sd->object_flag & SD_OBJECT_TETCAGE) && sd->prim != PRIM_NONE) {
++      sd->tetcage_source_primitive =
++          kernel_data_fetch(tetcage_primitives, sd->prim).source_primitive;
++    }
+ 
+ #ifdef __OBJECT_MOTION__
+     shader_setup_object_transforms(kg, sd, time);
+diff --git a/intern/cycles/kernel/types.h b/intern/cycles/kernel/types.h
+index ddde0ee0ebc9667e5fabb924813f0238303bdcfc..c8f99b7562b2b61988506df5e258a74aca7a2d02 100644
+--- a/intern/cycles/kernel/types.h
++++ b/intern/cycles/kernel/types.h
+@@ -624,6 +624,15 @@ struct Intersection {
+   int type;
+ };
+ 
++/* Stable source identity for a native tet-cage micro-triangle. */
++struct KernelTetCagePrimitive {
++  uint source_primitive;
++  uint source_triangle;
++  uint micro_triangle;
++  uint reserved;
++};
++static_assert_align(KernelTetCagePrimitive, 16);
++
+ /* On certain GPUs (Apple Silicon), splitting every integrator state field into its own separate
+  * array can be detrimental for cache utilization. By enabling __INTEGRATOR_GPU_PACKED_STATE__, we
+  * specify that certain fields should be packed together. This improves cache hit ratios in cases
+@@ -1007,6 +1016,8 @@ enum ShaderDataObjectFlag : uint {
+   SD_OBJECT_HAS_VOLUME_MOTION = (1u << 11),
+   /* Geometry has per-corner normals instead of per-vertex. */
+   SD_OBJECT_HAS_CORNER_NORMALS = (1u << 12),
++  /* Mesh carries an immutable tet-cage contract. */
++  SD_OBJECT_TETCAGE = (1u << 13),
+ 
+   /* object is using caustics */
+   SD_OBJECT_CAUSTICS = (SD_OBJECT_CAUSTICS_CASTER | SD_OBJECT_CAUSTICS_RECEIVER),
+@@ -1015,7 +1026,8 @@ enum ShaderDataObjectFlag : uint {
+                      SD_OBJECT_NEGATIVE_SCALE | SD_OBJECT_HAS_VOLUME |
+                      SD_OBJECT_INTERSECTS_VOLUME | SD_OBJECT_SHADOW_CATCHER |
+                      SD_OBJECT_HAS_VOLUME_ATTRIBUTES | SD_OBJECT_CAUSTICS |
+-                     SD_OBJECT_HAS_VOLUME_MOTION | SD_OBJECT_HAS_CORNER_NORMALS)
++                     SD_OBJECT_HAS_VOLUME_MOTION | SD_OBJECT_HAS_CORNER_NORMALS |
++                     SD_OBJECT_TETCAGE)
+ };
+ 
+ struct ccl_align(16) ShaderData {
+@@ -1039,6 +1051,8 @@ struct ccl_align(16) ShaderData {
+   int shader_flag;
+   /* booleans describing object of the shader, see ShaderDataObjectFlag */
+   uint object_flag;
++  /* Source identity for tet-cage hits; equals prim for ordinary geometry. */
++  uint tetcage_source_primitive;
+ 
+   /* Closure data, we store a fixed array of closures */
+   int num_closure;
+diff --git a/intern/cycles/scene/CMakeLists.txt b/intern/cycles/scene/CMakeLists.txt
+index f7a122da8ed0b3966b35f459bae4370af197280e..c4caf1ed4fe8823b3dca28ad20a84d23411550aa 100644
+--- a/intern/cycles/scene/CMakeLists.txt
++++ b/intern/cycles/scene/CMakeLists.txt
+@@ -53,6 +53,7 @@ set(SRC
+   svm.cpp
+   tables.cpp
+   tabulated_sobol.cpp
++  tetcage.cpp
+   volume.cpp
+ )
+ 
+@@ -92,6 +93,7 @@ set(SRC_HEADERS
+   svm.h
+   tables.h
+   tabulated_sobol.h
++  tetcage.h
+   volume.h
+ )
+ 
+diff --git a/intern/cycles/scene/devicescene.cpp b/intern/cycles/scene/devicescene.cpp
+index dc8479bdcd5175d46024ff86a92e967e14b2b5d3..dce343634276036ab764a062e0c56359f02665b3 100644
+--- a/intern/cycles/scene/devicescene.cpp
++++ b/intern/cycles/scene/devicescene.cpp
+@@ -20,6 +20,7 @@ DeviceScene::DeviceScene(Device *device)
+       tri_shader(device, "tri_shader", MEM_GLOBAL),
+       tri_vindex(device, "tri_vindex", MEM_GLOBAL),
+       tri_verts(device, "tri_verts", MEM_GLOBAL),
++      tetcage_primitives(device, "tetcage_primitives", MEM_GLOBAL),
+       curves(device, "curves", MEM_GLOBAL),
+       curve_keys(device, "curve_keys", MEM_GLOBAL),
+       curve_segments(device, "curve_segments", MEM_GLOBAL),
+diff --git a/intern/cycles/scene/devicescene.h b/intern/cycles/scene/devicescene.h
+index cee8bc85ce6bc04dcf9944bc3c00289e04723d84..8866236b7adf6ba5c14025827188d523f3920035 100644
+--- a/intern/cycles/scene/devicescene.h
++++ b/intern/cycles/scene/devicescene.h
+@@ -29,6 +29,7 @@ class DeviceScene {
+   device_vector<uint> tri_shader;
+   device_vector<packed_uint3> tri_vindex;
+   device_vector<packed_float3> tri_verts;
++  device_vector<KernelTetCagePrimitive> tetcage_primitives;
+ 
+   device_vector<KernelCurve> curves;
+   device_vector<float4> curve_keys;
+diff --git a/intern/cycles/scene/geometry.cpp b/intern/cycles/scene/geometry.cpp
+index 1fe20811ee4ee69e02fc078f19a637cbbad04f91..b6106ca219c678389d32cab41790e7cd766ac9a8 100644
+--- a/intern/cycles/scene/geometry.cpp
++++ b/intern/cycles/scene/geometry.cpp
+@@ -619,6 +619,7 @@ void GeometryManager::device_update_preprocess(Device *device, Scene *scene, Pro
+     if (device_update_flags & DEVICE_MESH_DATA_NEEDS_REALLOC) {
+       dscene->tri_vindex.tag_realloc();
+       dscene->tri_shader.tag_realloc();
++      dscene->tetcage_primitives.tag_realloc();
+     }
+ 
+     if (device_update_flags & DEVICE_CURVE_DATA_NEEDS_REALLOC) {
+@@ -1206,6 +1207,7 @@ void GeometryManager::device_update(Device *device,
+   dscene->tri_shader.clear_modified();
+   dscene->tri_vindex.clear_modified();
+   dscene->tri_verts.clear_modified();
++  dscene->tetcage_primitives.clear_modified();
+   dscene->curves.clear_modified();
+   dscene->curve_keys.clear_modified();
+   dscene->curve_segments.clear_modified();
+@@ -1233,6 +1235,7 @@ void GeometryManager::device_free(Device *device, DeviceScene *dscene, bool forc
+   dscene->tri_shader.free_if_need_realloc(force_free);
+   dscene->tri_vindex.free_if_need_realloc(force_free);
+   dscene->tri_verts.free_if_need_realloc(force_free);
++  dscene->tetcage_primitives.free_if_need_realloc(force_free);
+   dscene->curves.free_if_need_realloc(force_free);
+   dscene->curve_keys.free_if_need_realloc(force_free);
+   dscene->curve_segments.free_if_need_realloc(force_free);
+diff --git a/intern/cycles/scene/geometry_mesh.cpp b/intern/cycles/scene/geometry_mesh.cpp
+index a5620b627511472c1bbe828f789555803c06dc26..5eb0ec9e4265951a174d491bce7419b27096678d 100644
+--- a/intern/cycles/scene/geometry_mesh.cpp
++++ b/intern/cycles/scene/geometry_mesh.cpp
+@@ -60,9 +60,11 @@ void GeometryManager::device_update_mesh(Device * /*unused*/,
+ 
+     uint *tri_shader = dscene->tri_shader.alloc(tri_size);
+     packed_uint3 *tri_vindex = dscene->tri_vindex.alloc(tri_size);
++    KernelTetCagePrimitive *tetcage_primitives = dscene->tetcage_primitives.alloc(tri_size);
+ 
+     const bool copy_all_data = dscene->tri_shader.need_realloc() ||
+-                               dscene->tri_vindex.need_realloc();
++                               dscene->tri_vindex.need_realloc() ||
++                               dscene->tetcage_primitives.need_realloc();
+ 
+     for (Geometry *geom : scene->geometry) {
+       if (geom->is_mesh() || geom->is_volume()) {
+@@ -78,6 +80,29 @@ void GeometryManager::device_update_mesh(Device * /*unused*/,
+           mesh->pack_triangles(&tri_vindex[mesh->prim_offset]);
+         }
+ 
++        if (mesh->is_tet_cage() &&
++            (mesh->triangles_is_modified() || copy_all_data || mesh->is_modified()))
++        {
++          const vector<TetCageMicroTriangle> &micro_triangles = mesh->tet_cage_micro_triangles();
++          for (size_t triangle_index = 0; triangle_index < mesh->num_triangles(); triangle_index++)
++          {
++            KernelTetCagePrimitive &primitive =
++                tetcage_primitives[mesh->prim_offset + triangle_index];
++            if (triangle_index < micro_triangles.size()) {
++              primitive.source_primitive = micro_triangles[triangle_index].source_primitive_id;
++              primitive.source_triangle = micro_triangles[triangle_index].source_triangle_id;
++              primitive.micro_triangle = micro_triangles[triangle_index].micro_triangle_id;
++            }
++            else {
++              primitive.source_primitive = 0;
++              primitive.source_triangle = 0;
++              primitive.micro_triangle = uint(triangle_index);
++            }
++            primitive.reserved = 0;
++          }
++          dscene->tetcage_primitives.tag_modified();
++        }
++
+         if (progress.get_cancel()) {
+           return;
+         }
+@@ -89,6 +114,7 @@ void GeometryManager::device_update_mesh(Device * /*unused*/,
+ 
+     dscene->tri_shader.copy_to_device_if_modified();
+     dscene->tri_vindex.copy_to_device_if_modified();
++    dscene->tetcage_primitives.copy_to_device_if_modified();
+   }
+ 
+   if (curve_segment_size != 0) {
+diff --git a/intern/cycles/scene/mesh.cpp b/intern/cycles/scene/mesh.cpp
+index 089ce24ff0898f6ccb0c15af4f05e48471afcc3d..4437e5c07af22ee6e635b16eecceebdcc8a1e381 100644
+--- a/intern/cycles/scene/mesh.cpp
++++ b/intern/cycles/scene/mesh.cpp
+@@ -347,6 +347,57 @@ Mesh::Mesh(const NodeType *node_type, Type geom_type_)
+ 
+ Mesh::Mesh() : Mesh(get_node_type(), Geometry::MESH) {}
+ 
++bool Mesh::set_tet_cage_geometry(const TetCageGeometry &geometry, const uint32_t tetrahedron_index)
++{
++  if (tet_cage_geometry_ || tetrahedron_index >= geometry.tetrahedron_count()) {
++    return false;
++  }
++
++  vector<const TetCageMicroTriangle *> selected_triangles;
++  for (const TetCageMicroTriangle &micro_triangle : geometry.micro_triangles()) {
++    if (micro_triangle.tetrahedron_index == tetrahedron_index) {
++      selected_triangles.push_back(&micro_triangle);
++    }
++  }
++
++  if (selected_triangles.empty()) {
++    return false;
++  }
++
++  resize_mesh(int(selected_triangles.size() * 3), int(selected_triangles.size()));
++  packed_float3 *positions = get_position_for_write();
++  int *triangle_indices = get_triangles().data();
++  int *shader_indices = get_shader().data();
++  bool *smooth_flags = get_smooth().data();
++
++  for (size_t triangle_index = 0; triangle_index < selected_triangles.size(); triangle_index++) {
++    const TetCageMicroTriangle &micro_triangle = *selected_triangles[triangle_index];
++    const size_t vertex_index = triangle_index * 3;
++    positions[vertex_index + 0] = micro_triangle.vertices[0];
++    positions[vertex_index + 1] = micro_triangle.vertices[1];
++    positions[vertex_index + 2] = micro_triangle.vertices[2];
++
++    triangle_indices[vertex_index + 0] = int(vertex_index + 0);
++    triangle_indices[vertex_index + 1] = int(vertex_index + 1);
++    triangle_indices[vertex_index + 2] = int(vertex_index + 2);
++    shader_indices[triangle_index] = 0;
++    smooth_flags[triangle_index] = false;
++  }
++
++  tet_cage_geometry_ = make_unique<TetCageGeometry>(geometry);
++  tet_cage_micro_triangles_.clear();
++  tet_cage_micro_triangles_.reserve(selected_triangles.size());
++  for (const TetCageMicroTriangle *micro_triangle : selected_triangles) {
++    tet_cage_micro_triangles_.push_back(*micro_triangle);
++  }
++  tet_cage_tetrahedron_index_ = tetrahedron_index;
++
++  tag_triangles_modified();
++  tag_shader_modified();
++  tag_smooth_modified();
++  return true;
++}
++
+ void Mesh::add_builtin_attributes()
+ {
+   attributes.add(ATTR_STD_POSITION);
+@@ -394,6 +445,10 @@ void Mesh::clear(bool preserve_shaders, bool preserve_voxel_data)
+ {
+   Geometry::clear(preserve_shaders);
+ 
++  tet_cage_geometry_.reset();
++  tet_cage_micro_triangles_.clear();
++  tet_cage_tetrahedron_index_ = 0;
++
+   /* clear all verts and triangles */
+   triangles.clear();
+   shader.clear();
+diff --git a/intern/cycles/scene/mesh.h b/intern/cycles/scene/mesh.h
+index 256f42330d785608f397278b08931d6ca876f289..bbfc3f4e7b324c2f1b402675ea5fb761447d595c 100644
+--- a/intern/cycles/scene/mesh.h
++++ b/intern/cycles/scene/mesh.h
+@@ -9,6 +9,7 @@
+ #include "scene/attribute.h"
+ #include "scene/geometry.h"
+ #include "scene/shader.h"
++#include "scene/tetcage.h"
+ 
+ #include "subd/dice.h"
+ 
+@@ -185,6 +186,9 @@ class Mesh : public Geometry {
+   friend class ObjectManager;
+ 
+   unique_ptr<SubdParams> subd_params;
++  unique_ptr<TetCageGeometry> tet_cage_geometry_;
++  vector<TetCageMicroTriangle> tet_cage_micro_triangles_;
++  uint32_t tet_cage_tetrahedron_index_ = 0;
+ 
+  public:
+   /* Functions */
+@@ -215,6 +219,26 @@ class Mesh : public Geometry {
+   bool has_motion_blur() const override;
+   PrimitiveType primitive_type() const override;
+ 
++  /* Tet-cage adapter. The mesh arrays remain the CPU/reference fallback, while the Metal backend
++   * may use the immutable tet-cage contract to build a bounding-box BLAS for this mesh. */
++  bool set_tet_cage_geometry(const TetCageGeometry &geometry, uint32_t tetrahedron_index);
++  bool is_tet_cage() const
++  {
++    return tet_cage_geometry_ != nullptr;
++  }
++  const TetCageGeometry *tet_cage_geometry() const
++  {
++    return tet_cage_geometry_.get();
++  }
++  const vector<TetCageMicroTriangle> &tet_cage_micro_triangles() const
++  {
++    return tet_cage_micro_triangles_;
++  }
++  uint32_t tet_cage_tetrahedron_index() const
++  {
++    return tet_cage_tetrahedron_index_;
++  }
++
+   void tessellate(SubdParams &params);
+ 
+   SubdFace get_subd_face(const size_t index) const;
+diff --git a/intern/cycles/scene/object.cpp b/intern/cycles/scene/object.cpp
+index 31563bb01090dd73e65bf9b80fa1d08af39b51fb..17705f283708fef5d7c0db610408b0801bab5f2d 100644
+--- a/intern/cycles/scene/object.cpp
++++ b/intern/cycles/scene/object.cpp
+@@ -61,6 +61,7 @@ struct UpdateObjectTransformState {
+   bool have_motion;
+   bool have_curves;
+   bool have_points;
++  bool have_tetcage;
+   bool have_volumes;
+ 
+   /* ** Scheduling queue. ** */
+@@ -634,6 +635,9 @@ void ObjectManager::device_update_object_transform(UpdateObjectTransformState *s
+   }
+   else if (geom->is_mesh()) {
+     Mesh *mesh = static_cast<Mesh *>(geom);
++    if (mesh->is_tet_cage()) {
++      flag |= SD_OBJECT_TETCAGE;
++    }
+     const Attribute *attr_P = mesh->attributes.find(ATTR_STD_POSITION);
+     const Attribute *subd_attr_P = (mesh->get_subdivision_type() != Mesh::SUBDIVISION_NONE) ?
+                                        mesh->subd_attributes.find(ATTR_STD_POSITION) :
+@@ -745,9 +749,12 @@ void ObjectManager::device_update_object_transform(UpdateObjectTransformState *s
+   if (geom->is_hair()) {
+     state->have_curves = true;
+   }
+-  if (geom->is_pointcloud()) {
++  if (geom->is_pointcloud() || (geom->is_mesh() && static_cast<Mesh *>(geom)->is_tet_cage())) {
+     state->have_points = true;
+   }
++  if (geom->is_mesh() && static_cast<Mesh *>(geom)->is_tet_cage()) {
++    state->have_tetcage = true;
++  }
+   if (geom->is_volume()) {
+     state->have_volumes = true;
+   }
+@@ -802,6 +809,7 @@ void ObjectManager::device_update_transforms(DeviceScene *dscene, Scene *scene,
+   state.have_motion = false;
+   state.have_curves = false;
+   state.have_points = false;
++  state.have_tetcage = false;
+   state.have_volumes = false;
+   state.scene = scene;
+   state.queue_start_object = 0;
+@@ -874,6 +882,7 @@ void ObjectManager::device_update_transforms(DeviceScene *dscene, Scene *scene,
+   dscene->data.bvh.have_motion = state.have_motion;
+   dscene->data.bvh.have_curves = state.have_curves;
+   dscene->data.bvh.have_points = state.have_points;
++  dscene->data.bvh.have_tetcage = state.have_tetcage;
+   dscene->data.bvh.have_volumes = state.have_volumes;
+ 
+   dscene->objects.clear_modified();
+diff --git a/intern/cycles/scene/scene.cpp b/intern/cycles/scene/scene.cpp
+index 06cd5561852098c0328483c9773b09b09f40cc64..3d15ce553afb849dcacf459cc82e6e16156e7c5e 100644
+--- a/intern/cycles/scene/scene.cpp
++++ b/intern/cycles/scene/scene.cpp
+@@ -555,6 +555,8 @@ void Scene::update_kernel_features()
+   /* Track the max prim count in case the backend needs to rebuild BVHs or
+    * kernels to support different limits. */
+   size_t kernel_max_prim_count = 0;
++  bool have_point_intersections = false;
++  bool have_tetcage_intersections = false;
+ 
+   /* Figure out whether the scene will use shader ray-trace we need at least
+    * one caustic light, one caustic caster and one caustic receiver to use
+@@ -587,12 +589,18 @@ void Scene::update_kernel_features()
+     }
+     else if (geom->is_pointcloud()) {
+       kernel_features |= KERNEL_FEATURE_POINTCLOUD;
++      have_point_intersections = true;
+       kernel_max_prim_count = max(kernel_max_prim_count,
+                                   static_cast<PointCloud *>(geom)->num_points());
+     }
+     else if (geom->is_mesh()) {
+-      kernel_max_prim_count = max(kernel_max_prim_count,
+-                                  static_cast<Mesh *>(geom)->num_triangles());
++      const Mesh *mesh = static_cast<Mesh *>(geom);
++      if (mesh->is_tet_cage()) {
++        kernel_features |= KERNEL_FEATURE_POINTCLOUD;
++        have_point_intersections = true;
++        have_tetcage_intersections = true;
++      }
++      kernel_max_prim_count = max(kernel_max_prim_count, mesh->num_triangles());
+     }
+     else if (geom->is_light()) {
+       const Light *light = static_cast<const Light *>(object->get_geometry());
+@@ -629,6 +637,10 @@ void Scene::update_kernel_features()
+   kernel_features |= camera->get_kernel_features();
+ 
+   dscene.data.kernel_features = kernel_features;
++  /* Metal intersection kernels specialize the available geometry types. This must be populated
++   * before load_kernels(), while the object manager's final device update happens later. */
++  dscene.data.bvh.have_points = have_point_intersections;
++  dscene.data.bvh.have_tetcage = have_tetcage_intersections;
+ 
+   /* Currently viewport render is faster with higher max_closures, needs
+    * investigating. */
+diff --git a/intern/cycles/scene/tetcage.cpp b/intern/cycles/scene/tetcage.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..2aa6cda2d955ea2451325cd97be917d444ce4782
+--- /dev/null
++++ b/intern/cycles/scene/tetcage.cpp
+@@ -0,0 +1,69 @@
++/* SPDX-FileCopyrightText: 2026 Blender Foundation
++ *
++ * SPDX-License-Identifier: Apache-2.0 */
++
++#include "scene/tetcage.h"
++
++CCL_NAMESPACE_BEGIN
++
++bool TetCageGeometry::set_micro_triangles(const vector<TetCageMicroTriangle> &micro_triangles,
++                                          const uint32_t tetrahedron_count)
++{
++  if (micro_triangles_initialized_) {
++    return false;
++  }
++
++  for (const TetCageMicroTriangle &micro_triangle : micro_triangles) {
++    if (micro_triangle.tetrahedron_index >= tetrahedron_count) {
++      return false;
++    }
++  }
++
++  tetrahedron_count_ = tetrahedron_count;
++  micro_triangles_ = micro_triangles;
++  micro_triangles_initialized_ = true;
++  return true;
++}
++
++bool TetCageGeometry::set_frame_tetrahedron_transforms(
++    const vector<Transform> &tetrahedron_transforms)
++{
++  if (!micro_triangles_initialized_ || tetrahedron_transforms.size() != tetrahedron_count_) {
++    return false;
++  }
++
++  frame_tetrahedron_transforms_ = tetrahedron_transforms;
++  return true;
++}
++
++void TetCageGeometry::set_fallback_state(const TetCageFallbackState fallback_state)
++{
++  fallback_state_ = fallback_state;
++}
++
++bool TetCageGeometry::has_micro_triangles() const
++{
++  return !micro_triangles_.empty();
++}
++
++uint32_t TetCageGeometry::tetrahedron_count() const
++{
++  return tetrahedron_count_;
++}
++
++const vector<TetCageMicroTriangle> &TetCageGeometry::micro_triangles() const
++{
++  return micro_triangles_;
++}
++
++const vector<Transform> &TetCageGeometry::frame_tetrahedron_transforms() const
++{
++  return frame_tetrahedron_transforms_;
++}
++
++TetCageFallbackState TetCageGeometry::fallback_state() const
++{
++  return fallback_state_;
++}
++
++CCL_NAMESPACE_END
+diff --git a/intern/cycles/scene/tetcage.h b/intern/cycles/scene/tetcage.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..e3a5c1b4811d15ab4e6bfbcceab0642d79bb13ba
+--- /dev/null
++++ b/intern/cycles/scene/tetcage.h
+@@ -0,0 +1,62 @@
++/* SPDX-FileCopyrightText: 2026 Blender Foundation
++ *
++ * SPDX-License-Identifier: Apache-2.0 */
++
++#pragma once
++
++#include <cstdint>
++
++#include "util/transform.h"
++#include "util/types.h"
++#include "util/vector.h"
++
++CCL_NAMESPACE_BEGIN
++
++/* Immutable local-space micro-triangle and its source identity.
++ *
++ * The primitive is intentionally independent from a frame's tetrahedron transforms. This keeps
++ * topology and provenance stable while an importer updates only per-frame affine transforms. */
++struct TetCageMicroTriangle {
++  uint32_t tetrahedron_index;
++  uint32_t source_primitive_id;
++  uint32_t source_triangle_id;
++  uint32_t micro_triangle_id;
++  float3 vertices[3];
++};
++
++/* Status reported by the importer or a future device backend when the native path is unavailable.
++ */
++enum class TetCageFallbackState : uint8_t {
++  NONE,
++  REQUESTED,
++  ACTIVE,
++};
++
++/* Scene-side transport contract for tet-cage geometry.
++ *
++ * This is not a Geometry subclass yet: no BVH builder, kernel primitive, or device backend
++ * consumes it. Keeping the contract separate prevents it from being mistaken for PointCloud data
++ * before the renderer-side implementation can preserve its source-hit provenance. */
++class TetCageGeometry {
++ public:
++  bool set_micro_triangles(const vector<TetCageMicroTriangle> &micro_triangles,
++                           uint32_t tetrahedron_count);
++  bool set_frame_tetrahedron_transforms(const vector<Transform> &tetrahedron_transforms);
++
++  void set_fallback_state(TetCageFallbackState fallback_state);
++
++  bool has_micro_triangles() const;
++  uint32_t tetrahedron_count() const;
++  const vector<TetCageMicroTriangle> &micro_triangles() const;
++  const vector<Transform> &frame_tetrahedron_transforms() const;
++  TetCageFallbackState fallback_state() const;
++
++ private:
++  bool micro_triangles_initialized_ = false;
++  uint32_t tetrahedron_count_ = 0;
++  vector<TetCageMicroTriangle> micro_triangles_;
++  vector<Transform> frame_tetrahedron_transforms_;
++  TetCageFallbackState fallback_state_ = TetCageFallbackState::NONE;
++};
++
++CCL_NAMESPACE_END

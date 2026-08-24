@@ -1,0 +1,3 @@
+# Preserve upstream patch context verbatim; Git's working-tree whitespace check
+# must not treat embedded diff context as repository source formatting.
+patches/blender/*.patch whitespace=-trailing-space

@@ -49,3 +49,14 @@ executable/UI smoke make Blender UI/debug-view scaffolding executable now; they
 do not select a retained device method or prove a renderer result. Importer, RDG,
 shader-table, Cycles device, motion, and mixed-scene work still require their
 roadmap gates and measured proof.
+
+## Blender contribution preparation
+
+The current experimental Blender/Cycles delta is preserved as an applyable WIP
+series in [`patches/blender/`](../patches/blender/), replayable against its
+pinned base without copying build output or dependencies. It is intentionally
+not an upstream submission: the contribution cut must be recreated on current
+Blender `main` after a Cycles design discussion, in-tree tests, M9
+retained-method selection, and the remaining semantic/device gates. See the
+[contribution cut plan](blender-contribution-prep.md) and
+[official-guidance research](blender-contribution-research.md).
