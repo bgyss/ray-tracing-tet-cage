@@ -50,7 +50,8 @@ and sun controls but diverges under area sampling; static SSS multi-hit now uses
 the native AABB local intersection table, while animated SSS on the declared
 closed-tetrahedron fixture uses a motion-aware native local narrow phase and
 matches the ordinary path to float noise under point lighting; area-light
-sampling remains open. Integer source-primitive, owner-tet,
+sampling remains open for the default large area footprint; point-like area
+footprints (size <= 0.5 in the deterministic probe) are numeric-close. Integer source-primitive, owner-tet,
 and material face attributes also match on the two-material fixture. Static and
 object-transform-motion closed-tet volume probes are numeric-close under point,
 sun, and area controls; the two-tet static stack remains float-noise-only under

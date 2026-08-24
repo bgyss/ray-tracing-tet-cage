@@ -609,6 +609,34 @@
           "result": "float_noise"
         }
       },
+      "area_size_sweep": {
+        "2.0": {
+          "max_abs_rgb_difference": 0.022648286074399948,
+          "sum_abs_rgb_difference": 0.02848556899698451,
+          "result": "open_area_sampling_precision"
+        },
+        "0.5": {
+          "max_abs_rgb_difference": 1.3113021850585938e-06,
+          "sum_abs_rgb_difference": 1.4575431123375893e-05,
+          "result": "numeric_close"
+        },
+        "0.1": {
+          "max_abs_rgb_difference": 1.430511474609375e-06,
+          "sum_abs_rgb_difference": 1.7841521184891462e-05,
+          "result": "numeric_close"
+        },
+        "0.01": {
+          "max_abs_rgb_difference": 1.1920928955078125e-06,
+          "sum_abs_rgb_difference": 1.626642188057303e-05,
+          "result": "numeric_close"
+        },
+        "0.0001": {
+          "max_abs_rgb_difference": 1.7881393432617188e-06,
+          "sum_abs_rgb_difference": 1.7977028619498014e-05,
+          "result": "numeric_close"
+        },
+        "claim_boundary": "The large-footprint area-light seam remains open; point-like footprints are numeric-close without changing tet intersection policy."
+      },
       "result": "measured_with_native_volume_table; area_light_difference; point_and_sun_float_noise_only",
       "multi_tet_stack": {
         "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
