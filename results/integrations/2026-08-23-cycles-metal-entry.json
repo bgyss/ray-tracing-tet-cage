@@ -21,7 +21,7 @@
       "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
       "full_blender_target": "passed",
       "install": "passed",
-      "direct_probe": "passed",
+      "direct_probe": "passed; import/save/reload/pose/invalid-pose contract on candidate 430b6987380",
       "ui_smoke": "passed; rebuilt candidate 430b6987380; window_context=true; tetcage_ui_registered=true",
       "gui_smoke": "passed; real window context and timer-exit probe",
       "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
