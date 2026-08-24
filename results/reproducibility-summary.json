@@ -7,7 +7,7 @@
     "direct": 15,
     "synthetic": 6
   },
-  "file_count": 37,
+  "file_count": 42,
   "files": [
     {
       "documents": 1,
@@ -183,6 +183,46 @@
         "integration"
       ],
       "path": "integrations/2026-08-08-host-gates.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-09-blender-ui-build.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-09-cycles-verification.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-23-cycles-area-volume-precision.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-23-cycles-metal-entry.json",
+      "shared_records": 0
+    },
+    {
+      "documents": 1,
+      "kinds": [
+        "integration"
+      ],
+      "path": "integrations/2026-08-23-cycles-verification-candidate.json",
       "shared_records": 0
     },
     {
