@@ -2,6 +2,7 @@
   "schema_version": 1,
   "kind": "cycles_metal_entry",
   "status": "passed",
+  "verification_artifact": "results/integrations/2026-08-23-cycles-verification-candidate.json",
   "sources": {
     "cycles": {
       "root": "$CYCLES_SOURCE_ROOT",

@@ -35,6 +35,12 @@ paths. The Xcode 26 SDK emits availability diagnostics for Blender's pinned
 `unguarded-availability-new` from an error; this is a build-environment
 compatibility setting, not a renderer/device claim.
 
+The current candidate-profile rerun is recorded in
+`results/integrations/2026-08-23-cycles-verification-candidate.json`. It uses
+the clean pinned source trees for revision/LFS checks and the isolated native
+candidate app bundle for the normalized Debug cache, CPU/UI smoke, and
+tet-cage import/save/reload contract.
+
 These are environment gates, not claims that the integrations are impossible.
 The standalone checkout does not close M12: device implementation remains
 deferred until M9 selects the retained representation, and OptiX needs a
