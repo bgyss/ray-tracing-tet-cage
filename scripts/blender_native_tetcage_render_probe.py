@@ -511,7 +511,10 @@ def main() -> int:
         _setup_deformation_motion(scene)
     if probe_mode == "normal_transform":
         _setup_nonuniform_transform(scene)
-    scene.cycles.samples = int(os.environ.get("TETCAGE_SAMPLES", "1"))
+    sample_count = int(os.environ.get("TETCAGE_SAMPLES", "1"))
+    if sample_count < 1:
+        raise RuntimeError("TETCAGE_SAMPLES must be at least 1")
+    scene.cycles.samples = sample_count
     scene.cycles.use_adaptive_sampling = False
     scene.cycles.use_denoising = False
     scene.cycles.seed = 0
@@ -544,7 +547,7 @@ def main() -> int:
         "scene_mode": "mixed" if mixed_scene else "tet_only",
         "probe_mode": probe_mode,
         "resolution": "16x16",
-        "samples": 1,
+        "samples": sample_count,
         "shadows_enabled": shadows_enabled,
         "transparent_mix": float(os.environ.get("TETCAGE_TRANSPARENT_MIX", "0.5")),
         "output": str(pathlib.Path(output_image).resolve()),

@@ -171,6 +171,10 @@ fallback because the native motion closure path is not yet qualified;
 `transparent_motion` probes the Transparent+Emission boundary explicitly and
 `transparent_diffuse_motion` probes the Transparent+Diffuse boundary. Pure transparency uses
 `transparent_pure_motion` and remains native.
+The production adapter gate is contract-tested in
+`tests/blender_mixed_transparent_motion_contract.py`: a motion-blurred material
+with both transparent and non-transparent closures must retain the ordinary
+mesh path, while pure transparency may use the native path.
 The manifest also records a forced-native diagnostic of the motion-vertex fix
 for those mixed closures; it is evidence for follow-up qualification, not a
 production dispatch override.
@@ -180,7 +184,10 @@ the transform. `deformation_local_motion` exercises the motion-local path on the
 closed-tetrahedron fixture and records the float-noise differential against
 ordinary Cycles; area-light sampling remains an explicit gate.
 Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
-count; the checked-in evidence uses the deterministic default of one sample.
+count; the probe records the effective sample count in its JSON result. The
+checked-in one-sample evidence remains the deterministic fast gate, while
+sample-count sweeps help separate a rare ray miss from a systematic area-light
+seam.
 For area-light sensitivity controls, set `TETCAGE_AREA_SIZE` (the default is
 `2.0`; values near zero provide a point-light-like precision control).
 The `normal`, `normal_transform`, `position`, `uv`, `texture`, `source_normal`, `source_primitive`, `owner_tet`,
@@ -188,6 +195,13 @@ The `normal`, `normal_transform`, `position`, `uv`, `texture`, `source_normal`, 
 `TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
 control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
 separates shadow traversal from primary/light-sampling precision.
+The closed-tet volume contract keeps the default large footprint (`2.0`) open
+until its native/fallback differential is qualified. At the deterministic
+one-sample setting the `0.5` area control is numeric-close, but a 64-sample
+sweep exposes an area residual even at `0.5`; the point-light control remains
+float-noise-only and the size-2 residual is unchanged when the shadow toggle is
+disabled. The status is guarded by `tests/blender_area_precision_contract.py`
+so a future promotion cannot silently widen the native boundary.
 Set `TETCAGE_MIRROR=1` with `normal_transform` to exercise a negative-scale
 mirror in the same normal differential.
 Set `TETCAGE_TET_INDEX` with a multi-tet asset to isolate one imported tet

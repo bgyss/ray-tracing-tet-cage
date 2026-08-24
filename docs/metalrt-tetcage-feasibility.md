@@ -44,14 +44,17 @@ query seam are compiled, and source primitive/triangle/micro IDs are packed for
 ShaderData. The static emission comparison is pixel-identical to the ordinary
 triangle reference on the M1 Max. Object-transform motion, transparent/shadow
 traversal, and the zero-hit local-ray path now have native Blender differentials;
-normal/position/UV/source-normal and source material-slot handoff and point/sun lighting controls match, while the native AABB volume-table path runs; pure-transparent motion is native, while mixed transparent-closure motion explicitly retains ordinary Cycles fallback until its closure semantics are qualified; area-light
+normal/position/UV/source-normal and source material-slot handoff and point/sun lighting controls match, while the native AABB volume-table path runs; pure-transparent motion is native, while mixed transparent-closure motion explicitly retains ordinary Cycles fallback until its closure semantics are qualified (the dispatch predicate is contract-tested); area-light
 sampling remains an explicit parity gate. SSS is numerically close under point
 and sun controls but diverges under area sampling; static SSS multi-hit now uses
 the native AABB local intersection table, while animated SSS on the declared
 closed-tetrahedron fixture uses a motion-aware native local narrow phase and
 matches the ordinary path to float noise under point lighting; area-light
-sampling remains open for the default large area footprint; point-like area
-footprints (size <= 0.5 in the deterministic probe) are numeric-close. Integer source-primitive, owner-tet,
+sampling remains open for the default large area footprint even at higher
+sample counts and with shadows disabled. The deterministic one-sample sweep is
+numeric-close at size `0.5`, but a 64-sample sweep remains open even at that
+size; the point-light control stays float-noise-only and the shadow-disabled
+size-2 control is unchanged. Integer source-primitive, owner-tet,
 and material face attributes also match on the two-material fixture. Static and
 object-transform-motion closed-tet volume probes are numeric-close under point,
 sun, and area controls; the two-tet static stack remains float-noise-only under

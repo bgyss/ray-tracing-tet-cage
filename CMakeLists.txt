@@ -152,10 +152,19 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.blender_native_deformation_contract PROPERTIES
       SKIP_RETURN_CODE 77
       PASS_REGULAR_EXPRESSION "Blender native deformation contract: (pass|skipped)")
+    add_test(NAME tetcage.blender_mixed_transparent_motion_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_mixed_transparent_motion_contract.py")
+    set_tests_properties(tetcage.blender_mixed_transparent_motion_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Blender mixed-transparent motion contract: (pass|skipped)")
     add_test(NAME tetcage.blender_native_differential_contract
       COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_native_differential_contract.py")
     set_tests_properties(tetcage.blender_native_differential_contract PROPERTIES
       PASS_REGULAR_EXPRESSION "Blender native differential contract: pass")
+    add_test(NAME tetcage.blender_area_precision_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_area_precision_contract.py")
+    set_tests_properties(tetcage.blender_area_precision_contract PROPERTIES
+      PASS_REGULAR_EXPRESSION "Blender area-light precision contract: pass")
     add_test(NAME tetcage.cycles_native_volume_contract
       COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_native_volume_contract.py")
     set_tests_properties(tetcage.cycles_native_volume_contract PROPERTIES

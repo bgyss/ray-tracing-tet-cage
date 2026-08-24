@@ -75,6 +75,13 @@ are qualified; pure-transparent motion uses the native path; animated
 subsurface/BSSRDF motion uses the motion-aware native local narrow phase on the
 declared closed-tetrahedron fixture (point-light numeric-close; area-light
 sampling remains open). The open single-triangle SSS diagnostic is not promoted.
+The mixed-transparent dispatch predicate and the large-footprint volume seam
+are guarded by `tests/blender_mixed_transparent_motion_contract.py` and
+`tests/blender_area_precision_contract.py`, respectively. The latter records
+the important distinction between the one-sample point-like area control
+(numeric-close) and the higher-sample area sweep (open even at size `0.5`),
+while the point-light control remains float-noise-only and the default size-2
+footprint remains open with shadows disabled.
 The older release-binary Python child-launch
 path remains a separate host-startup limitation.
 

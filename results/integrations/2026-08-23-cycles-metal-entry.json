@@ -3,6 +3,7 @@
   "kind": "cycles_metal_entry",
   "status": "passed",
   "verification_artifact": "results/integrations/2026-08-23-cycles-verification-candidate.json",
+  "area_precision_artifact": "results/integrations/2026-08-23-cycles-area-volume-precision.json",
   "sources": {
     "cycles": {
       "root": "$CYCLES_SOURCE_ROOT",
@@ -395,7 +396,21 @@
       "samples": 1,
       "shadow_all_motion_callback": true,
       "native_adapter_selected": false,
-      "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "production_gate_contract": {
+      "script": "tests/blender_mixed_transparent_motion_contract.py",
+      "result": "passed",
+      "policy": "mixed transparent and non-transparent closures with motion blur remain on ordinary Cycles fallback by default"
+    },
+    "latest_default_differential": {
+      "script": "scripts/blender_native_differential.py",
+      "light": "point",
+      "samples": 1,
+      "native_sha256": "b0bb3e4489e5829fdbf4223f7a24a077ae75cb28eda8ea5eeedda43ac659f16e",
+      "fallback_sha256": "afe7679bfe31dbf4051a34f6f3d7ef9e3f3995e7467db5074102ab4cb5fb668a",
+      "pixel_differences": 0,
+      "result": "exact"
+    },
       "native_sha256": "9d569e050e3a6fcc332c7bbd4f3d61e97777a004be9ca02c6f86f849b0f4306f",
       "fallback_sha256": "4268e5196833928d5b9f183a48fd08ef2dd6936313c64c9f0185a12710dd1619",
       "pixel_differences": 0,
@@ -450,7 +465,21 @@
       "scene": "one tet-cage candidate with animated object transform and mixed Transparent BSDF/Diffuse BSDF material",
       "resolution": "16x16",
       "native_adapter_selected": false,
-      "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "production_gate_contract": {
+      "script": "tests/blender_mixed_transparent_motion_contract.py",
+      "result": "passed",
+      "policy": "mixed transparent and non-transparent closures with motion blur remain on ordinary Cycles fallback by default"
+    },
+    "latest_default_differential": {
+      "script": "scripts/blender_native_differential.py",
+      "light": "point",
+      "samples": 1,
+      "native_sha256": "32051cfef9af88ea0ac8bf005cd8bb2be72285d8c22cf2909e2f59c4107b7aeb",
+      "fallback_sha256": "379f090da52f2e5e38f9fa7daa9d387ddf28f78d8f4e20d7eb966d19e2891e4d",
+      "pixel_differences": 0,
+      "result": "exact"
+    },
       "native_sha256": "6eba20d346439ee75b73f73e7daf4207c09a18f0fe0ca5be76588b4d8fa18fbe",
       "fallback_sha256": "0396e6db7035a16d5694f4b1b0b7334bfcdf0123963dca4292923c14681afdae",
       "pixel_differences": 0,
@@ -636,7 +665,46 @@
           "sum_abs_rgb_difference": 1.7977028619498014e-05,
           "result": "numeric_close"
         },
-        "claim_boundary": "The large-footprint area-light seam remains open; point-like footprints are numeric-close without changing tet intersection policy."
+        "claim_boundary": "At the deterministic one-sample setting, the large-footprint area-light seam remains open and point-like footprints are numeric-close; higher-sample area controls remain an explicit precision gate without changing tet intersection policy."
+      },
+      "sample_sweep_64": {
+        "samples": 64,
+        "area_size_2.0": {
+          "native_sha256": "5b3fbdcf05fdd64629db794876b227cbdc8b2c64396b2ab34fc58e1fbdbe67f4",
+          "fallback_sha256": "49fd7e788e73955b95d5071d8d6759bb9f82818b22a97fe672ee584e78e9ec25",
+          "pixel_differences": 143,
+          "max_abs_rgb_difference": 0.007658421993255615,
+          "sum_abs_rgb_difference": 0.28532987195194437,
+          "shadows_enabled": true,
+          "result": "open_area_sampling_precision"
+        },
+        "area_size_2.0_shadows_disabled": {
+          "native_sha256": "d5d6b68a26c37e4a940cb7e8dd04adcacbd3a4318a78d73ef1a02ac46f38a26f",
+          "fallback_sha256": "e82617b578ad55312e85e4e71aa07ae7078c4471f1ca6c16df879fc4fa8c4bd5",
+          "pixel_differences": 137,
+          "max_abs_rgb_difference": 0.007658381015062332,
+          "sum_abs_rgb_difference": 0.2853297347401167,
+          "shadows_enabled": false,
+          "result": "open_area_sampling_precision"
+        },
+        "area_size_0.5": {
+          "native_sha256": "7c3e9fd653b42436e3381f4add2aa3fc4d4078cf4c30cf9eb11f773b7a1f4e0b",
+          "fallback_sha256": "6110f5f55ef343db7914de00e6a52e42dad6cf745c0114fb4c045d14814be533",
+          "pixel_differences": 140,
+          "max_abs_rgb_difference": 0.00017058849334716797,
+          "sum_abs_rgb_difference": 0.002063368282506417,
+          "shadows_enabled": true,
+          "result": "open_area_sampling_precision"
+        },
+        "point": {
+          "native_sha256": "96fd6738ca257141055ddc471a3afa271daf46c36ea5dfb8b5dfd55d657b33bb",
+          "fallback_sha256": "6eed323a2e3d92603eb94c74322c11a2165ba3dc1dbcf2dc340d9bf027f5a2ec",
+          "pixel_differences": 139,
+          "max_abs_rgb_difference": 1.564621925354004e-07,
+          "sum_abs_rgb_difference": 8.933111530495808e-07,
+          "result": "numeric_close"
+        },
+        "claim_boundary": "At 64 samples, the large area footprint remains open and the 0.5 area control also exceeds the numeric-close threshold; the point-light control remains float-noise-only. Shadows-disabled area results are unchanged, so the residual is not explained by shadow traversal alone."
       },
       "result": "measured_with_native_volume_table; area_light_difference; point_and_sun_float_noise_only",
       "multi_tet_stack": {
