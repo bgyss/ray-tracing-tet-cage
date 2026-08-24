@@ -8,7 +8,7 @@ content and Vulkan comparison remain open.
 
 Project: <https://github.com/bgyss/ray-tracing-tet-cage>
 
-Evidence: [clean M5 result manifest](results/metal/2026-07-29-m5-clean-rerun.json)
+Evidence: [clean M5 result manifest](../results/metal/2026-07-29-m5-clean-rerun.json)
 
 ### LinkedIn
 
@@ -208,3 +208,112 @@ It’s explicitly a research plan—not finished implementation or reproduced be
 - X/Twitter: post the main version, then use the follow-up as a second post or reply with a short diagram/GIF.
 - Reddit: use the long version in a graphics, rendering, GPU programming, or engine-specific community only where project/research posts are welcome; keep the paper link and repository link visible.
 - If implementation results become available later, replace the “planning/research” language with measured numbers and link the result manifest rather than relying on an unqualified speedup claim.
+
+## Cycles/Blender integration progress and path forward (2026-08-24)
+
+These drafts describe the measured Cycles/Blender integration work without
+presenting the exploratory adapter as an upstream merge or production feature.
+
+Project: <https://github.com/bgyss/ray-tracing-tet-cage>
+
+Paper: <https://doi.org/10.1145/3820014>
+
+Evidence: [Cycles/Blender entry manifest](../results/integrations/2026-08-23-cycles-metal-entry.json), [area-volume precision record](../results/integrations/2026-08-23-cycles-area-volume-precision.json), and [representation boundary](cycles-representation-boundary.md)
+
+### LinkedIn
+
+Cycles/Blender integration is now a real, measured workstream for my tetrahedral-cage ray-tracing reimplementation.
+
+The project is based on the representation described in [*Ray Tracing Massive Amounts of Animated Geometry*](https://doi.org/10.1145/3820014): keep clipped micro-geometry static, animate through cage/tetrahedron transforms, and preserve source-hit provenance. The goal here is not to claim a finished Blender feature, but to find the smallest honest path from that representation into an existing renderer.
+
+What is now proven on an Apple M1 Max:
+
+- pinned standalone Cycles and Blender source/dependency checkouts, a full Blender developer build, app install, UI/Cycles smoke, and tet-cage import/save/reload/debug checks;
+- an opt-in candidate Cycles/Blender adapter that builds conservative AABB candidates and reconstructs ordinary Cycles hits;
+- static tet-only and mixed triangle/AABB traversal, rigid object-transform motion, shape-key motion, source primitive/material/UV/normal attributes, transparent camera/shadow, AO/local, and volume probes; and
+- 41/41 repository tests plus the pinned source/dependency verifier.
+
+The boundaries matter. Mixed transparent plus non-transparent motion remains ordinary Cycles fallback by default. Pure-transparent motion is eligible for the native experiment. Large-footprint area-light volume precision is still open: at 64 samples the size-2 control differs by `0.00766` max RGB, while the point-light control is float-noise-only. Those are gates, not footnotes.
+
+The path to formal integration is:
+
+1. Close renderer semantics on a representative animated corpus.
+2. Run M9's cross-platform method/scale study and select the retained representation.
+3. Turn the exploratory adapter into a dedicated, reviewable Cycles geometry contract with explicit provenance and fallback behavior.
+4. Validate Metal and OptiX against the same scenes while preserving existing Cycles devices.
+5. Submit a focused Blender/Cycles patch series with reproducible tests, docs, UI/debug views, and evidence that survives upstream review.
+
+This is an integration candidate, not an upstream merge or production performance claim. Feedback from Cycles/Blender, Metal, OptiX, and rendering folks is welcome.
+
+Repository: <https://github.com/bgyss/ray-tracing-tet-cage>
+
+#Blender3D #Cycles #RayTracing #ComputerGraphics #Metal #OpenSource #Rendering
+
+### X/Twitter thread
+
+#### Post 1
+
+Cycles/Blender integration is a measured workstream for my tetrahedral-cage ray-tracing reimplementation. Pinned macOS builds, Blender UI/debug smoke, and tet-cage import/save/reload pass. This is groundwork—not an upstream merge: https://github.com/bgyss/ray-tracing-tet-cage
+
+#### Post 2
+
+The opt-in candidate covers static tet + ordinary-triangle traversal, rigid/shape-key motion, source attributes, transparent/AO/local/volume probes on an Apple M1 Max. Mixed transparent motion stays ordinary Cycles fallback by default.
+
+#### Post 3
+
+Next: close semantic parity on representative assets, run M9 cross-platform method/scale selection, then submit a focused Cycles/Blender patch series. OptiX still needs a qualified NVIDIA host; area-light volume precision is open.
+
+### Reddit
+
+#### Title
+
+Cycles/Blender tet-cage integration is measurable now, but still experimental
+
+#### Body
+
+I’m continuing a proof-gated reimplementation of the tetrahedral-cage representation from [*Ray Tracing Massive Amounts of Animated Geometry*](https://doi.org/10.1145/3820014): clip dense rest-pose geometry into a coarse tetrahedral cage, keep the clipped micro-geometry static, and animate through cage/tet transforms and top-level instances.
+
+The new work is an exploratory Cycles/Blender integration lane, not an official Blender or Cycles feature. The pinned standalone Cycles source is `97dbe6f`; the pinned Blender source is `4a09c19`. The candidate branches are intentionally separate from those clean upstream checkouts.
+The formal upstream target is Cycles as maintained in the [Blender repository](https://github.com/blender/blender); the standalone checkout is only a core/device prototyping lane.
+
+On an Apple M1 Max, the current evidence includes:
+
+- a full Blender developer build and install, Cycles/OSL/UI smoke, and tet-cage import/save/reload/debug checks;
+- an opt-in candidate adapter that uses conservative AABB candidates and maps hits back to ordinary Cycles identity/provenance;
+- static tet-only and mixed triangle/AABB traversal;
+- rigid object-transform motion and animated shape-key motion;
+- source primitive/material/UV/normal attributes;
+- transparent camera/shadow, AO/local, SSS/local, and volume probes; and
+- 41/41 repository tests plus the pinned source/dependency verifier.
+
+The limitations are part of the result:
+
+- mixed transparent plus non-transparent motion stays on ordinary Cycles fallback by default;
+- pure-transparent motion is the narrower native candidate;
+- the large-footprint area-light volume seam remains open (`0.00766` max RGB at 64 samples for the size-2 control), even with shadows disabled; and
+- this is not yet a production `TetCageGeometry`, an upstream patch, an OptiX result, or a cross-platform performance claim.
+
+The path to formal integration follows the roadmap rather than skipping ahead:
+
+1. Build a representative animated corpus and close camera, shadow, transparent, volume, local/SSS, motion, and attribute parity.
+2. Complete M9's cross-platform scale/crossover study and choose the retained method.
+3. Replace the exploratory adapter with a dedicated Cycles geometry boundary that preserves provenance, existing device behavior, and explicit fallback.
+4. Validate Metal and OptiX on the same scenes, with a qualified NVIDIA host for the OptiX side.
+5. Prepare a small, reviewable Blender/Cycles patch series with source tests, reproducible build instructions, UI/debug views, and image/time/memory evidence.
+
+The repository, roadmap, representation boundary, and dated manifests are here:
+
+- <https://github.com/bgyss/ray-tracing-tet-cage>
+- [`docs/open-roadmap-workplan.md`](open-roadmap-workplan.md)
+- [`docs/cycles-representation-boundary.md`](cycles-representation-boundary.md)
+- [`results/integrations/2026-08-23-cycles-metal-entry.json`](../results/integrations/2026-08-23-cycles-metal-entry.json)
+- [`results/integrations/2026-08-23-cycles-area-volume-precision.json`](../results/integrations/2026-08-23-cycles-area-volume-precision.json)
+
+I’d especially appreciate feedback from Cycles/Blender maintainers and people who have dealt with custom geometry, Metal intersection-function tables, OptiX GAS/IAS updates, or renderer-visible hit provenance.
+
+### Posting notes
+
+- LinkedIn: attach a simple diagram of the immutable micro-geometry → AABB candidate → normalized Cycles hit boundary, plus a small “proven / open / next” panel.
+- X/Twitter: post the three-part thread; the first post is the link-bearing opener and the third post makes the formal-integration boundary explicit.
+- Reddit: keep the long body intact so the fallback gates and upstream relationship are visible; include the dated manifests rather than a benchmark screenshot without context.
+- Do not describe the candidate branch as “merged into Cycles,” “production-ready,” or “formally integrated” until the M9/M12 acceptance evidence is complete and an upstream review path exists.
