@@ -641,6 +641,42 @@
       },
       "claim_boundary": "Volume entry/exit query runs for single and two-tet stacks; point/sun controls are float-noise-only, while area-light precision remains open."
     },
+    "native_volume_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... volume_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Principled Volume and object-transform motion",
+      "resolution": "16x16",
+      "samples": 1,
+      "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+      "native_volume_table": true,
+      "point": {
+        "native_sha256": "ffd45ccc69aee19c8e957801ff4b67a995eac8497f232212f77d92527c06a778",
+        "fallback_sha256": "eb727946e75f92b966a1c8970980b4ab9bd9b05a83710c902913becd84d9fa03",
+        "pixel_differences": 72,
+        "max_abs_rgb_difference": 2.0919833332300186e-07,
+        "sum_abs_rgb_difference": 3.347757228766568e-06,
+        "result": "numeric_close"
+      },
+      "sun": {
+        "native_sha256": "871d225183ab70689e29468c289305d90aab0d332acd7c1dabf0baa2b2b2cb00",
+        "fallback_sha256": "258148329f23c1b9a3c6ebab259d78d28476020d9269a704f7e456b67d59e030",
+        "pixel_differences": 71,
+        "max_abs_rgb_difference": 2.60770320892334e-07,
+        "sum_abs_rgb_difference": 3.6239489418221638e-06,
+        "result": "numeric_close"
+      },
+      "area": {
+        "native_sha256": "69ba4ab0a11bfb8adbe98c5249e27120bb683ee1bba6c2fbacddb26e0205420f",
+        "fallback_sha256": "46a295197a5e52817f8cba7ae765f322483bade6c59e0d89e011e982f4de7664",
+        "pixel_differences": 80,
+        "max_abs_rgb_difference": 1.7285346984863281e-06,
+        "sum_abs_rgb_difference": 2.6392692234367132e-05,
+        "result": "numeric_close"
+      },
+      "result": "native_motion_volume_numeric_close_all_lights",
+      "claim_boundary": "Object-transform motion through the native volume table is numeric-close under point, sun, and area controls for the declared closed-tet fixture; multi-object deformation and production volume scenes remain open."
+    },
     "native_material_render": {
       "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... material",
       "device": "METAL Apple M1 Max",

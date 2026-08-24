@@ -51,9 +51,10 @@ the native AABB local intersection table, while animated SSS on the declared
 closed-tetrahedron fixture uses a motion-aware native local narrow phase and
 matches the ordinary path to float noise under point lighting; area-light
 sampling remains open. Integer source-primitive, owner-tet,
-and material face attributes also match on the two-material fixture. The single- and two-tet
-volume probes are float-noise-only under point and sun controls and diverge only under area
-sampling. An isolated
+and material face attributes also match on the two-material fixture. Static and
+object-transform-motion closed-tet volume probes are numeric-close under point,
+sun, and area controls; the two-tet static stack remains float-noise-only under
+point and sun and open under area sampling. An isolated
 Blender branch (`430b6987380`) compiles
 the scene/device/CPU-kernel/bridge targets and, with
 `CYCLES_TETCAGE_NATIVE=1`, recognizes the `cycles_tetcage_v1` candidate, builds
