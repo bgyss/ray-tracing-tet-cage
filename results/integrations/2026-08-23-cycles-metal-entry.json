@@ -22,7 +22,7 @@
       "full_blender_target": "passed",
       "install": "passed",
       "direct_probe": "passed",
-      "ui_smoke": "passed",
+      "ui_smoke": "passed; rebuilt candidate 430b6987380; window_context=true; tetcage_ui_registered=true",
       "gui_smoke": "passed; real window context and timer-exit probe",
       "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
     }
