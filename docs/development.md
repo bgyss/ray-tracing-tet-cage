@@ -162,7 +162,8 @@ zero-hit local-ray path; `deformation_local_motion` exercises the motion-local
 multi-hit callback; `volume` on the same closed fixture records the
 current numeric volume differential rather than treating it as exact, while
 `volume_motion` exercises object-transform motion through the native volume
-table. The
+table; the two-closed-tets fixture extends this to a moving two-object stack.
+The
 two-closed-tets fixture exercises the same volume mode across two native tet
 objects and records the multi-object stack result in the integration manifest.
 Mixed transparent-closure object motion currently retains ordinary Cycles

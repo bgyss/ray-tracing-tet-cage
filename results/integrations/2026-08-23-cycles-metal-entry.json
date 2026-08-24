@@ -674,6 +674,35 @@
         "sum_abs_rgb_difference": 2.6392692234367132e-05,
         "result": "numeric_close"
       },
+      "multi_tet_stack": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "cage_tetrahedra": 2,
+        "motion_delta": 0.15,
+        "point": {
+          "native_sha256": "e459a7a032474d20ab978bdfa963105b060d43f969d11d701c42a0e856a133ce",
+          "fallback_sha256": "d4b587f3fc737560ad26d5e1bf00a66cc4506ecf3e93c2b9c784adcfffcc2045",
+          "pixel_differences": 89,
+          "max_abs_rgb_difference": 2.8312206268310547e-07,
+          "sum_abs_rgb_difference": 4.912923031952232e-06,
+          "result": "numeric_close"
+        },
+        "sun": {
+          "native_sha256": "2c0a2b5ca656608e999e4db3cdbded7fce86de598e6cd67dbc6057682222889f",
+          "fallback_sha256": "b03f4f31c976c213f98fbc29355d9a8c3e0c89a68d120838e977d65c3cc536c7",
+          "pixel_differences": 84,
+          "max_abs_rgb_difference": 4.3213367462158203e-07,
+          "sum_abs_rgb_difference": 5.211062671151012e-06,
+          "result": "numeric_close"
+        },
+        "area": {
+          "native_sha256": "4891274c18d527e4270f6459f5fd531c160f2094604471f3ccc8225d8312f7f4",
+          "fallback_sha256": "8a8e12af7527972245b349729d2fbb4310cd381b6e33793a209c8e577e9fac97",
+          "pixel_differences": 84,
+          "max_abs_rgb_difference": 2.384185791015625e-06,
+          "sum_abs_rgb_difference": 5.055329529568553e-05,
+          "result": "numeric_close"
+        }
+      },
       "result": "native_motion_volume_numeric_close_all_lights",
       "claim_boundary": "Object-transform motion through the native volume table is numeric-close under point, sun, and area controls for the declared closed-tet fixture; multi-object deformation and production volume scenes remain open."
     },
