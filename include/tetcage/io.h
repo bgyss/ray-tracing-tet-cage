@@ -17,5 +17,6 @@ template <typename T> struct LoadResult {
 [[nodiscard]] std::string write_tet_cage_file(const std::string &path, const Cage &cage);
 [[nodiscard]] LoadResult<CompiledAsset> load_asset_file(const std::string &path);
 [[nodiscard]] std::string write_asset_file(const std::string &path, const CompiledAsset &asset);
+[[nodiscard]] std::string write_cycles_xml(const std::string &path, const CompiledAsset &asset);
 
 } // namespace tetcage

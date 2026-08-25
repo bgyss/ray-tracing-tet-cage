@@ -1,0 +1,1201 @@
+diff --git a/intern/cycles/blender/mesh.cpp b/intern/cycles/blender/mesh.cpp
+index 21ecaef4c8eb10c0ac5d7aee1b9f0a8234fc2b6d..3a49c5687887dce44d67e4777e44849edf25063a 100644
+--- a/intern/cycles/blender/mesh.cpp
++++ b/intern/cycles/blender/mesh.cpp
+@@ -15,6 +15,8 @@
+ #include "scene/mesh.h"
+ #include "scene/object.h"
+ #include "scene/scene.h"
++#include "scene/shader_graph.h"
++#include "scene/shader_nodes.h"
+ 
+ #include "subd/split.h"
+ 
+@@ -1028,7 +1030,37 @@ void BlenderSync::sync_mesh(BObjectInfo &b_ob_info, Mesh *mesh)
+       {
+         const std::string contract = blender_mesh_tetcage_contract(
+             *b_mesh, b_ob_info.object_data, &b_ob_info.real_object->id);
+-        if (blender_native_tetcage_enabled() && !need_motion && new_mesh.num_triangles() != 0) {
++        const AttributeSet &native_attributes = (new_mesh.get_subdivision_type() ==
++                                                 Mesh::SUBDIVISION_NONE) ?
++                                                    new_mesh.attributes :
++                                                    new_mesh.subd_attributes;
++        const Attribute *native_position = native_attributes.find(ATTR_STD_POSITION);
++        const bool has_deformation_motion = native_position && native_position->has_motion();
++        const bool has_shape_keys = b_mesh->key != nullptr;
++        bool has_transparent_surface = false;
++        bool has_nontransparent_surface = false;
++        bool has_transparent_closure = false;
++        for (Node *node : new_mesh.get_used_shaders()) {
++          const Shader *shader = static_cast<const Shader *>(node);
++          has_transparent_surface |= shader->has_surface_shadow_transparency();
++          if (shader->graph) {
++            for (ShaderNode *shader_node : shader->graph->nodes) {
++              const bool is_nontransparent_closure = shader_node->has_surface_emission() ||
++                                                     shader_node->has_surface_bssrdf() ||
++                                                     ((shader_node->get_feature() &
++                                                       KERNEL_FEATURE_NODE_BSDF) != 0 &&
++                                                      !shader_node->has_surface_transparent());
++              has_nontransparent_surface |= is_nontransparent_closure;
++              has_transparent_closure |= shader_node->has_surface_transparent();
++            }
++          }
++        }
++        const bool mixed_transparent_motion = has_transparent_surface && has_transparent_closure &&
++                                              has_nontransparent_surface &&
++                                              scene->need_motion() == Scene::MOTION_BLUR;
++        if (blender_native_tetcage_enabled() && new_mesh.num_triangles() != 0 &&
++            !mixed_transparent_motion)
++        {
+           vector<TetCageMicroTriangle> micro_triangles;
+           micro_triangles.reserve(new_mesh.num_triangles());
+           const packed_float3 *positions = new_mesh.get_position();
+@@ -1054,7 +1086,10 @@ void BlenderSync::sync_mesh(BObjectInfo &b_ob_info, Mesh *mesh)
+               contract_geometry.set_frame_tetrahedron_transforms(frame_transforms) &&
+               new_mesh.set_tet_cage_geometry(contract_geometry, 0))
+           {
+-            LOG_INFO << "Enabled static native tet-cage adapter "
++            LOG_INFO << "Enabled "
++                     << (has_deformation_motion || has_shape_keys ? "deformation-capable " :
++                                                                    "static ")
++                     << "native tet-cage adapter "
+                      << (contract.empty() ? "(unversioned)" : contract) << " on mesh "
+                      << b_mesh->id.name;
+           }
+@@ -1066,9 +1101,11 @@ void BlenderSync::sync_mesh(BObjectInfo &b_ob_info, Mesh *mesh)
+         else {
+           LOG_DEBUG << "Tet-cage native candidate "
+                     << (contract.empty() ? "(unversioned)" : contract) << " on mesh "
+-                    << b_mesh->id.name
+-                    << "; retaining ordinary Cycles mesh fallback (set CYCLES_TETCAGE_NATIVE=1 "
+-                       "for the static experimental adapter).";
++                    << b_mesh->id.name << "; retaining ordinary Cycles mesh fallback"
++                    << (mixed_transparent_motion ?
++                            " (mixed transparent closure motion is not yet native)" :
++                            "")
++                    << ".";
+         }
+       }
+ 
+diff --git a/intern/cycles/device/metal/bvh.mm b/intern/cycles/device/metal/bvh.mm
+index 3b3d6913c9621bb50b53f2ea29335fafbb07773d..0147f8c414f6f6bb936292543ccb21ec843cd23d 100644
+--- a/intern/cycles/device/metal/bvh.mm
++++ b/intern/cycles/device/metal/bvh.mm
+@@ -945,36 +945,69 @@ bool BVHMetal::build_BLAS_tetcage(Progress &progress,
+ {
+   if (@available(macos 12.0, *)) {
+     Mesh *const mesh = static_cast<Mesh *const>(geom);
++    if (progress.get_cancel()) {
++      return false;
++    }
+     const size_t num_triangles = mesh->num_triangles();
+     if (num_triangles == 0) {
+       return false;
+     }
+ 
+     const packed_float3 *verts = mesh->get_position();
++    const Attribute *attr_P = mesh->attributes.find(ATTR_STD_POSITION);
++    const bool use_motion = motion_blur && mesh->get_use_motion_blur() && attr_P &&
++                            attr_P->has_motion();
++    const size_t num_motion_steps = use_motion ? mesh->get_motion_steps() : 1;
+     id<MTLBuffer> aabbBuf = [mtl_device
+-        newBufferWithLength:num_triangles * sizeof(MTLAxisAlignedBoundingBox)
++        newBufferWithLength:num_triangles * num_motion_steps * sizeof(MTLAxisAlignedBoundingBox)
+                     options:MTLResourceStorageModeShared];
+     MTLAxisAlignedBoundingBox *aabb_data = (MTLAxisAlignedBoundingBox *)[aabbBuf contents];
+ 
+-    for (size_t triangle_index = 0; triangle_index < num_triangles; triangle_index++) {
+-      BoundBox bounds = BoundBox::empty;
+-      mesh->get_triangle(triangle_index).bounds_grow(verts, bounds);
+-      const float3 extent = bounds.size();
+-      const float margin = max(1.0e-5f, 1.0e-5f * max(extent.x, max(extent.y, extent.z)));
+-      bounds.grow(bounds.min, margin);
+-      bounds.grow(bounds.max, margin);
+-      aabb_data[triangle_index].min = MTLPackedFloat3Make(
+-          bounds.min.x, bounds.min.y, bounds.min.z);
+-      aabb_data[triangle_index].max = MTLPackedFloat3Make(
+-          bounds.max.x, bounds.max.y, bounds.max.z);
+-    }
+-
+-    MTLAccelerationStructureBoundingBoxGeometryDescriptor *geomDesc =
+-        [MTLAccelerationStructureBoundingBoxGeometryDescriptor descriptor];
+-    geomDesc.boundingBoxBuffer = aabbBuf;
+-    geomDesc.boundingBoxBufferOffset = 0;
+-    geomDesc.boundingBoxCount = int(num_triangles);
+-    geomDesc.boundingBoxStride = sizeof(aabb_data[0]);
++    for (size_t step = 0; step < num_motion_steps; step++) {
++      const packed_float3 *step_verts = use_motion ?
++                                             attr_P->data_at_time_step<packed_float3>(
++                                                 int(step), int(num_motion_steps)) :
++                                             verts;
++      for (size_t triangle_index = 0; triangle_index < num_triangles; triangle_index++) {
++        BoundBox bounds = BoundBox::empty;
++        mesh->get_triangle(triangle_index).bounds_grow(step_verts, bounds);
++        const float3 extent = bounds.size();
++        const float margin = max(1.0e-5f, 1.0e-5f * max(extent.x, max(extent.y, extent.z)));
++        bounds.grow(bounds.min, margin);
++        bounds.grow(bounds.max, margin);
++        const size_t aabb_index = step * num_triangles + triangle_index;
++        aabb_data[aabb_index].min = MTLPackedFloat3Make(
++            bounds.min.x, bounds.min.y, bounds.min.z);
++        aabb_data[aabb_index].max = MTLPackedFloat3Make(
++            bounds.max.x, bounds.max.y, bounds.max.z);
++      }
++    }
++
++    MTLAccelerationStructureGeometryDescriptor *geomDesc;
++    if (num_motion_steps > 1) {
++      NSMutableArray *motion_buffers = [NSMutableArray arrayWithCapacity:num_motion_steps];
++      for (size_t step = 0; step < num_motion_steps; step++) {
++        MTLMotionKeyframeData *keyframe = [MTLMotionKeyframeData data];
++        keyframe.buffer = aabbBuf;
++        keyframe.offset = step * num_triangles * sizeof(aabb_data[0]);
++        [motion_buffers addObject:keyframe];
++      }
++      MTLAccelerationStructureMotionBoundingBoxGeometryDescriptor *motion_desc =
++          [MTLAccelerationStructureMotionBoundingBoxGeometryDescriptor descriptor];
++      motion_desc.boundingBoxBuffers = motion_buffers;
++      motion_desc.boundingBoxCount = num_triangles;
++      motion_desc.boundingBoxStride = sizeof(aabb_data[0]);
++      geomDesc = motion_desc;
++    }
++    else {
++      MTLAccelerationStructureBoundingBoxGeometryDescriptor *static_desc =
++          [MTLAccelerationStructureBoundingBoxGeometryDescriptor descriptor];
++      static_desc.boundingBoxBuffer = aabbBuf;
++      static_desc.boundingBoxBufferOffset = 0;
++      static_desc.boundingBoxCount = num_triangles;
++      static_desc.boundingBoxStride = sizeof(aabb_data[0]);
++      geomDesc = static_desc;
++    }
+     geomDesc.intersectionFunctionTableOffset = 2;
+     geomDesc.allowDuplicateIntersectionFunctionInvocation = false;
+     geomDesc.opaque = false;
+@@ -982,6 +1015,13 @@ bool BVHMetal::build_BLAS_tetcage(Progress &progress,
+     MTLPrimitiveAccelerationStructureDescriptor *accelDesc =
+         [MTLPrimitiveAccelerationStructureDescriptor descriptor];
+     accelDesc.geometryDescriptors = @[ geomDesc ];
++    if (num_motion_steps > 1) {
++      accelDesc.motionStartTime = 0.0f;
++      accelDesc.motionEndTime = 1.0f;
++      accelDesc.motionStartBorderMode = MTLMotionBorderModeClamp;
++      accelDesc.motionEndBorderMode = MTLMotionBorderModeClamp;
++      accelDesc.motionKeyframeCount = num_motion_steps;
++    }
+     accelDesc.usage = MTLAccelerationStructureUsageNone;
+     if (extended_limits) {
+       accelDesc.usage |= MTLAccelerationStructureUsageExtendedLimits;
+@@ -990,7 +1030,8 @@ bool BVHMetal::build_BLAS_tetcage(Progress &progress,
+       accelDesc.usage |= MTLAccelerationStructureUsagePreferFastIntersection;
+     }
+ 
+-    BVH_status("Building tet-cage AABB BLAS | %7d triangles | %s",
++    BVH_status("Building %s tet-cage AABB BLAS | %7d triangles | %s",
++               num_motion_steps > 1 ? "motion" : "static",
+                int(num_triangles),
+                geom->name.c_str());
+ 
+@@ -1016,9 +1057,24 @@ bool BVHMetal::build_BLAS_tetcage(Progress &progress,
+ 
+     const size_t wired_size = aabbBuf.allocatedSize + scratchBuf.allocatedSize +
+                               accel_uncompressed.allocatedSize * 2;
+-    [accelCommands addCompletedHandler:^(id<MTLCommandBuffer> /*command_buffer*/) {
++    Progress *const progress_ptr = &progress;
++    [accelCommands addCompletedHandler:^(id<MTLCommandBuffer> command_buffer) {
+       [scratchBuf release];
+       [aabbBuf release];
++
++      if (command_buffer.status != MTLCommandBufferStatusCompleted) {
++        @autoreleasepool {
++          NSString *error = command_buffer.error ? [command_buffer.error localizedDescription] : nil;
++          progress_ptr->set_error(string_printf(
++              "Tet-cage AABB BLAS build failed (status %d): %s",
++              int(command_buffer.status),
++              error ? [error UTF8String] : "unknown Metal command-buffer error"));
++        }
++        g_bvh_build_throttler.release(wired_size);
++        [sizeBuf release];
++        return;
++      }
++
+       set_accel_struct(accel_uncompressed);
+       g_bvh_build_throttler.release(wired_size);
+       [sizeBuf release];
+@@ -1027,7 +1083,7 @@ bool BVHMetal::build_BLAS_tetcage(Progress &progress,
+     g_bvh_build_throttler.acquire(wired_size);
+     [accelCommands commit];
+     [accelCommands waitUntilCompleted];
+-    return true;
++    return accelCommands.status == MTLCommandBufferStatusCompleted && !progress.get_error();
+   }
+ 
+   (void)progress;
+diff --git a/intern/cycles/device/metal/kernel.mm b/intern/cycles/device/metal/kernel.mm
+index 417cca918603dc100183fc6a8f4bfd990f9d206a..8d0c2b041d1e0e1b46abeb1d8935aced05f3f2e7 100644
+--- a/intern/cycles/device/metal/kernel.mm
++++ b/intern/cycles/device/metal/kernel.mm
+@@ -626,9 +626,18 @@ void MetalKernelPipeline::compile()
+                                "__intersection__tri_shadow_all",
+                                "__intersection__curve_shadow_all",
+                                "__intersection__point_shadow_all");
+-    add_intersection_functions(METALRT_TABLE_VOLUME, "__intersection__volume_tri");
+-    add_intersection_functions(METALRT_TABLE_LOCAL, "__intersection__local_tri");
+-    add_intersection_functions(METALRT_TABLE_LOCAL_MBLUR, "__intersection__local_tri_mblur");
++    add_intersection_functions(METALRT_TABLE_VOLUME,
++                               "__intersection__volume_tri",
++                               nullptr,
++                               "__intersection__volume_tetcage");
++    add_intersection_functions(METALRT_TABLE_LOCAL,
++                               "__intersection__local_tri",
++                               nullptr,
++                               "__intersection__local_tetcage");
++    add_intersection_functions(METALRT_TABLE_LOCAL_MBLUR,
++                               "__intersection__local_tri_mblur",
++                               nullptr,
++                               "__intersection__local_tetcage_mblur");
+     add_intersection_functions(METALRT_TABLE_LOCAL_SINGLE_HIT,
+                                "__intersection__local_tri_single_hit");
+     add_intersection_functions(METALRT_TABLE_LOCAL_SINGLE_HIT_MBLUR,
+diff --git a/intern/cycles/kernel/device/metal/bvh.h b/intern/cycles/kernel/device/metal/bvh.h
+index a19d69691cd0e7ba2f85f1faa53c86be0f5d0f29..a9b11d4eeae58e1033a88254caa62a1922262734 100644
+--- a/intern/cycles/kernel/device/metal/bvh.h
++++ b/intern/cycles/kernel/device/metal/bvh.h
+@@ -21,6 +21,13 @@ struct MetalRTIntersectionPayload {
+   int self_prim;
+   int self_object;
+   uint visibility;
++#if defined(__METALRT_MOTION__)
++  int tet_object;
++  int tet_prim;
++  float tet_u;
++  float tet_v;
++  float tet_t;
++#endif
+ };
+ 
+ struct MetalRTIntersectionLocalPayload_single_hit {
+@@ -41,6 +48,7 @@ struct MetalRTLocalHit {
+  * data is duplicated into the payload and then copied back to the LocalIntersection. */
+ struct MetalRTIntersectionLocalPayload {
+   int self_prim;
++  int tet_object;
+ #if defined(__METALRT_MOTION__)
+   int self_object;
+ #endif
+@@ -55,8 +63,156 @@ struct MetalRTIntersectionLocalPayload {
+ struct MetalRTIntersectionShadowPayload {
+   RaySelfPrimitives self;
+   uint visibility;
++  int tet_object;
++  int tet_prim;
++  float tet_u;
++  float tet_v;
++  float tet_t;
+ };
+ 
++/* Watertight projected-axis triangle test for the native tet-cage paths. Metal's built-in triangle
++ * intersector uses the same projected-edge family; keeping this separate from Cycles' historical
++ * Pluecker helper limits the precision seam to the procedural candidate. */
++ccl_device_forceinline bool metal_tetcage_ray_triangle_intersect(const float3 ray_P,
++                                                                 const float3 ray_D,
++                                                                 const float ray_tmin,
++                                                                 const float ray_tmax,
++                                                                 const float3 tri_a,
++                                                                 const float3 tri_b,
++                                                                 const float3 tri_c,
++                                                                 ccl_private float *isect_u,
++                                                                 ccl_private float *isect_v,
++                                                                 ccl_private float *isect_t)
++{
++  const float3 A = tri_a - ray_P;
++  const float3 B = tri_b - ray_P;
++  const float3 C = tri_c - ray_P;
++
++  int kz = 0;
++  if (fabsf(ray_D.y) > fabsf(ray_D[kz])) {
++    kz = 1;
++  }
++  if (fabsf(ray_D.z) > fabsf(ray_D[kz])) {
++    kz = 2;
++  }
++  if (ray_D[kz] == 0.0f) {
++    return false;
++  }
++  int kx = (kz + 1) % 3;
++  int ky = (kx + 1) % 3;
++  if (ray_D[kz] < 0.0f) {
++    const int tmp = kx;
++    kx = ky;
++    ky = tmp;
++  }
++
++  const float Sx = ray_D[kx] / ray_D[kz];
++  const float Sy = ray_D[ky] / ray_D[kz];
++  const float Sz = 1.0f / ray_D[kz];
++  const float Ax = fma(-Sx, A[kz], A[kx]);
++  const float Ay = fma(-Sy, A[kz], A[ky]);
++  const float Bx = fma(-Sx, B[kz], B[kx]);
++  const float By = fma(-Sy, B[kz], B[ky]);
++  const float Cx = fma(-Sx, C[kz], C[kx]);
++  const float Cy = fma(-Sy, C[kz], C[ky]);
++
++  const float U = Cx * By - Cy * Bx;
++  const float V = Ax * Cy - Ay * Cx;
++  const float W = Bx * Ay - By * Ax;
++  if ((U < 0.0f || V < 0.0f || W < 0.0f) && (U > 0.0f || V > 0.0f || W > 0.0f)) {
++    return false;
++  }
++
++  const float det = U + V + W;
++  if (det == 0.0f) {
++    return false;
++  }
++  const float Az = Sz * A[kz];
++  const float Bz = Sz * B[kz];
++  const float Cz = Sz * C[kz];
++  const float T = U * Az + V * Bz + W * Cz;
++  const float t = T / det;
++  if (!(t >= ray_tmin && t <= ray_tmax)) {
++    return false;
++  }
++
++  const float inv_det = 1.0f / det;
++  *isect_u = clamp(V * inv_det, 0.0f, 1.0f);
++  *isect_v = clamp(W * inv_det, 0.0f, 1.0f);
++  *isect_t = t;
++  return true;
++}
++
++#ifdef __BVH_LOCAL__
++/* Record tet-cage local hits with the same projected-axis narrow phase used by camera and shadow
++ * rays. Keeping the hit-record policy in Cycles' shared helper preserves reservoir sampling while
++ * avoiding a second, non-watertight triangle predicate for SSS and bevel queries. */
++ccl_device_inline bool metal_tetcage_triangle_intersect_local_vertices(
++    ccl_private LocalIntersection *local_isect,
++    const float3 P,
++    const float3 dir,
++    const int object,
++    const int prim,
++    const float tmin,
++    const float tmax,
++    const float3 tri_a,
++    const float3 tri_b,
++    const float3 tri_c,
++    ccl_private uint *lcg_state,
++    const int max_hits)
++{
++  float t;
++  float u;
++  float v;
++  if (!metal_tetcage_ray_triangle_intersect(P, dir, tmin, tmax, tri_a, tri_b, tri_c, &u, &v, &t)) {
++    return false;
++  }
++
++  if (max_hits == 0) {
++    return true;
++  }
++
++  const int hit_index = local_intersect_get_record_index(local_isect, t, lcg_state, max_hits);
++  if (hit_index == -1) {
++    return false;
++  }
++
++  ccl_private Intersection *isect = &local_isect->hits[hit_index];
++  isect->prim = prim;
++  isect->object = object;
++  isect->type = PRIMITIVE_TRIANGLE;
++  isect->u = u;
++  isect->v = v;
++  isect->t = t;
++  local_isect->Ng[hit_index] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
++  return true;
++}
++
++ccl_device_inline bool metal_tetcage_triangle_intersect_local(
++    KernelGlobals kg,
++    ccl_private LocalIntersection *local_isect,
++    const float3 P,
++    const float3 dir,
++    const int object,
++    const int prim,
++    const float tmin,
++    const float tmax,
++    ccl_private uint *lcg_state,
++    const int max_hits)
++{
++  const int position_offset = kernel_data_fetch(objects, object).position_offset;
++  const uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
++  const float3 tri_a = kernel_data_fetch(tri_verts, position_offset + tri_vindex.x);
++  const float3 tri_b = kernel_data_fetch(tri_verts, position_offset + tri_vindex.y);
++  const float3 tri_c = kernel_data_fetch(tri_verts, position_offset + tri_vindex.z);
++
++  const bool hit = metal_tetcage_triangle_intersect_local_vertices(
++      local_isect, P, dir, object, prim, tmin, tmax, tri_a, tri_b, tri_c, lcg_state, max_hits);
++  (void)kg;
++  return hit;
++}
++#endif
++
+ #ifdef __HAIR__
+ ccl_device_forceinline bool curve_ribbon_accept(KernelGlobals kg,
+                                                 const float u,
+@@ -229,16 +385,16 @@ ccl_device_intersect bool scene_intersect_tetcage_query(KernelGlobals kg,
+     const float3 tri_a = kernel_data_fetch(tri_verts, position_offset + tri_vindex.x);
+     const float3 tri_b = kernel_data_fetch(tri_verts, position_offset + tri_vindex.y);
+     const float3 tri_c = kernel_data_fetch(tri_verts, position_offset + tri_vindex.z);
+-    if (!ray_triangle_intersect(local_P,
+-                                local_D,
+-                                ray->tmin,
+-                                closest_t,
+-                                tri_a,
+-                                tri_b,
+-                                tri_c,
+-                                &candidate_u,
+-                                &candidate_v,
+-                                &candidate_t))
++    if (!metal_tetcage_ray_triangle_intersect(local_P,
++                                              local_D,
++                                              ray->tmin,
++                                              closest_t,
++                                              tri_a,
++                                              tri_b,
++                                              tri_c,
++                                              &candidate_u,
++                                              &candidate_v,
++                                              &candidate_t))
+     {
+       continue;
+     }
+@@ -295,6 +451,13 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
+   payload.self_prim = ray->self.prim;
+   payload.self_object = ray->self.object;
+   payload.visibility = visibility;
++#if defined(__METALRT_MOTION__)
++  payload.tet_object = -1;
++  payload.tet_prim = -1;
++  payload.tet_u = 0.0f;
++  payload.tet_v = 0.0f;
++  payload.tet_t = FLT_MAX;
++#endif
+ 
+   uint ray_mask = visibility & 0xFF;
+   if (0 == ray_mask && (visibility & ~0xFF) != 0) {
+@@ -366,6 +529,17 @@ ccl_device_intersect bool scene_intersect(KernelGlobals kg,
+     }
+ 
+     if (kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) {
++#  if defined(__METALRT_MOTION__)
++      if (payload.tet_object == object && payload.tet_prim == prim) {
++        isect->object = object;
++        isect->prim = prim;
++        isect->type = kernel_data_fetch(objects, object).primitive_type;
++        isect->u = payload.tet_u;
++        isect->v = payload.tet_v;
++        isect->t = intersection.distance;
++        return true;
++      }
++#  endif
+       if (!triangle_intersect(nullptr,
+                               isect,
+                               r.origin,
+@@ -469,7 +643,7 @@ ccl_device_intersect bool scene_intersect_tetcage_query_shadow(KernelGlobals kg,
+     float t;
+     float u;
+     float v;
+-    if (ray_triangle_intersect(
++    if (metal_tetcage_ray_triangle_intersect(
+             local_P, local_D, ray->tmin, ray->tmax, tri_a, tri_b, tri_c, &u, &v, &t))
+     {
+       return true;
+@@ -509,6 +683,11 @@ ccl_device_intersect bool scene_intersect_shadow(KernelGlobals kg,
+   MetalRTIntersectionShadowPayload payload;
+   payload.self = ray->self;
+   payload.visibility = visibility;
++  payload.tet_object = -1;
++  payload.tet_prim = -1;
++  payload.tet_u = 0.0f;
++  payload.tet_v = 0.0f;
++  payload.tet_t = FLT_MAX;
+ 
+   uint ray_mask = visibility & 0xFF;
+   if (0 == ray_mask && (visibility & ~0xFF) != 0) {
+@@ -549,22 +728,128 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
+       bvh_instance_push(nullptr, local_object, ray, &local_P, &local_D, &idir);
+     }
+ 
++    if (!single_hit) {
++      if (local_isect) {
++        local_isect->num_hits = 0;
++      }
++
++      metal::raytracing::ray local_ray(local_P, local_D, ray->tmin, ray->tmax);
++      metalrt_blas_intersector_type metalrt_intersect;
++      metalrt_intersect.force_opacity(metal::raytracing::forced_opacity::non_opaque);
++      metalrt_intersect.assume_geometry_type(metal::raytracing::geometry_type::triangle |
++                                             metal::raytracing::geometry_type::bounding_box);
++
++      MetalRTIntersectionLocalPayload payload;
++      payload.self_prim = ray->self.prim - primitive_id_offset;
++      payload.tet_object = local_object;
++      payload.max_hits = max_hits;
++      payload.num_hits = 0;
++      if (lcg_state) {
++        payload.has_lcg_state = true;
++        payload.lcg_state = *lcg_state;
++      }
++      else {
++        payload.has_lcg_state = false;
++      }
++
++      const auto intersection = metalrt_intersect.intersect(
++          local_ray,
++          metal_ancillaries->blas_accel_structs[local_object].blas,
++          metal_ancillaries->ift_local,
++          payload);
++      if (max_hits == 0) {
++        return intersection.type != intersection_type::none;
++      }
++      if (lcg_state) {
++        *lcg_state = payload.lcg_state;
++      }
++      if (local_isect) {
++        local_isect->num_hits = payload.num_hits;
++        const int num_recorded_hits = min(payload.num_hits, max_hits);
++        const int prim_type = kernel_data_fetch(objects, local_object).primitive_type;
++        for (int hit = 0; hit < num_recorded_hits; hit++) {
++          const uint prim = payload.hits[hit].prim + primitive_id_offset;
++          local_isect->hits[hit].prim = prim;
++          local_isect->hits[hit].t = payload.hits[hit].t;
++          local_isect->hits[hit].u = payload.hits[hit].u;
++          local_isect->hits[hit].v = payload.hits[hit].v;
++          local_isect->hits[hit].object = local_object;
++          local_isect->hits[hit].type = prim_type;
++
++          const int position_offset = kernel_data_fetch(objects, local_object).position_offset;
++          const uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
++          const float3 tri_a = float3(
++              kernel_data_fetch(tri_verts, position_offset + tri_vindex.x));
++          const float3 tri_b = float3(
++              kernel_data_fetch(tri_verts, position_offset + tri_vindex.y));
++          const float3 tri_c = float3(
++              kernel_data_fetch(tri_verts, position_offset + tri_vindex.z));
++          local_isect->Ng[hit] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
++        }
++      }
++      return payload.num_hits > 0;
++    }
++
++    if (local_isect) {
++      local_isect->num_hits = 0;
++    }
++    bool found = false;
++    const uint num_primitives = kernel_data_fetch(objects, local_object).numprims;
++    for (uint triangle_index = 0; triangle_index < num_primitives; triangle_index++) {
++      const int prim = primitive_id_offset + triangle_index;
++      /* Metal's local ray is thread-addressed, so the shared ray_data helper cannot bind here;
++       * its local policy is the same primitive-ID comparison. */
++      if (ray->self.prim == prim) {
++        continue;
++      }
++      const bool hit = metal_tetcage_triangle_intersect_local(kg,
++                                                              local_isect,
++                                                              local_P,
++                                                              local_D,
++                                                              local_object,
++                                                              prim,
++                                                              ray->tmin,
++                                                              ray->tmax,
++                                                              lcg_state,
++                                                              max_hits);
++      found = found || hit || (local_isect && local_isect->num_hits > 0);
++    }
++    return found;
++  }
++#    else
++  if (kernel_data_fetch(object_flag, local_object) & SD_OBJECT_TETCAGE) {
++    const uint primitive_id_offset = kernel_data_fetch(object_prim_offset, local_object);
++    float3 local_P = ray->P;
++    float3 local_D = ray->D;
++    if (!(kernel_data_fetch(object_flag, local_object) & SD_OBJECT_TRANSFORM_APPLIED)) {
++      float3 idir;
++      bvh_instance_motion_push(nullptr, local_object, ray, &local_P, &local_D, &idir);
++    }
++
+     if (local_isect) {
+       local_isect->num_hits = 0;
+     }
+     bool found = false;
+     const uint num_primitives = kernel_data_fetch(objects, local_object).numprims;
+     for (uint triangle_index = 0; triangle_index < num_primitives; triangle_index++) {
+-      const bool hit = triangle_intersect_local(kg,
+-                                                local_isect,
+-                                                local_P,
+-                                                local_D,
+-                                                local_object,
+-                                                primitive_id_offset + triangle_index,
+-                                                ray->tmin,
+-                                                ray->tmax,
+-                                                lcg_state,
+-                                                max_hits);
++      const int prim = primitive_id_offset + triangle_index;
++      if (ray->self.prim == prim) {
++        continue;
++      }
++      float3 tri_verts_local[3];
++      motion_triangle_vertices(kg, local_object, prim, ray->time, tri_verts_local);
++      const bool hit = metal_tetcage_triangle_intersect_local_vertices(local_isect,
++                                                                       local_P,
++                                                                       local_D,
++                                                                       local_object,
++                                                                       prim,
++                                                                       ray->tmin,
++                                                                       ray->tmax,
++                                                                       tri_verts_local[0],
++                                                                       tri_verts_local[1],
++                                                                       tri_verts_local[2],
++                                                                       lcg_state,
++                                                                       max_hits);
+       found = found || hit || (local_isect && local_isect->num_hits > 0);
+     }
+     return found;
+@@ -591,7 +876,10 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
+   }
+ #  endif
+ 
+-  metalrt_intersect.assume_geometry_type(metal::raytracing::geometry_type::triangle);
++  metalrt_intersect.assume_geometry_type(metal::raytracing::geometry_type::triangle |
++                                         (kernel_data.bvh.have_tetcage ?
++                                              metal::raytracing::geometry_type::bounding_box :
++                                              metal::raytracing::geometry_type::none));
+ 
+   if (single_hit) {
+     MetalRTIntersectionLocalPayload_single_hit payload;
+@@ -637,17 +925,26 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
+     local_isect->hits[0].v = intersection.triangle_barycentric_coord.y;
+     local_isect->hits[0].t = intersection.distance;
+ 
++    float3 tri_verts_local[3];
++#  if defined(__METALRT_MOTION__)
++    motion_triangle_vertices(kg, local_object, prim, ray->time, tri_verts_local);
++#  else
+     const int position_offset = kernel_data_fetch(objects, local_object).position_offset;
+     const packed_uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
+-    const float3 tri_a = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.x));
+-    const float3 tri_b = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.y));
+-    const float3 tri_c = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.z));
++    tri_verts_local[0] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.x));
++    tri_verts_local[1] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.y));
++    tri_verts_local[2] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.z));
++#  endif
++    const float3 tri_a = tri_verts_local[0];
++    const float3 tri_b = tri_verts_local[1];
++    const float3 tri_c = tri_verts_local[2];
+     local_isect->Ng[0] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
+     return true;
+   }
+   else {
+     MetalRTIntersectionLocalPayload payload;
+     payload.self_prim = ray->self.prim - primitive_id_offset;
++    payload.tet_object = local_object;
+     payload.max_hits = max_hits;
+     payload.num_hits = 0;
+     if (lcg_state) {
+@@ -706,11 +1003,19 @@ ccl_device_intersect bool scene_intersect_local(KernelGlobals kg,
+         local_isect->hits[hit].object = local_object;
+         local_isect->hits[hit].type = prim_type;
+ 
++        float3 tri_verts_local[3];
++#  if defined(__METALRT_MOTION__)
++        motion_triangle_vertices(kg, local_object, prim, ray->time, tri_verts_local);
++#  else
+         const int position_offset = kernel_data_fetch(objects, local_object).position_offset;
+         const packed_uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
+-        const float3 tri_a = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.x));
+-        const float3 tri_b = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.y));
+-        const float3 tri_c = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.z));
++        tri_verts_local[0] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.x));
++        tri_verts_local[1] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.y));
++        tri_verts_local[2] = float3(kernel_data_fetch(tri_verts, position_offset + tri_vindex.z));
++#  endif
++        const float3 tri_a = tri_verts_local[0];
++        const float3 tri_b = tri_verts_local[1];
++        const float3 tri_c = tri_verts_local[2];
+         local_isect->Ng[hit] = normalize(cross(tri_b - tri_a, tri_c - tri_a));
+       }
+     }
+@@ -819,16 +1124,16 @@ ccl_device_intersect bool scene_intersect_tetcage_query_volume(KernelGlobals kg,
+     float candidate_t;
+     float candidate_u;
+     float candidate_v;
+-    if (!ray_triangle_intersect(local_P,
+-                                local_D,
+-                                ray->tmin,
+-                                closest_t,
+-                                tri_a,
+-                                tri_b,
+-                                tri_c,
+-                                &candidate_u,
+-                                &candidate_v,
+-                                &candidate_t))
++    if (!metal_tetcage_ray_triangle_intersect(local_P,
++                                              local_D,
++                                              ray->tmin,
++                                              closest_t,
++                                              tri_a,
++                                              tri_b,
++                                              tri_c,
++                                              &candidate_u,
++                                              &candidate_v,
++                                              &candidate_t))
+     {
+       continue;
+     }
+@@ -859,19 +1164,24 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
+                                                  ccl_private Intersection *isect,
+                                                  const uint visibility)
+ {
+-#  ifdef __POINTCLOUD__
+-#    ifndef __METALRT_MOTION__
++#ifdef __POINTCLOUD__
++#  ifndef __METALRT_MOTION__
+   if (kernel_data.bvh.have_tetcage) {
+     return scene_intersect_tetcage_query_volume(kg, ray, isect, visibility);
+   }
+-#    endif
+ #  endif
++#endif
+ 
+   metal::raytracing::ray r(ray->P, ray->D, ray->tmin, ray->tmax);
+   metalrt_intersector_type metalrt_intersect;
+   metalrt_intersect.force_opacity(metal::raytracing::forced_opacity::non_opaque);
+-  metalrt_intersect.set_geometry_cull_mode(metal::raytracing::geometry_cull_mode::bounding_box |
+-                                           metal::raytracing::geometry_cull_mode::curve);
++  if (kernel_data.bvh.have_tetcage) {
++    metalrt_intersect.set_geometry_cull_mode(metal::raytracing::geometry_cull_mode::curve);
++  }
++  else {
++    metalrt_intersect.set_geometry_cull_mode(metal::raytracing::geometry_cull_mode::bounding_box |
++                                             metal::raytracing::geometry_cull_mode::curve);
++  }
+   metalrt_intersect.assume_geometry_type(
+       metal::raytracing::geometry_type::triangle |
+       (kernel_data.bvh.have_curves ? metal::raytracing::geometry_type::curve :
+@@ -882,6 +1192,11 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
+   MetalRTIntersectionShadowPayload payload;
+   payload.self = ray->self;
+   payload.visibility = visibility;
++  payload.tet_object = -1;
++  payload.tet_prim = -1;
++  payload.tet_u = 0.0f;
++  payload.tet_v = 0.0f;
++  payload.tet_t = FLT_MAX;
+ 
+   uint ray_mask = visibility & 0xFF;
+   if (0 == ray_mask && (visibility & ~0xFF) != 0) {
+@@ -911,6 +1226,17 @@ ccl_device_intersect bool scene_intersect_volume(KernelGlobals kg,
+     isect->t = intersection.distance;
+     return true;
+   }
++  if (intersection.type == intersection_type::bounding_box &&
++      payload.tet_object == intersection.instance_id)
++  {
++    isect->prim = payload.tet_prim;
++    isect->type = kernel_data_fetch(objects, payload.tet_object).primitive_type;
++    isect->u = payload.tet_u;
++    isect->v = payload.tet_v;
++    isect->object = payload.tet_object;
++    isect->t = payload.tet_t;
++    return true;
++  }
+   return false;
+ }
+ #endif
+diff --git a/intern/cycles/kernel/device/metal/kernel.metal b/intern/cycles/kernel/device/metal/kernel.metal
+index cbcd3d45827406a2b464ab7b1b6bfb290f3427be..cde1ad6492a06984a1847133e74f08ca37e73f56 100644
+--- a/intern/cycles/kernel/device/metal/kernel.metal
++++ b/intern/cycles/kernel/device/metal/kernel.metal
+@@ -17,6 +17,7 @@
+ /* The rest of the includes. */
+ #include "kernel/bvh/intersect_filter.h"
+ #include "kernel/geom/geom_intersect.h"
++#include "kernel/geom/motion_triangle.h"
+ 
+ /* MetalRT intersection handlers. */
+ 
+@@ -269,6 +270,17 @@ __intersection__tri_shadow_all(constant KernelParamsMetal &launch_params_metal [
+   return result;
+ }
+ 
++ccl_device_inline bool metalrt_tetcage_intersect(thread MetalKernelContext &context,
++                                                  thread Intersection &isect,
++                                                  const float3 ray_origin,
++                                                  const float3 ray_direction,
++                                                  const float ray_tmin,
++                                                  const float ray_tmax,
++                                                 const float ray_time,
++                                                 const uint object,
++                                                 const uint prim,
++                                                 const bool allow_static_object_motion);
++
+ [[intersection(
+     triangle, triangle_data, curve_data, METALRT_TAGS METALRT_LIMITS)]] PrimitiveIntersectionResult
+ __intersection__volume_tri(constant KernelParamsMetal &launch_params_metal [[buffer(1)]],
+@@ -297,6 +309,78 @@ __intersection__volume_tri(constant KernelParamsMetal &launch_params_metal [[buf
+   return result;
+ }
+ 
++#  ifdef __POINTCLOUD__
++[[intersection(bounding_box,
++               triangle_data,
++               curve_data,
++               METALRT_TAGS METALRT_LIMITS)]] BoundingBoxIntersectionResult
++__intersection__volume_tetcage(
++    constant KernelParamsMetal &launch_params_metal [[buffer(1)]],
++    ray_data MetalKernelContext::MetalRTIntersectionShadowPayload &payload [[payload]],
++    const uint object [[instance_id]],
++    const uint primitive_id [[primitive_id]],
++    const uint primitive_id_offset [[user_instance_id]],
++    const float3 ray_origin [[origin]],
++    const float3 ray_direction [[direction]],
++#    if defined(__METALRT_MOTION__)
++    const float time [[time]],
++#    endif
++    const float ray_tmin [[min_distance]],
++    const float ray_tmax [[max_distance]])
++{
++  BoundingBoxIntersectionResult result;
++  result.accept = false;
++  result.continue_search = true;
++  result.distance = ray_tmax;
++
++  if (!(kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) ||
++      !(kernel_data_fetch(object_flag, object) & SD_OBJECT_HAS_VOLUME))
++  {
++    return result;
++  }
++
++#    ifndef __METALRT_MOTION__
++  const float time = 0.0f;
++#    endif
++  const uint prim = primitive_id + primitive_id_offset;
++  Intersection isect;
++  isect.t = ray_tmax;
++  MetalKernelContext context(launch_params_metal);
++  if (!metalrt_tetcage_intersect(
++          context,
++          isect,
++          ray_origin,
++          ray_direction,
++          ray_tmin,
++          ray_tmax,
++          time,
++          object,
++          prim,
++          true))
++  {
++    return result;
++  }
++
++  KernelGlobals kg = nullptr;
++  if (context.bvh_volume_anyhit_triangle_filter(
++          kg, object, prim, payload.self, payload.visibility))
++  {
++    return result;
++  }
++
++  result.accept = true;
++  result.distance = isect.t;
++  if (isect.t < payload.tet_t) {
++    payload.tet_object = object;
++    payload.tet_prim = prim;
++    payload.tet_u = isect.u;
++    payload.tet_v = isect.v;
++    payload.tet_t = isect.t;
++  }
++  return result;
++}
++#  endif
++
+ template<typename TReturnType, uint intersection_type>
+ inline TReturnType metalrt_visibility_test(
+     constant KernelParamsMetal &launch_params_metal,
+@@ -565,26 +649,102 @@ __intersection__curve_shadow_all(constant KernelParamsMetal &launch_params_metal
+ }
+ 
+ #  ifdef __POINTCLOUD__
++ccl_device_inline float3 metalrt_tetcage_motion_vertex(
++    constant KernelParamsMetal &launch_params_metal,
++    const uint object,
++    const uint vertex_index,
++    int step)
++{
++  const int num_geom_steps = kernel_data_fetch(objects, object).num_geom_steps;
++  const int num_steps = (num_geom_steps > 0) ? num_geom_steps : 1;
++  const int center_step = (num_steps - 1) / 2;
++  int offset = kernel_data_fetch(objects, object).position_offset;
++  if (step != center_step) {
++    if (step < center_step) {
++      step++;
++    }
++    offset += step * kernel_data_fetch(objects, object).numverts;
++  }
++  return kernel_data_fetch(tri_verts, offset + vertex_index);
++}
++
++ccl_device_inline void metalrt_tetcage_motion_vertices(
++    constant KernelParamsMetal &launch_params_metal,
++    const uint object,
++    const uint prim,
++    const float time,
++    const bool allow_static_object_motion,
++    float3 verts[3])
++{
++  const uint object_flags = kernel_data_fetch(object_flag, object);
++  const uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
++  if (allow_static_object_motion && (object_flags & SD_OBJECT_MOTION) &&
++      !(object_flags & SD_OBJECT_HAS_VERTEX_MOTION)) {
++    const int position_offset = kernel_data_fetch(objects, object).position_offset;
++    verts[0] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.x);
++    verts[1] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.y);
++    verts[2] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.z);
++    return;
++  }
++
++  const int num_geom_steps = kernel_data_fetch(objects, object).num_geom_steps;
++  const int num_steps = (num_geom_steps > 0) ? num_geom_steps : 1;
++  if (num_steps <= 1) {
++    verts[0] = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.x, 0);
++    verts[1] = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.y, 0);
++    verts[2] = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.z, 0);
++    return;
++  }
++
++  const int max_step = num_steps - 1;
++  const float clamped_time = clamp(time, 0.0f, 1.0f);
++  const int step = min(int(clamped_time * max_step), max_step - 1);
++  const float t = clamped_time * max_step - step;
++  const float3 a = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.x, step);
++  const float3 b = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.y, step);
++  const float3 c = metalrt_tetcage_motion_vertex(launch_params_metal, object, tri_vindex.z, step);
++  const float3 next_a = metalrt_tetcage_motion_vertex(
++      launch_params_metal, object, tri_vindex.x, step + 1);
++  const float3 next_b = metalrt_tetcage_motion_vertex(
++      launch_params_metal, object, tri_vindex.y, step + 1);
++  const float3 next_c = metalrt_tetcage_motion_vertex(
++      launch_params_metal, object, tri_vindex.z, step + 1);
++  verts[0] = (1.0f - t) * a + t * next_a;
++  verts[1] = (1.0f - t) * b + t * next_b;
++  verts[2] = (1.0f - t) * c + t * next_c;
++}
++
+ ccl_device_inline bool metalrt_tetcage_intersect(thread MetalKernelContext &context,
+                                                  thread Intersection &isect,
+                                                  const float3 ray_origin,
+                                                  const float3 ray_direction,
+                                                  const float ray_tmin,
+                                                  const float ray_tmax,
++                                                 const float ray_time,
+                                                  const uint object,
+-                                                 const uint prim)
++                                                 const uint prim,
++                                                 const bool allow_static_object_motion)
+ {
+   constant KernelParamsMetal &launch_params_metal = context.launch_params_metal;
+   const int position_offset = kernel_data_fetch(objects, object).position_offset;
+   const uint3 tri_vindex = kernel_data_fetch(tri_vindex, prim);
+-  const float3 tri_a = kernel_data_fetch(tri_verts, position_offset + tri_vindex.x);
+-  const float3 tri_b = kernel_data_fetch(tri_verts, position_offset + tri_vindex.y);
+-  const float3 tri_c = kernel_data_fetch(tri_verts, position_offset + tri_vindex.z);
++  float3 tri_verts_local[3];
++#    if defined(__METALRT_MOTION__)
++  metalrt_tetcage_motion_vertices(
++      launch_params_metal, object, prim, ray_time, allow_static_object_motion, tri_verts_local);
++#    else
++  tri_verts_local[0] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.x);
++  tri_verts_local[1] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.y);
++  tri_verts_local[2] = kernel_data_fetch(tri_verts, position_offset + tri_vindex.z);
++#    endif
++  const float3 tri_a = tri_verts_local[0];
++  const float3 tri_b = tri_verts_local[1];
++  const float3 tri_c = tri_verts_local[2];
+ 
+   float t;
+   float u;
+   float v;
+-  if (!context.ray_triangle_intersect(
++  if (!context.metal_tetcage_ray_triangle_intersect(
+           ray_origin, ray_direction, ray_tmin, ray_tmax, tri_a, tri_b, tri_c, &u, &v, &t))
+   {
+     return false;
+@@ -599,6 +759,104 @@ ccl_device_inline bool metalrt_tetcage_intersect(thread MetalKernelContext &cont
+   return true;
+ }
+ 
++#    ifdef __BVH_LOCAL__
++[[intersection(bounding_box,
++               triangle_data,
++               curve_data,
++               METALRT_TAGS METALRT_LIMITS)]] BoundingBoxIntersectionResult
++__intersection__local_tetcage(
++    constant KernelParamsMetal &launch_params_metal [[buffer(1)]],
++    ray_data MetalKernelContext::MetalRTIntersectionLocalPayload &payload [[payload]],
++    const uint primitive_id [[primitive_id]],
++    const float3 ray_origin [[origin]],
++    const float3 ray_direction [[direction]],
++    const float ray_tmin [[min_distance]],
++    const float ray_tmax [[max_distance]])
++{
++  BoundingBoxIntersectionResult result;
++  result.accept = false;
++  result.continue_search = true;
++  result.distance = ray_tmax;
++
++  const uint object = payload.tet_object;
++  const uint primitive_id_offset = kernel_data_fetch(object_prim_offset, object);
++  const uint prim = primitive_id + primitive_id_offset;
++  Intersection isect;
++  isect.t = ray_tmax;
++  MetalKernelContext context(launch_params_metal);
++  if (!metalrt_tetcage_intersect(
++          context, isect, ray_origin, ray_direction, ray_tmin, ray_tmax, 0.0f, object, prim, true))
++  {
++    return result;
++  }
++
++  result = metalrt_local_hit<BoundingBoxIntersectionResult, METALRT_HIT_BOUNDING_BOX>(
++      launch_params_metal, payload, primitive_id, float2(isect.u, isect.v), isect.t);
++  result.distance = isect.t;
++  return result;
++}
++
++[[intersection(bounding_box,
++               triangle_data,
++               curve_data,
++               METALRT_TAGS METALRT_LIMITS)]] BoundingBoxIntersectionResult
++__intersection__local_tetcage_mblur(
++    constant KernelParamsMetal &launch_params_metal [[buffer(1)]],
++    ray_data MetalKernelContext::MetalRTIntersectionLocalPayload &payload [[payload]],
++#    if defined(__METALRT_MOTION__)
++    const uint object [[instance_id]],
++#    endif
++    const uint primitive_id [[primitive_id]],
++    const uint primitive_id_offset [[user_instance_id]],
++    const float3 ray_origin [[origin]],
++    const float3 ray_direction [[direction]],
++#    if defined(__METALRT_MOTION__)
++    const float time [[time]],
++#    endif
++    const float ray_tmin [[min_distance]],
++    const float ray_tmax [[max_distance]])
++{
++  BoundingBoxIntersectionResult result;
++  result.accept = false;
++  result.continue_search = true;
++  result.distance = ray_tmax;
++
++#    if defined(__METALRT_MOTION__)
++  const uint hit_object = object;
++  const float hit_time = time;
++#    else
++  const uint hit_object = payload.tet_object;
++  const float hit_time = 0.0f;
++#    endif
++  if (hit_object != uint(payload.tet_object)) {
++    return result;
++  }
++
++  const uint prim = primitive_id + primitive_id_offset;
++  Intersection isect;
++  isect.t = ray_tmax;
++  MetalKernelContext context(launch_params_metal);
++  if (!metalrt_tetcage_intersect(context,
++                                 isect,
++                                 ray_origin,
++                                 ray_direction,
++                                 ray_tmin,
++                                 ray_tmax,
++                                 hit_time,
++                                 hit_object,
++                                 prim,
++                                 false))
++  {
++    return result;
++  }
++
++  result = metalrt_local_hit<BoundingBoxIntersectionResult, METALRT_HIT_BOUNDING_BOX>(
++      launch_params_metal, payload, primitive_id, float2(isect.u, isect.v), isect.t);
++  result.distance = isect.t;
++  return result;
++}
++#    endif
++
+ ccl_device_inline void metalrt_intersection_point_shadow_all(
+     constant KernelParamsMetal &launch_params_metal,
+     ray_data MetalKernelContext::BVHShadowAllPayload &payload,
+@@ -618,7 +876,8 @@ ccl_device_inline void metalrt_intersection_point_shadow_all(
+   MetalKernelContext context(launch_params_metal);
+   const bool hit =
+       (kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) ?
+-          metalrt_tetcage_intersect(context, isect, ray_P, ray_D, ray_tmin, isect.t, object, prim) :
++          metalrt_tetcage_intersect(
++              context, isect, ray_P, ray_D, ray_tmin, isect.t, time, object, prim, true) :
+           context.point_intersect(
+               nullptr, &isect, ray_P, ray_D, ray_tmin, isect.t, object, prim, time, type);
+   if (hit) {
+@@ -668,14 +927,32 @@ __intersection__point(constant KernelParamsMetal &launch_params_metal [[buffer(1
+   const bool hit =
+       (kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) ?
+           metalrt_tetcage_intersect(
+-              context, isect, ray_origin, ray_direction, ray_tmin, isect.t, object, prim) :
+-          context.point_intersect(
+-              nullptr, &isect, ray_origin, ray_direction, ray_tmin, isect.t, object, prim, time, type);
++              context, isect, ray_origin, ray_direction, ray_tmin, isect.t, time, object, prim, true) :
++          context.point_intersect(nullptr,
++                                  &isect,
++                                  ray_origin,
++                                  ray_direction,
++                                  ray_tmin,
++                                  isect.t,
++                                  object,
++                                  prim,
++                                  time,
++                                  type);
+   if (hit) {
+     result = metalrt_visibility_test<BoundingBoxIntersectionResult, METALRT_HIT_BOUNDING_BOX>(
+         launch_params_metal, payload, object, prim, isect.u);
+     if (result.accept) {
+       result.distance = isect.t;
++#    if defined(__METALRT_MOTION__)
++      if ((kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) && isect.t < payload.tet_t)
++      {
++        payload.tet_object = object;
++        payload.tet_prim = prim;
++        payload.tet_u = isect.u;
++        payload.tet_v = isect.v;
++        payload.tet_t = isect.t;
++      }
++#    endif
+     }
+   }
+   return result;
+@@ -722,9 +999,17 @@ __intersection__point_shadow(constant KernelParamsMetal &launch_params_metal [[b
+   const bool hit =
+       (kernel_data_fetch(object_flag, object) & SD_OBJECT_TETCAGE) ?
+           metalrt_tetcage_intersect(
+-              context, isect, ray_origin, ray_direction, ray_tmin, isect.t, object, prim) :
+-          context.point_intersect(
+-              nullptr, &isect, ray_origin, ray_direction, ray_tmin, isect.t, object, prim, time, type);
++              context, isect, ray_origin, ray_direction, ray_tmin, isect.t, time, object, prim, true) :
++          context.point_intersect(nullptr,
++                                  &isect,
++                                  ray_origin,
++                                  ray_direction,
++                                  ray_tmin,
++                                  isect.t,
++                                  object,
++                                  prim,
++                                  time,
++                                  type);
+   if (hit) {
+     result =
+         metalrt_visibility_test_shadow<BoundingBoxIntersectionResult, METALRT_HIT_BOUNDING_BOX>(

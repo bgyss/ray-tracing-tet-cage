@@ -1,0 +1,970 @@
+{
+  "schema_version": 1,
+  "kind": "cycles_metal_entry",
+  "status": "passed",
+  "verification_artifact": "results/integrations/2026-08-23-cycles-verification-candidate.json",
+  "area_precision_artifact": "results/integrations/2026-08-23-cycles-area-volume-precision.json",
+  "sources": {
+    "cycles": {
+      "root": "$CYCLES_SOURCE_ROOT",
+      "revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "working_tree": "clean"
+    },
+    "blender": {
+      "root": "$BLENDER_SOURCE_ROOT",
+      "revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "working_tree": "clean"
+    },
+    "blender_embedded_candidate": {
+      "root": "$BLENDER_NATIVE_WORKTREE",
+      "base_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "revision": "d92d347fdc754094e814e0f10fc314e82dc1d031",
+      "working_tree": "clean; lib/macos_arm64 pinned at a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+      "targets_compiled": ["cycles_scene", "cycles_device", "cycles_kernel_cpu", "bf_intern_cycles", "cycles_osl_shaders", "bf_intern_draco_bridge", "bf_intern_meshopt_bridge", "blender"],
+      "full_blender_target": "passed",
+      "install": "passed",
+      "direct_probe": "passed; import/save/reload/pose/invalid-pose contract on candidate d92d347fdc75",
+      "ui_smoke": "passed; rebuilt candidate d92d347fdc75; window_context=true; tetcage_ui_registered=true",
+      "gui_smoke": "passed; real window context and timer-exit probe",
+      "candidate_behavior": "CYCLES_TETCAGE_NATIVE=1 activates the Mesh adapter, static or motion Metal AABB BLAS, triangle/AABB intersection query, static tet volume query dispatch, object-transform motion with static tet vertices plus TLAS transforms, time-interpolated shape-key deformation, motion-aware native local tet scans, and pure-transparent motion; mixed transparent-closure candidates retain ordinary Cycles fallback"
+    }
+  },
+  "toolchain": {
+    "xcode": "26.6 (17F113)",
+    "macos_sdk": "26.5",
+    "metal_compiler": "Apple metal version 32023.883 (metalfe-32023.883)",
+    "architecture": "arm64"
+  },
+  "build": {
+    "directory": "$CYCLES_BUILD_DIR",
+    "configuration": "Debug",
+    "with_cycles_device_metal": true,
+    "with_cycles_device_cuda": false,
+    "with_cycles_device_optix": false,
+    "command": "cmake --build $CYCLES_BUILD_DIR --target cycles --parallel 8",
+    "result": "passed"
+  },
+  "cycles_native_scene_contract": {
+    "worktree": "$CYCLES_NATIVE_WORKTREE",
+    "base_revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+    "implementation_revision": "0b4e499570f3acff4f018a0bcf089456ff686bb4",
+    "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
+    "command": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
+    "result": "passed",
+    "build_reliability": {
+      "cancellation_guard": true,
+      "command_buffer_error_propagation": true,
+      "verified_cycles_build": "cmake --build $CYCLES_NATIVE_BUILD_DIR --target cycles --parallel 8",
+      "verified_blender_build": "cmake --build $BLENDER_NATIVE_BUILD_DIR --target blender --parallel 8",
+      "result": "passed"
+    },
+    "local_kernel_contract": {
+      "command": "python3 tests/cycles_native_kernel_contract.py",
+      "result": "passed",
+      "narrow_phase": "metal_tetcage_triangle_intersect_local uses projected-axis acceptance and Cycles local hit recording",
+      "self_filter": "Metal-safe ray->self.prim == prim policy",
+      "runtime_probe": {
+        "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+        "probe": "local",
+        "rgb_pixel_differences": 103,
+        "max_abs_rgb_difference": 3.349564552307129,
+        "sum_abs_rgb_difference": 34.16133675526362,
+        "result": "measured_area_sampling_difference",
+        "claim_boundary": "The local path now shares the projected tet predicate, but SSS multi-hit ordering and area-light parity remain open."
+      }
+    },
+    "contract": [
+      "immutable provenance-bearing micro-triangles",
+      "complete per-tetrahedron affine frame snapshots",
+      "explicit NONE/REQUESTED/ACTIVE fallback state"
+    ],
+    "provenance_buffer": "packed per-micro-triangle source primitive/triangle/micro IDs with ShaderData source-primitive mapping",
+    "ordinary_metalrt_smoke": {
+      "scene": "scene_cube_surface.xml",
+      "resolution": "16x16",
+      "samples": 1,
+      "metalrt_off_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311",
+      "metalrt_on_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311",
+      "images_byte_identical": true
+    },
+    "static_tet_cage_query": {
+      "scene": "$CYCLES_NATIVE_WORKTREE/examples/scene_tetcage_native.xml",
+      "reference_scene": "$CYCLES_NATIVE_WORKTREE/examples/scene_tetcage_native_reference.xml",
+      "device": "METAL Apple M1 Max",
+      "query_tags": "intersection_query<instancing>",
+      "aabb_blas": true,
+      "shadow_query": "compiled_static_self_filtered; emission image regression passed; dedicated shadow image pending",
+      "local_query": "compiled_static_projected_axis_triangle_scan; runtime SSS/area parity pending",
+      "shader": "emission",
+      "resolution": "8x8",
+      "samples": 1,
+      "native_metalrt_sha256": "964c160c72c3ef1e0fb55d3fed29b737ee9f51c6d4d16570aa3db02012eda194",
+      "ordinary_triangle_reference_sha256": "3398c6a421a04194248d543f9a56b6acaf35735a7aaa0ce06082e46dd9191f3a",
+      "file_bytes_identical": false,
+      "pixel_differences": 0,
+      "result": "passed",
+      "claim_boundary": "Static camera-ray intersection-query proof with object visibility filtering, mixed triangle/AABB candidate handling, a compiled self-filtered opaque-shadow seam, and a projected-axis local hit recorder; standalone deformation-motion, transparent/shadow-all, exact volume/SSS semantics, and full Blender-native semantics remain open."
+    },
+    "upstream_gtest": "not run: standalone dependency bundle does not provision GTest/gflags/glog",
+    "claim_boundary": "This is an experimental Mesh adapter and Metal AABB/query path, not production tet-cage Geometry semantics. It does not yet cover broader motion topology, record-all/local ordering, exact volume-stack semantics, complete shading attributes, or Blender-native Metal dispatch."
+  },
+  "device": {
+    "command": "$CYCLES_BINARY --list-devices",
+    "result": "passed",
+    "devices": [
+      "CPU Apple M1 Max",
+      "METAL Apple M1 Max (GPU - 32 cores)"
+    ]
+  },
+  "ordinary_scene_metalrt": {
+    "scene": "scene_cube_surface.xml",
+    "resolution": "16x16",
+    "samples": 1,
+    "kernel_source": "$CYCLES_SOURCE_ROOT/src",
+    "off": {
+      "environment": "CYCLES_METALRT=0",
+      "result": "passed",
+      "acceleration_layout": "BVH2",
+      "image_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311"
+    },
+    "on": {
+      "environment": "CYCLES_METALRT=1",
+      "result": "passed",
+      "acceleration_layout": "mesh BLAS plus TLAS",
+      "image_sha256": "e33e48d8e70f9f0927ea6273f75d3539bae31bc21bc4148f52e2a67160041311"
+    },
+    "images_byte_identical": true
+  },
+  "ordinary_nonopaque_scene_metalrt": {
+    "scene": "scene_caustics.xml",
+    "resolution": "16x16",
+    "samples": 1,
+    "off": {
+      "environment": "CYCLES_METALRT=0",
+      "result": "passed",
+      "acceleration_layout": "BVH2",
+      "image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a"
+    },
+    "on": {
+      "environment": "CYCLES_METALRT=1",
+      "result": "passed",
+      "acceleration_layout": "mesh BLAS plus TLAS",
+      "image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a"
+    },
+    "images_byte_identical": true,
+    "claim_boundary": "This is ordinary Cycles MetalRT coverage for glass/caustics and non-opaque traversal. It is not tet-cage semantic coverage."
+  },
+  "tet_cage_procedural_path": {
+    "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 1 --rays 64 --motion 0.0 --compact",
+    "result": "passed",
+    "device": "Apple M1 Max",
+    "traversal_mode": "procedural_aabb_expansion3_projected_edges",
+    "rays": 64,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "position_error_max": 2.8760993586729455e-11,
+    "normal_error_max": 0.0,
+    "attribute_error_max": 5.0716770116920884e-08,
+    "runtime_shader_compiled": true,
+    "gpu_attribute_reconstruction": true,
+    "claim_boundary": "This is direct Metal proof for the project's standalone procedural AABB path, now consuming the Cycles tet-cage frame contract. It is not yet proof that Blender/Cycles can ingest or render a .tetcage asset."
+  },
+  "tet_cage_motion_instances": {
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 2 --rays 128 --motion 0.05 --frames 3 --rebuild-period 2 --compact",
+    "result": "passed",
+    "rays": 384,
+    "frames_completed": 3,
+    "tlas_refit_frames": 1,
+    "tlas_rebuild_frames": 1,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "position_error_max": 1.686830675140527e-10,
+    "attribute_error_max": 5.128715840907461e-08,
+    "claim_boundary": "This proves the standalone procedural path's motion/refit/rebuild behavior, not Cycles renderer motion-blur semantics."
+  },
+  "tet_cage_gpu_instance_generation": {
+    "command": "tetcage_metal_fast_path one-tet.tetcage --copies 2 --rays 128 --motion 0.05 --frames 2 --compact --gpu-instances",
+    "result": "passed",
+    "rays": 256,
+    "frames_completed": 2,
+    "gpu_instance_generation": true,
+    "hardware_mismatches": 0,
+    "wrong_ownership": 0,
+    "claim_boundary": "This proves GPU-generated instance descriptors for the standalone procedural path, not Cycles scene synchronization."
+  },
+  "cycles_conventional_fallback": {
+    "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+    "xml_export_command": "tetcage_cycles_xml one-tet.tetcage cycles-fallback.xml",
+    "xml_export_result": "passed",
+    "render_command": "$CYCLES_BINARY --background --device METAL --samples 1 --width 16 --height 16 cycles-fallback.xml",
+    "metalrt_on_result": "passed",
+    "metalrt_off_result": "passed",
+    "metalrt_on_image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a",
+    "metalrt_off_image_sha256": "2242a1ae5f345da26d3bb7edbf011282310ce2bbfe9082703c22b534c80e4c0a",
+    "images_byte_identical": true,
+    "claim_boundary": "This proves a compiled asset can enter the standalone Cycles renderer through the ordinary triangle fallback. It does not prove procedural tet-cage geometry inside Cycles."
+  },
+  "blender_fallback_import": {
+    "contract": "tests/blender_import_contract.py",
+    "binary": "$BLENDER_BINARY",
+    "result": "isolated_probe_passed; isolated_harness_passed; release_harness_blocked",
+    "render_engine": "CYCLES",
+    "surface_triangles": 1,
+    "cage_tetrahedra": 1,
+    "fallback_mode": "conventional_mesh",
+    "pose_update_handler": true,
+    "pose_updated": true,
+    "invalid_pose_rejected": true,
+    "invalid_pose_reason": "invalid_pose",
+    "save_reload": true,
+    "procedural_metalrt": false,
+    "native_candidate": true,
+    "native_contract": "cycles_tetcage_v1",
+    "uv_layer": true,
+    "normal_attribute": true,
+    "source_material_ids": [7],
+    "direct_probe": {
+      "command": "$BLENDER_BINARY --background --factory-startup --python-exit-code 7 --python scripts/blender_import_contract_probe.py",
+      "result": "passed",
+      "metadata": "native candidate and cycles_tetcage_v1 recorded on mesh/object/scene"
+    },
+    "python_harness": {
+      "result": "blocked",
+      "return_code": -11,
+      "reason": "release Blender launched as a child of the Python harness crashes during Metal backend capability detection; direct shell probe succeeds"
+    },
+    "isolated_harness": {
+      "command": "BLENDER_BINARY=$BLENDER_NATIVE_BINARY python3 tests/blender_import_contract.py",
+      "result": "passed"
+    },
+    "native_static_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "native_sha256": "b4c2f26f5f9b497c252a9d8f8aa8c01f962e26f4f5512e9e5f290b41a2112b18",
+      "fallback_sha256": "28a689488df0b9d1cd0eeeeccfdeeb918b25e9cb974264a5503eb19d96ab733f",
+      "pixel_differences": 0,
+      "selection_log": ["Enabled static native tet-cage adapter cycles_tetcage_v1", "Use Pointclouds True", "Building tet-cage AABB BLAS"],
+      "result": "passed",
+      "claim_boundary": "Static tet-only native Blender Metal intersection proof; mixed ordinary geometry, object-transform motion, transparent/shadow traversal, zero-hit local rays, volume precision, and full Principled shading semantics are tracked separately below."
+    },
+    "native_mixed_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... mixed",
+      "device": "METAL Apple M1 Max",
+      "scene": "default cube plus one tet-cage candidate",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "native_sha256": "a2bdaa68fc7df45160511c8833f4d4a256309ad755269aa6e45672dbd06eb0bc",
+      "fallback_sha256": "623db5846f039015f52ef83a14d32dc5bf9ba8616f3dbc43d3ba22443ad309b2",
+      "pixel_differences": 0,
+      "selection_log": [
+        "Enabled static native tet-cage adapter cycles_tetcage_v1",
+        "Building mesh BLAS for ordinary cube",
+        "Building tet-cage AABB BLAS"
+      ],
+      "result": "passed",
+      "claim_boundary": "Static mixed ordinary-triangle plus tet-AABB traversal proof under a fixed emission shader; Principled lighting/material and broader multi-object semantic coverage remain open."
+    },
+    "native_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with object-transform keyframes and motion blur",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "motion_delta": 0.15,
+      "native_sha256": "4360308fa4dfbc854c844ab6aa0eb5d3a47b01f49657309256ecfe81a4e488fa",
+      "fallback_sha256": "aff57e1ab1e6a638f78a939ab645cabd4e671fbf55b520c265542c2bc9e93db1",
+      "pixel_differences": 0,
+      "selection_log": [
+        "Enabled static native tet-cage adapter cycles_tetcage_v1",
+        "Use Pointclouds True",
+        "Use Object Motion True",
+        "motion payload carries accepted tet object/primitive/barycentrics",
+        "object-transform motion uses static tet vertices and TLAS transforms"
+      ],
+      "result": "passed",
+      "claim_boundary": "Measured object-transform motion callback handoff for a fixed-emission tet-only scene with the static-vertex/TLAS motion fix; broader deformation topology, transparent/shadow-all, local/volume runtime, and full Principled semantics remain open."
+    },
+    "native_multi_object_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with object-transform keyframes and motion blur",
+      "resolution": "16x16",
+      "samples": 1,
+      "motion_delta": 0.15,
+      "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+      "native_sha256": "8350edc67b6e5839d079005b933482a8b08f2108ad4cc957a45667751bc8e68c",
+      "fallback_sha256": "be26d8ad83578f4e645c996d17c914fe95cab80c6fd49a393a7a675c11e2231d",
+      "pixel_differences": 0,
+      "result": "passed_native_multi_object_motion",
+      "claim_boundary": "Two-object rigid object-transform motion is pixel-exact under the fixed emission probe; deformation topology, closure semantics, and performance remain open."
+    },
+    "deformation_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated Blender shape-key deformation",
+      "resolution": "16x16",
+      "samples": 1,
+      "native_gate_requested": true,
+      "native_adapter_selected": true,
+      "motion_aabb_blas": true,
+      "motion_keyframes": 3,
+      "native_sha256": "dbaae74fc7ac86b701ef510f3c51111eff919c7153592ba0a6399d9fe91de653",
+      "fallback_sha256": "eb20d0fcc60e45bf12151427af7bae86e7858b41714403ca89555dfb049c67b3",
+      "pixel_differences": 0,
+      "result": "passed_native_deformation",
+      "claim_boundary": "Measured native Metal motion AABB and time-interpolated tet narrow phase for one animated Blender shape-key fixture; broader deformation topology, local/SSS, and volume semantics remain open."
+    },
+    "native_multi_object_deformation_motion": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with animated Blender shape-key deformation",
+      "resolution": "16x16",
+      "samples": 1,
+      "cage_tetrahedra": 2,
+      "native_adapter_selected": true,
+      "motion_aabb_blas": true,
+      "motion_keyframes": 3,
+      "native_sha256": "2b6da2d931eb0ba5e47105417655db1b8abf5387e7e0caf7b52c326b061c596f",
+      "fallback_sha256": "61e94f1842e164bfd203d1c9cb0b48d5e0f424ec7a10b05187fc32d2a6d25e69",
+      "pixel_differences": 0,
+      "result": "passed_native_multi_object_deformation",
+      "claim_boundary": "Measured native motion AABB/time-interpolated deformation across two tet objects; broader topology and production clips remain open."
+    },
+    "native_multi_object_deformation_local_motion": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_local_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+      "scene": "two tet-cage candidates with animated shape-key deformation and Principled subsurface",
+      "resolution": "16x16",
+      "samples": 1,
+      "cage_tetrahedra": 2,
+      "motion_local_dispatch": "motion-aware GPU local narrow phase with projected-axis tet scans",
+      "native_sha256": "71e8ac0c126e55087f9b0480cef903ca9cf5bff6554f6925e0a6b85e3d01e04a",
+      "fallback_sha256": "e2790686acee631e043ca27d50cde0ab97f22ced7e76478d986dc2659d02b924",
+      "pixel_differences": 106,
+      "max_abs_rgb_difference": 0.00017762184143066406,
+      "sum_abs_rgb_difference": 0.0010838370071724057,
+      "result": "numeric_close",
+      "claim_boundary": "Two-object animated SSS local scans match ordinary Cycles to float noise; broader topology and closure semantics remain open."
+    },
+    "native_mixed_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... mixed_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "ordinary default cube plus moving tet-cage candidate",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "fixed emission probe",
+      "motion_delta": 0.15,
+      "native_sha256": "329e9b68701a319964d1ab9f23ef0c388dfc77c0b3790199cdba6eeb6b42b184",
+      "fallback_sha256": "9a05f195cd03f03bbab69dd0ecee2ab24af4ceac7facd473532a654bea39bd12",
+      "pixel_differences": 0,
+      "result": "passed",
+      "claim_boundary": "Measured mixed ordinary-triangle plus object-transform-motion tet traversal under fixed emission; shape-key deformation is covered by the native deformation probe, while broader material/visibility semantics remain open."
+    },
+    "native_transparent_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... transparent",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with mixed Transparent BSDF/emission material",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "transparent plus fixed emission probe",
+      "native_sha256": "54eb5dbc538b2e776a4ae11612e0fbf4e1d289e20523f2d321bea86f9d89fde4",
+      "fallback_sha256": "b0c1ef9d0bc27f97c39ea554424d97d805b52caf54ffdfe596504c06ecf2e02f",
+      "pixel_differences": 0,
+      "selection_log": [
+        "Enabled static native tet-cage adapter cycles_tetcage_v1",
+        "Use Transparent True",
+        "Use Pointclouds True"
+      ],
+      "result": "passed",
+      "claim_boundary": "Measured transparent camera/shadow traversal for the fixed probe; arbitrary Principled transparency and material/attribute semantics remain open."
+    },
+    "native_transparent_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated object transform and Transparent BSDF/emission material",
+      "resolution": "16x16",
+      "samples": 1,
+      "shadow_all_motion_callback": true,
+      "native_adapter_selected": false,
+    "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "production_gate_contract": {
+      "script": "tests/blender_mixed_transparent_motion_contract.py",
+      "result": "passed",
+      "policy": "mixed transparent and non-transparent closures with motion blur remain on ordinary Cycles fallback by default"
+    },
+    "latest_default_differential": {
+      "script": "scripts/blender_native_differential.py",
+      "light": "point",
+      "samples": 1,
+      "native_sha256": "b0bb3e4489e5829fdbf4223f7a24a077ae75cb28eda8ea5eeedda43ac659f16e",
+      "fallback_sha256": "afe7679bfe31dbf4051a34f6f3d7ef9e3f3995e7467db5074102ab4cb5fb668a",
+      "pixel_differences": 0,
+      "result": "exact"
+    },
+      "native_sha256": "9d569e050e3a6fcc332c7bbd4f3d61e97777a004be9ca02c6f86f849b0f4306f",
+      "fallback_sha256": "4268e5196833928d5b9f183a48fd08ef2dd6936313c64c9f0185a12710dd1619",
+      "pixel_differences": 0,
+      "max_abs_difference": 0.0,
+      "sum_abs_difference": 0.0,
+      "selection_log": ["transparent_surface=1", "transparent_closure=1", "nontransparent_surface=1", "scene_motion=2", "ordinary Cycles mesh fallback"],
+      "result": "passed_fallback_boundary",
+      "raw_native_experiment_emission_mix": {
+        "transparent_mix": 1.0,
+        "force_native_diagnostic": true,
+        "diagnostic_source_revision": "430b6987380",
+        "temporary_gate_bypass": true,
+        "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+        "lighting_controls": ["point", "area"],
+        "point_native_sha256": "64f67abce580c5ffb63acfccbfa29ff25e59239f979cab5bb78375a9c5c63083",
+        "point_fallback_sha256": "7a55d91415be3943ab8d836988b2896f5cc9e5afeaed5323c9625bcf1e6b2027",
+        "point_pixel_differences": 0,
+        "area_native_sha256": "a828d13546646d5a25b03bbec7d1b7fac93c8bbeb765941527001e52fa2a8f77",
+        "area_fallback_sha256": "abb40f9613eec9a60c2d9697fae6b775586f894705577a2a7ba67cb473f960a2",
+        "area_pixel_differences": 0,
+        "result": "passed_raw_native_motion_vertex_fix",
+        "claim_boundary": "Forced-native diagnostic only; the production mixed-closure adapter remains gated pending broader closure and sample-count qualification."
+      },
+      "raw_native_experiment_transparent_mix": {
+        "transparent_mix": 0.0,
+        "native_sha256": "af6cb8f6efb2b0771947a279b307f9285f9165c446bb93bbada0d7fdba5854b1",
+        "fallback_sha256": "ceddcdef3dc33990941fd77409f822cf720485670f85c8e287af302cc14c033e",
+        "pixel_differences": 0,
+        "result": "passed",
+        "diagnostic": "Fully transparent material matches; the residual is tied to emission/transparent closure interaction in the motion path."
+      },
+      "claim_boundary": "Mixed transparent-closure motion refuses the unqualified native adapter and matches ordinary Cycles through explicit fallback; the raw native experiment remains recorded for future closure work."
+    },
+    "native_transparent_pure_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_pure_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated object transform and pure Transparent BSDF material",
+      "resolution": "16x16",
+      "native_adapter_selected": true,
+      "native_sha256": "1c420b2eaac7169f39f8b16dc6d4d623de0bf48e359915950b4fe17e7b9ad565",
+      "fallback_sha256": "c739f8dddaa43fab2cdc63354b74e51d1c8c6e358600a738f98d8b179ecb89b7",
+      "pixel_differences": 0,
+      "max_abs_difference": 0.0,
+      "sum_abs_difference": 0.0,
+      "selection_log": ["transparent_surface=1", "surface_emission=0", "scene_motion=2", "native Mesh adapter"],
+      "result": "passed",
+      "claim_boundary": "Pure-transparent object motion uses the native MetalRT path and matches ordinary Cycles for the declared fixture; mixed closure graphs remain gated."
+    },
+    "native_transparent_diffuse_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... transparent_diffuse_motion",
+      "device": "METAL Apple M1 Max",
+      "scene": "one tet-cage candidate with animated object transform and mixed Transparent BSDF/Diffuse BSDF material",
+      "resolution": "16x16",
+      "native_adapter_selected": false,
+    "fallback_reason": "mixed transparent-closure motion is not yet native",
+    "production_gate_contract": {
+      "script": "tests/blender_mixed_transparent_motion_contract.py",
+      "result": "passed",
+      "policy": "mixed transparent and non-transparent closures with motion blur remain on ordinary Cycles fallback by default"
+    },
+    "latest_default_differential": {
+      "script": "scripts/blender_native_differential.py",
+      "light": "point",
+      "samples": 1,
+      "native_sha256": "32051cfef9af88ea0ac8bf005cd8bb2be72285d8c22cf2909e2f59c4107b7aeb",
+      "fallback_sha256": "379f090da52f2e5e38f9fa7daa9d387ddf28f78d8f4e20d7eb966d19e2891e4d",
+      "pixel_differences": 0,
+      "result": "exact"
+    },
+      "native_sha256": "6eba20d346439ee75b73f73e7daf4207c09a18f0fe0ca5be76588b4d8fa18fbe",
+      "fallback_sha256": "0396e6db7035a16d5694f4b1b0b7334bfcdf0123963dca4292923c14681afdae",
+      "pixel_differences": 0,
+      "max_abs_difference": 0.0,
+      "sum_abs_difference": 0.0,
+      "selection_log": ["transparent_surface=1", "transparent_closure=1", "nontransparent_surface=1", "ordinary Cycles mesh fallback"],
+      "result": "passed_fallback_boundary",
+      "raw_native_experiment": {
+        "force_native_diagnostic": true,
+        "diagnostic_source_revision": "430b6987380",
+        "temporary_gate_bypass": true,
+        "lighting_controls": ["point", "area"],
+        "point_native_sha256": "66441e187133925d78421f182aecd9ebd844bf964a8e4f2a875394510e1400dc",
+        "point_fallback_sha256": "6fd230badda5ae18a65d08fc1ac2c7acf535346ab1777e5dc37cc83435e28cfc",
+        "point_pixel_differences": 3,
+        "point_max_abs_difference": 8.940696716308594e-08,
+        "point_sum_abs_difference": 1.7508864402770996e-07,
+        "area_native_sha256": "cc63c808e5b86bc5682cc2aa58cdf9779a967c2e591f28506d7b9d116055aaa8",
+        "area_fallback_sha256": "c46caf6ae9ec0d11f9f5dee7cbd5052a72768df9cb3caadbf4a80b2c5c09408b",
+        "area_pixel_differences": 4,
+        "area_max_abs_difference": 7.152557373046875e-07,
+        "area_sum_abs_difference": 2.9206275939941406e-06,
+        "result": "numeric_close_raw_native_motion_vertex_fix",
+        "claim_boundary": "Forced-native diagnostic only; the production mixed-closure adapter remains gated pending broader closure and sample-count qualification."
+      },
+      "claim_boundary": "Mixed Transparent+Diffuse motion matches ordinary Cycles through explicit fallback; the native mixed-closure path remains open."
+    },
+    "native_local_ao_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... ao",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Ambient Occlusion local-ray material",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "Ambient Occlusion to emission",
+      "native_sha256": "c39a2de0870870516b3b7576bb157c25a58b3ed4d083f71c2208f1bd89aa26d0",
+      "fallback_sha256": "ea523cc7f6fb6ee755f523f98601238e56b171e08cf46130ecd7762a54b310a3",
+      "pixel_differences": 0,
+      "local_query": "runtime static projected-axis AABB ift_local callback; max_hits=0",
+      "result": "passed",
+      "claim_boundary": "Measured the zero-hit local-ray path; SSS reservoir/multi-hit ordering and bevel local semantics remain open."
+    },
+    "native_local_sss_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... local",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Principled subsurface material",
+      "resolution": "16x16",
+      "samples": 1,
+      "local_intersection_table": true,
+      "area": {
+        "native_sha256": "304f0cf07f67c1706ad7ce5e137433909fde6b839d959a3013d2452b29cb9753",
+        "fallback_sha256": "60075b1be703e2083775177e62d684c055a2c60f472a1f3aee80f4df79eb52d9",
+        "pixel_differences": 104,
+        "max_abs_rgb_difference": 3.3495583534240723,
+        "sum_abs_rgb_difference": 34.161255772341974,
+        "result": "open_area_sampling_precision"
+      },
+      "point": {
+        "native_sha256": "991b8469e5426a3e664753e3901765bdbf426c842976efed58fa0d55521a047f",
+        "fallback_sha256": "dac8ee2fd9d85ea816f24a5342dcb1ab3d53a796ae84e6ae93322299e30a4af0",
+        "pixel_differences": 94,
+        "max_abs_rgb_difference": 1.9431114196777344e-05,
+        "sum_abs_rgb_difference": 0.0002824000839609653,
+        "result": "numeric_close"
+      },
+      "claim_boundary": "Static tet SSS multi-hit recording now uses the native AABB local table; point-light error is numeric-close and area-light sampling remains open."
+    },
+    "native_deformation_local_motion": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... deformation_local_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "animated shape-key deformation with Principled subsurface material",
+      "resolution": "16x16",
+      "samples": 1,
+      "motion_local_intersection_table": true,
+      "motion_local_normal_source": "motion_triangle_vertices at ray->time for local-hit Ng",
+      "motion_local_dispatch": "motion-aware GPU local narrow phase with projected-axis tet scans and Cycles hit-record policy",
+      "native_adapter_selected": true,
+      "selection_log": ["Enabled deformation-capable native tet-cage adapter cycles_tetcage_v1", "motion-aware local tet scan"],
+      "differential_harness": {
+        "script": "scripts/blender_native_differential.py",
+        "native_elapsed_ms": 2995.838125003502,
+        "fallback_elapsed_ms": 3066.0089580342174,
+        "comparison_max_abs_rgb_difference": 2.1457672119140625e-05,
+        "comparison_sum_abs_rgb_difference": 0.0003098007582593709,
+        "result": "numeric_close"
+      },
+      "area": {
+        "native_sha256": "1ed3225271dacef07bacede3e8fae5390fe24e653be6c5251a116bac89670f62",
+        "fallback_sha256": "13fc43344c86d0b99dfe1f120d5cc5308894324e6be544987d88e8ce6e0703be",
+        "pixel_differences": 109,
+        "max_abs_rgb_difference": 0.00017213821411132812,
+        "sum_abs_rgb_difference": 0.0024523944593966007,
+        "result": "open_area_sampling_precision"
+      },
+      "point": {
+        "native_sha256": "0941a5652e0b6f757ea7454fd05c0559ecb42bc6f2321bf2f3caac9f2a89895a",
+        "fallback_sha256": "d1efb7284b1cf55945c1726c1379739bbd5e9b802fb761ae6ae66781a60e57cf",
+        "pixel_differences": 109,
+        "max_abs_rgb_difference": 3.820657730102539e-05,
+        "sum_abs_rgb_difference": 0.0003603170334827155,
+        "result": "numeric_close"
+      },
+      "prior_unqualified_callback_area": {
+        "native_sha256": "99234a07112d1ed1d6449cf4e4bfa973f70350cbcd8df18b9eca777692745199",
+        "fallback_sha256": "f6da056c9785517829b5db57cb5e4c3b17c67b67987d3a51f515de6f14566016",
+        "pixel_differences": 109,
+        "max_abs_rgb_difference": 14.347710533998907,
+        "sum_abs_rgb_difference": 849.9367401520722,
+        "result": "open_motion_local_ordering"
+      },
+      "prior_unqualified_callback_point": {
+        "native_sha256": "61c1b7ab842f3437a16184d41307e50ba3a0a3d4cc9f5120d66efd9d5df7b3fe",
+        "fallback_sha256": "2d38005bed243d6c70dd9c64493747c8e2c4e0b73640a4e05ab0fef54068e0c7",
+        "pixel_differences": 109,
+        "max_abs_rgb_difference": 1.5817458460805938,
+        "sum_abs_rgb_difference": 101.6299308007001,
+        "result": "open_motion_local_ordering"
+      },
+      "claim_boundary": "Animated BSSRDF/SSS uses the motion-aware native local narrow phase and matches ordinary Cycles to float noise on the declared closed-tetrahedron point-light fixture; area-light sampling and open single-triangle ordering remain open."
+    },
+    "native_volume_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... volume",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Principled Volume material",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "Principled Volume",
+      "volume_intersection_table": true,
+      "static_query_dispatch": true,
+      "differential_harness": {
+        "script": "scripts/blender_native_differential.py",
+        "native_elapsed_ms": 12345.30437499052,
+        "fallback_elapsed_ms": 3395.2096659922972,
+        "comparison_max_abs_rgb_difference": 1.8440186977386475e-07,
+        "comparison_sum_abs_rgb_difference": 1.7144775483757257e-06,
+        "result": "numeric_close"
+      },
+      "native_sha256": "c1c1877783a1e8ede7cfc1e6fd787a1f06656d355ccff9ec31bc9de9435e58e1",
+      "fallback_sha256": "7c9ed16833683737326583861909aca0791c0fbc86dcca8904eb693b53f77a1b",
+      "pixel_differences": 55,
+      "max_abs_rgb_difference": 0.022648286074399948,
+      "sum_abs_rgb_difference": 0.02848556899698451,
+      "light_controls": {
+        "point": {
+          "pixel_differences": 2,
+          "max_abs_rgb_difference": 1.8440186977386475e-07,
+          "sum_abs_rgb_difference": 1.7144775483757257e-06,
+          "result": "float_noise"
+        },
+        "sun": {
+          "pixel_differences": 2,
+          "max_abs_rgb_difference": 2.682209014892578e-07,
+          "sum_abs_rgb_difference": 1.6696285456418991e-06,
+          "result": "float_noise"
+        }
+      },
+      "area_size_sweep": {
+        "2.0": {
+          "max_abs_rgb_difference": 0.022648286074399948,
+          "sum_abs_rgb_difference": 0.02848556899698451,
+          "result": "open_area_sampling_precision"
+        },
+        "0.5": {
+          "max_abs_rgb_difference": 1.3113021850585938e-06,
+          "sum_abs_rgb_difference": 1.4575431123375893e-05,
+          "result": "numeric_close"
+        },
+        "0.1": {
+          "max_abs_rgb_difference": 1.430511474609375e-06,
+          "sum_abs_rgb_difference": 1.7841521184891462e-05,
+          "result": "numeric_close"
+        },
+        "0.01": {
+          "max_abs_rgb_difference": 1.1920928955078125e-06,
+          "sum_abs_rgb_difference": 1.626642188057303e-05,
+          "result": "numeric_close"
+        },
+        "0.0001": {
+          "max_abs_rgb_difference": 1.7881393432617188e-06,
+          "sum_abs_rgb_difference": 1.7977028619498014e-05,
+          "result": "numeric_close"
+        },
+        "claim_boundary": "At the deterministic one-sample setting, the large-footprint area-light seam remains open and point-like footprints are numeric-close; higher-sample area controls remain an explicit precision gate without changing tet intersection policy."
+      },
+      "sample_sweep_64": {
+        "samples": 64,
+        "area_size_2.0": {
+          "native_sha256": "5b3fbdcf05fdd64629db794876b227cbdc8b2c64396b2ab34fc58e1fbdbe67f4",
+          "fallback_sha256": "49fd7e788e73955b95d5071d8d6759bb9f82818b22a97fe672ee584e78e9ec25",
+          "pixel_differences": 143,
+          "max_abs_rgb_difference": 0.007658421993255615,
+          "sum_abs_rgb_difference": 0.28532987195194437,
+          "shadows_enabled": true,
+          "result": "open_area_sampling_precision"
+        },
+        "area_size_2.0_shadows_disabled": {
+          "native_sha256": "d5d6b68a26c37e4a940cb7e8dd04adcacbd3a4318a78d73ef1a02ac46f38a26f",
+          "fallback_sha256": "e82617b578ad55312e85e4e71aa07ae7078c4471f1ca6c16df879fc4fa8c4bd5",
+          "pixel_differences": 137,
+          "max_abs_rgb_difference": 0.007658381015062332,
+          "sum_abs_rgb_difference": 0.2853297347401167,
+          "shadows_enabled": false,
+          "result": "open_area_sampling_precision"
+        },
+        "area_size_0.5": {
+          "native_sha256": "7c3e9fd653b42436e3381f4add2aa3fc4d4078cf4c30cf9eb11f773b7a1f4e0b",
+          "fallback_sha256": "6110f5f55ef343db7914de00e6a52e42dad6cf745c0114fb4c045d14814be533",
+          "pixel_differences": 140,
+          "max_abs_rgb_difference": 0.00017058849334716797,
+          "sum_abs_rgb_difference": 0.002063368282506417,
+          "shadows_enabled": true,
+          "result": "open_area_sampling_precision"
+        },
+        "point": {
+          "native_sha256": "96fd6738ca257141055ddc471a3afa271daf46c36ea5dfb8b5dfd55d657b33bb",
+          "fallback_sha256": "6eed323a2e3d92603eb94c74322c11a2165ba3dc1dbcf2dc340d9bf027f5a2ec",
+          "pixel_differences": 139,
+          "max_abs_rgb_difference": 1.564621925354004e-07,
+          "sum_abs_rgb_difference": 8.933111530495808e-07,
+          "result": "numeric_close"
+        },
+        "claim_boundary": "At 64 samples, the large area footprint remains open and the 0.5 area control also exceeds the numeric-close threshold; the point-light control remains float-noise-only. Shadows-disabled area results are unchanged, so the residual is not explained by shadow traversal alone."
+      },
+      "result": "measured_with_native_volume_table; area_light_difference; point_and_sun_float_noise_only",
+      "multi_tet_stack": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "cage_tetrahedra": 2,
+        "native_volume_table": true,
+        "point": {
+          "native_sha256": "4acda8bcbb1763b26699ab538c867c6a2f2fb4cc6e965e0b9839567f0253695e",
+          "fallback_sha256": "f87b23226c56d650565235aa14ce41a54a09eda527a993df1f44636e7b24d7f4",
+          "pixel_differences": 70,
+          "max_abs_rgb_difference": 3.501772880554199e-07,
+          "sum_abs_rgb_difference": 4.3720356188714504e-06,
+          "result": "float_noise"
+        },
+        "sun": {
+          "native_sha256": "4c7d1d6cacab9bebce5b931d45708fab3b3c4697fa36a1c76fb9935e1e81a053",
+          "fallback_sha256": "e675453b3724d24d715d30247fdcfb72a0837fc154fa9ecee9574b3ef1aeed0b",
+          "pixel_differences": 66,
+          "max_abs_rgb_difference": 1.9371509552001953e-07,
+          "sum_abs_rgb_difference": 2.4170440156012774e-06,
+          "result": "float_noise"
+        },
+        "area": {
+          "native_sha256": "d209f1f88eb3a8d373bc5f88cf3a3540fddc9e1a5c6755ab2b2b0fb8780288a2",
+          "fallback_sha256": "43dba91d00b38fa0dedba7d18e609522102a2a5957c66c8a8c735c9e23d688d9",
+          "pixel_differences": 76,
+          "max_abs_rgb_difference": 0.7615760564804077,
+          "sum_abs_rgb_difference": 1.961035904532764,
+          "result": "open_area_sampling_precision"
+        },
+        "result": "two_tet_stack_point_sun_float_noise; area_open"
+      },
+      "claim_boundary": "Volume entry/exit query runs for single and two-tet stacks; point/sun controls are float-noise-only, while area-light precision remains open."
+    },
+    "native_volume_motion_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 TETCAGE_MOTION_DELTA=0.15 blender_native_tetcage_render_probe.py ... volume_motion",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+      "scene": "closed tetrahedron with Principled Volume and object-transform motion",
+      "resolution": "16x16",
+      "samples": 1,
+      "motion_vertex_policy": "static tet vertices for object-transform motion; TLAS carries transforms",
+      "native_volume_table": true,
+      "point": {
+        "native_sha256": "ffd45ccc69aee19c8e957801ff4b67a995eac8497f232212f77d92527c06a778",
+        "fallback_sha256": "eb727946e75f92b966a1c8970980b4ab9bd9b05a83710c902913becd84d9fa03",
+        "pixel_differences": 72,
+        "max_abs_rgb_difference": 2.0919833332300186e-07,
+        "sum_abs_rgb_difference": 3.347757228766568e-06,
+        "result": "numeric_close"
+      },
+      "sun": {
+        "native_sha256": "871d225183ab70689e29468c289305d90aab0d332acd7c1dabf0baa2b2b2cb00",
+        "fallback_sha256": "258148329f23c1b9a3c6ebab259d78d28476020d9269a704f7e456b67d59e030",
+        "pixel_differences": 71,
+        "max_abs_rgb_difference": 2.60770320892334e-07,
+        "sum_abs_rgb_difference": 3.6239489418221638e-06,
+        "result": "numeric_close"
+      },
+      "area": {
+        "native_sha256": "69ba4ab0a11bfb8adbe98c5249e27120bb683ee1bba6c2fbacddb26e0205420f",
+        "fallback_sha256": "46a295197a5e52817f8cba7ae765f322483bade6c59e0d89e011e982f4de7664",
+        "pixel_differences": 80,
+        "max_abs_rgb_difference": 1.7285346984863281e-06,
+        "sum_abs_rgb_difference": 2.6392692234367132e-05,
+        "result": "numeric_close"
+      },
+      "multi_tet_stack": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "cage_tetrahedra": 2,
+        "motion_delta": 0.15,
+        "point": {
+          "native_sha256": "e459a7a032474d20ab978bdfa963105b060d43f969d11d701c42a0e856a133ce",
+          "fallback_sha256": "d4b587f3fc737560ad26d5e1bf00a66cc4506ecf3e93c2b9c784adcfffcc2045",
+          "pixel_differences": 89,
+          "max_abs_rgb_difference": 2.8312206268310547e-07,
+          "sum_abs_rgb_difference": 4.912923031952232e-06,
+          "result": "numeric_close"
+        },
+        "sun": {
+          "native_sha256": "2c0a2b5ca656608e999e4db3cdbded7fce86de598e6cd67dbc6057682222889f",
+          "fallback_sha256": "b03f4f31c976c213f98fbc29355d9a8c3e0c89a68d120838e977d65c3cc536c7",
+          "pixel_differences": 84,
+          "max_abs_rgb_difference": 4.3213367462158203e-07,
+          "sum_abs_rgb_difference": 5.211062671151012e-06,
+          "result": "numeric_close"
+        },
+        "area": {
+          "native_sha256": "4891274c18d527e4270f6459f5fd531c160f2094604471f3ccc8225d8312f7f4",
+          "fallback_sha256": "8a8e12af7527972245b349729d2fbb4310cd381b6e33793a209c8e577e9fac97",
+          "pixel_differences": 84,
+          "max_abs_rgb_difference": 2.384185791015625e-06,
+          "sum_abs_rgb_difference": 5.055329529568553e-05,
+          "result": "numeric_close"
+        }
+      },
+      "result": "native_motion_volume_numeric_close_all_lights",
+      "claim_boundary": "Object-transform motion through the native volume table is numeric-close under point, sun, and area controls for the declared closed-tet fixture; multi-object deformation and production volume scenes remain open."
+    },
+    "native_material_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... material",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-material.obj + tests/assets/two-material.cage",
+      "scene": "one tet with source material IDs 7 and 11",
+      "resolution": "16x16",
+      "samples": 1,
+      "shader": "per-source-material emission colors",
+      "native_sha256": "26e456c4b92b6242ba0c270e051a31baeadbb1482a63c52c5cda098fb8b7c2fc",
+      "fallback_sha256": "8315d8b3dfabf4b442e73556c475a4b0487ee81fc1decb626e473fd9903a3226",
+      "pixel_differences": 0,
+      "source_material_ids": [7, 11],
+      "result": "passed",
+      "claim_boundary": "Measured source material-slot selection and a UV-driven checker texture node through native and ordinary Cycles paths; broader texture/custom-attribute semantics remain open."
+    },
+    "native_attribute_render": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... source_primitive|owner_tet|material_attribute",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/two-material.obj + tests/assets/two-material.cage",
+      "resolution": "16x16",
+      "samples": 1,
+      "source_primitive": {
+        "native_sha256": "6b41c2d82298b42437bbeb8e36edd69f4ac994b0cd8451ef341dea232fa23d5c",
+        "fallback_sha256": "ce625e1ef0f01417f859ab6e6da5193cd0556ba9a7277a27c0454fbce738c8a3",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "owner_tet": {
+        "native_sha256": "ebc4787da0016dda8064d021642cc13338a687d584dd8e0016a41e2c4fd91118",
+        "fallback_sha256": "f9e5d58921d25f294a409f928201925892d579b00dbf1629dc7f200671610bce",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "material_attribute": {
+        "native_sha256": "1fe099862360c2860bdc45978d5bbb79cb690512751074db34c305e63a446747",
+        "fallback_sha256": "4f6bef9abd2bed731838f2825808ffb40f4ea9d7e9676bb61f19ef45a62fc3ca",
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "multi_tet_owner_tet": {
+        "asset": "tests/assets/two-closed-tets.obj + tests/assets/two-closed-tets.cage",
+        "native_sha256": "e276b96e269019d9d76f056c75984681cbc0f632aec3935d32a6966aef488c11",
+        "fallback_sha256": "d09b563581c25ea478d1219b41b18e25715a85005ed5f0dcaf7277d1ef95b6e7",
+        "pixel_differences": 0,
+        "cage_tetrahedra": 2,
+        "result": "passed"
+      },
+      "claim_boundary": "Integer face attributes for source primitive, owner tet, and source material IDs match ordinary Cycles for the two-material fixture; the checker texture graph passes, while broader custom shader-node semantics remain open."
+    },
+    "native_shading_diagnostics": {
+      "command": "CYCLES_KERNEL_PATH=$BLENDER_NATIVE_WORKTREE/intern/cycles CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 blender_native_tetcage_render_probe.py ... normal|normal_transform|normal_transform+TETCAGE_MIRROR|position|uv|texture|diffuse",
+      "device": "METAL Apple M1 Max",
+      "asset": "tests/assets/one-tet.obj + tests/assets/one-tet.cage",
+      "normal": {
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "normal_transform": {
+        "native_sha256": "21a5351e6a9276c0bcd726b18256c91255cfe59e53debbda2aedb4c2f0235aae",
+        "fallback_sha256": "7f7f8713ad12696e4b35ea6e8390eb1edbf6178b14acbf119427124b5b82b4cb",
+        "pixel_differences": 0,
+        "max_abs_difference": 0.0,
+        "sum_abs_difference": 0.0,
+        "transform": "nonuniform scale (1.7, 0.6, 1.2), shear xy=0.25, plus Euler rotation (0.2, -0.3, 0.15)",
+        "result": "passed"
+      },
+      "normal_mirror": {
+        "native_sha256": "8f52a218c882d359ed9d3e29074209ede189910db9df82195b413c910eb3022b",
+        "fallback_sha256": "12424a83dc23350b3cddcaa591487c5174cf9e0ecd75cf3dd187e611c9b5ef46",
+        "pixel_differences": 0,
+        "max_abs_difference": 0.0,
+        "sum_abs_difference": 0.0,
+        "transform": "negative scale x=-1.7, scale y/z=(0.6, 1.2), shear xy=0.25, plus Euler rotation (0.2, -0.3, 0.15)",
+        "result": "passed"
+      },
+      "position": {
+        "pixel_differences": 0,
+        "max_abs_difference": 5.960464477539063e-08,
+        "result": "passed_with_float_noise"
+      },
+      "uv": {
+        "pixel_differences": 0,
+        "max_abs_difference": 5.960464477539063e-08,
+        "result": "passed_with_float_noise"
+      },
+      "texture": {
+        "native_sha256": "6f439f8ab7a2ff4b88ccf11ed48196992f704b5216220eb4805101290f7f14ad",
+        "fallback_sha256": "6e5d0ac81855d765815a6a8d25446f40e3107bdb629e53fa26b8f03c0437624b",
+        "pixel_differences": 0,
+        "shader": "UV -> Checker Texture -> Emission",
+        "differential_harness": {
+          "script": "scripts/blender_native_differential.py",
+          "native_elapsed_ms": 7442.514000053052,
+          "fallback_elapsed_ms": 3033.8028330006637,
+          "comparison_elapsed_ms": null,
+          "result": "exact"
+        },
+        "result": "passed"
+      },
+      "source_normal": {
+        "pixel_differences": 0,
+        "result": "passed"
+      },
+      "diffuse_controls": {
+        "point": {"pixel_differences": 0, "result": "passed_with_float_noise"},
+        "sun": {"pixel_differences": 0, "result": "passed"},
+        "area": {
+          "pixel_differences": 13,
+          "max_abs_difference": 1.1339759826660156,
+          "sum_abs_difference": 3.445928178727627,
+          "result": "open_area_sampling_precision",
+          "samples_64": {
+            "rgb_mean_abs_difference": 0.011133820163498362,
+            "rgb_rms_difference": 0.03456117222319741,
+            "rgb_max_abs_difference": 0.19240713119506836,
+            "rgb_sum_abs_difference": 8.550773885566741
+          }
+        },
+        "area_no_shadows": {
+          "native_sha256": "b1ee0f00cf2706f38baa8d6d58a75380fdc534559db4be7cbf9e150da02ba3ec",
+          "fallback_sha256": "02024ca441d7bf9e235c3168f9b728596d6bf39cb646b21fb6683a31b7a7e69a",
+          "pixel_differences": 5,
+          "max_abs_difference": 1.1339759826660156,
+          "sum_abs_difference": 3.445928178727627,
+          "result": "open_primary_area_sampling_precision",
+          "diagnostic": "Shadows disabled; residual remains, so shadow traversal is not the sole source of the area-light mismatch."
+        }
+      },
+      "sss_controls": {
+        "point": {
+          "pixel_differences": 167,
+          "max_abs_difference": 3.0159950256347656e-05,
+          "sum_abs_difference": 0.00029370791162364185,
+          "result": "numeric_close"
+        },
+        "sun": {
+          "pixel_differences": 166,
+          "max_abs_difference": 2.9206275939941406e-05,
+          "sum_abs_difference": 0.0002854950726032257,
+          "result": "numeric_close"
+        },
+        "area": {
+          "pixel_differences": 203,
+          "max_abs_difference": 3.3495712280273438,
+          "sum_abs_difference": 34.16148420760874,
+          "result": "open_area_sampling_precision"
+        }
+      },
+      "claim_boundary": "Native normal and position handoff is measured; point/sun direct lighting matches, while area-light sampling remains an explicit parity gate."
+    },
+    "metal_render": {
+      "binary": "$BLENDER_BINARY",
+      "cpu_device": false,
+      "metal_device": true,
+      "cycles_metalrt_environment": "CYCLES_METALRT=1",
+      "resolution": "16x16",
+      "samples": 1,
+      "result": "passed",
+      "image_sha256": "0b59c4ef02b733bb4634de92f55157d2884581cf170520ffc7efdbf50f761fdc"
+    },
+    "claim_boundary": "This proves the version-1 asset parser, Blender per-tet triangle-instance fallback, dependency-graph pose update, save/reload, the Tet Cage Debug UI/operator smoke, a CPU-disabled Cycles Metal render, and opt-in static, object-transform-motion, and one native shape-key deformation tet differential in the isolated branch; SSS, exact volume, broader deformation topology, and broader Principled semantics remain open."
+  },
+  "claim_boundary": "This closes the ordinary Cycles MetalRT entry gate, proves the project's static procedural Metal AABB path on the Apple M1 Max, and proves opt-in static, one-/two-object object-transform motion, native shape-key deformation, and closed-tet motion-local SSS ingestion in the isolated Blender branch. Mixed transparent-closure motion, area-light parity, exact volume/closure semantics, broader deformation topology, full shading/visibility semantics, OptiX, and complete Blender UI/debug integration remain open."
+}

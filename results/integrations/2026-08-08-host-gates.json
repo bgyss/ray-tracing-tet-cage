@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "unreal": {
+    "root": "/Users/briangyss/src/UnrealEngine",
+    "checkout_present": true,
+    "revision": "4.19.2-release-1-g08ee319f80e",
+    "ue5_target": "blocked",
+    "status": "blocked",
+    "reason": "The discovered checkout is Unreal 4.19.2; M11 requires a pinned UE5 RHI/renderer proof."
+  },
+  "blender_cycles": {
+    "binary": "/Applications/Blender.app/Contents/MacOS/blender",
+    "binary_present": true,
+    "version": "Blender 5.2.0 LTS",
+    "source_root": "/Users/briangyss/src/cycles",
+    "source_kind": "standalone_cycles",
+    "cycles_source_present": true,
+    "device_core_status": "candidate",
+    "blender_source_root": "/Users/briangyss/src/blender",
+    "blender_source_present": true,
+    "blender_source_clean": true,
+    "blender_revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+    "blender_ui_status": "candidate",
+    "status": "candidate",
+    "reason": "A standalone Cycles checkout can support core and device-layer setup; Blender UI/debug work requires a separately pinned, clean Blender source checkout. MetalRT and OptiX implementation remain deferred until M9 selects the retained method and an NVIDIA host qualifies OptiX."
+  }
+}

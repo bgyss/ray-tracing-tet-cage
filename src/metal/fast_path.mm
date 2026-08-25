@@ -3,6 +3,7 @@
 
 #include "tetcage/metal_backend.h"
 
+#include "tetcage/cycles_bridge.h"
 #include "tetcage/metal_evidence.h"
 #include "tetcage/oracle.h"
 #include "tetcage/runtime.h"
@@ -1360,7 +1361,8 @@ Tetrahedron posed_tet(const CompiledAsset &asset, const std::vector<Vec3> &pose,
 
 InstanceRecords make_instance_records(const CompiledAsset &asset,
                                       const std::vector<BlasGroup> &groups,
-                                      const std::vector<std::vector<Vec3>> &poses) {
+                                      const std::vector<std::vector<Vec3>> &poses,
+                                      const std::uint64_t asset_hash) {
   InstanceRecords records;
   const std::size_t count = poses.size() * groups.size();
   records.descriptors.reserve(count);
@@ -1369,29 +1371,31 @@ InstanceRecords make_instance_records(const CompiledAsset &asset,
   records.instance_to_blas.reserve(count);
   records.precise_transforms.reserve(count);
   for (std::uint32_t copy = 0; copy < poses.size(); ++copy) {
-    const auto transforms = build_tet_transforms(asset, CagePose{poses[copy]}, copy, 0U);
-    if (!transforms.error.empty()) {
-      throw std::runtime_error(transforms.error);
+    Cage posed_cage = asset.cage;
+    posed_cage.vertices = poses[copy];
+    const auto frame = build_cycles_tet_cage_frame(asset, posed_cage, copy, asset_hash);
+    if (frame.mode != CyclesGeometryMode::procedural_metalrt) {
+      throw std::runtime_error("Cycles tet-cage frame selected conventional fallback: " +
+                               std::string(cycles_fallback_reason_name(frame.fallback_reason)));
     }
     for (std::uint32_t blas_index = 0; blas_index < groups.size(); ++blas_index) {
       const auto tet_id = groups[blas_index].tet_id;
-      const auto &transform = transforms.transforms[tet_id];
-      const PackedFloat3 c0{
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[0].z)};
-      const PackedFloat3 c1{
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[1].z)};
-      const PackedFloat3 c2{
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].x),
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].y),
-          static_cast<float>(transform.object_from_canonical.linear.columns[2].z)};
-      const PackedFloat3 translation{
-          static_cast<float>(transform.object_from_canonical.translation.x),
-          static_cast<float>(transform.object_from_canonical.translation.y),
-          static_cast<float>(transform.object_from_canonical.translation.z)};
+      if (tet_id >= frame.tet_transforms.size()) {
+        throw std::runtime_error("Cycles tet-cage frame is missing a tetrahedron transform");
+      }
+      const auto &transform = frame.tet_transforms[tet_id];
+      const PackedFloat3 c0{static_cast<float>(transform.linear.columns[0].x),
+                            static_cast<float>(transform.linear.columns[0].y),
+                            static_cast<float>(transform.linear.columns[0].z)};
+      const PackedFloat3 c1{static_cast<float>(transform.linear.columns[1].x),
+                            static_cast<float>(transform.linear.columns[1].y),
+                            static_cast<float>(transform.linear.columns[1].z)};
+      const PackedFloat3 c2{static_cast<float>(transform.linear.columns[2].x),
+                            static_cast<float>(transform.linear.columns[2].y),
+                            static_cast<float>(transform.linear.columns[2].z)};
+      const PackedFloat3 translation{static_cast<float>(transform.translation.x),
+                                     static_cast<float>(transform.translation.y),
+                                     static_cast<float>(transform.translation.z)};
       MTLAccelerationStructureUserIDInstanceDescriptor descriptor{};
       descriptor.transformationMatrix =
           MTLPackedFloat4x3(MTLPackedFloat3(c0.x, c0.y, c0.z), MTLPackedFloat3(c1.x, c1.y, c1.z),
@@ -1407,15 +1411,12 @@ InstanceRecords make_instance_records(const CompiledAsset &asset,
                                     static_cast<std::uint32_t>(descriptor.options), descriptor.mask,
                                     descriptor.intersectionFunctionTableOffset,
                                     descriptor.accelerationStructureIndex, descriptor.userID});
-      records.mirrored = records.mirrored || (transform.flags & tet_transform_mirrored) != 0U;
       records.descriptors.push_back(descriptor);
       records.info.push_back({copy, blas_index, tet_id});
       records.instance_to_blas.push_back(blas_index);
       records.precise_transforms.push_back(
-          {split_vec3(transform.object_from_canonical.linear.columns[0]),
-           split_vec3(transform.object_from_canonical.linear.columns[1]),
-           split_vec3(transform.object_from_canonical.linear.columns[2]),
-           split_vec3(transform.object_from_canonical.translation)});
+          {split_vec3(transform.linear.columns[0]), split_vec3(transform.linear.columns[1]),
+           split_vec3(transform.linear.columns[2]), split_vec3(transform.translation)});
     }
   }
   return records;
@@ -1718,7 +1719,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
   run.cage_deformation_ms = milliseconds(cage_begin, cage_end);
 
   const auto transform_begin = Clock::now();
-  auto instance_records = make_instance_records(asset, groups, poses);
+  auto instance_records = make_instance_records(asset, groups, poses, run.asset_hash);
   auto &descriptors = instance_records.descriptors;
   auto &gpu_instance_inputs = instance_records.gpu_inputs;
   auto &instance_info = instance_records.info;
@@ -2130,7 +2131,7 @@ MetalFastPathOutcome run_impl(const CompiledAsset &asset, const MetalFastPathOpt
     run.cage_deformation_ms += milliseconds(frame_pose_begin, Clock::now());
 
     const auto frame_transform_begin = Clock::now();
-    instance_records = make_instance_records(asset, groups, poses);
+    instance_records = make_instance_records(asset, groups, poses, run.asset_hash);
     run.transform_generation_ms += milliseconds(frame_transform_begin, Clock::now());
     run.mirrored_instances = run.mirrored_instances || instance_records.mirrored;
     if (instance_records.descriptors.size() != descriptors.size()) {

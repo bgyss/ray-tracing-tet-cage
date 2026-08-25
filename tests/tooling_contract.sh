@@ -25,7 +25,7 @@ require_file docs/development.md
 require_file scripts/doctor.sh
 require_file scripts/format.sh
 
-for tool in cmake ninja clang-tools python3 jq shellcheck pkg-config \
+for tool in cmake ninja clang-tools git-lfs python3 jq shellcheck pkg-config \
   vulkan-headers vulkan-loader glslang spirv-tools shaderc; do
   require_text flake.nix "${tool}"
 done
@@ -35,15 +35,17 @@ require_text flake.nix 'packages'
 require_text flake.nix '/usr/bin/clang'
 require_text flake.nix 'TETCAGE_NIX_SHELL'
 
-for task in doctor configure build test check format format-check; do
+for task in doctor configure build test check format format-check integration-probe cycles-verify; do
   require_text mise.toml "\\[tasks\\.${task}\\]"
 done
 require_text mise.toml 'nix develop path:\.'
+require_file scripts/cycles_verify.py
 
 require_text CMakePresets.json '"name":[[:space:]]*"nix"'
 require_text CMakePresets.json '"generator":[[:space:]]*"Ninja"'
 require_text scripts/check.sh 'TETCAGE_PRESET'
 require_text docs/development.md 'mise run check'
+require_text docs/development.md 'mise run cycles-verify'
 require_text docs/development.md 'nix flake check path:\.'
 
 printf 'tooling contract: pass\n'

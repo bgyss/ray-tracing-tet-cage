@@ -46,8 +46,12 @@ description = "Inspect the installed RenderMan public headers and write a feasib
 run = "nix develop path:. --command bash -lc 'mkdir -p results && bash scripts/renderman_feasibility.sh > results/renderman-feasibility.json'"
 
 [tasks.integration-probe]
-description = "Record installed Unreal and Blender/Cycles integration prerequisites"
-run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && bash scripts/integration_probe.sh > results/integrations/2026-07-28-host-gates.json'"
+description = "Record installed Unreal, standalone Cycles, and Blender integration prerequisites"
+run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && bash scripts/integration_probe.sh > results/integrations/2026-08-08-host-gates.json'"
+
+[tasks.cycles-verify]
+description = "Verify pinned Cycles/Blender sources, LFS hydration, CPU tests, and Blender debug cache"
+run = "nix develop path:. --command bash -lc 'mkdir -p results/integrations && CYCLES_VERIFY_OUTPUT=results/integrations/2026-08-09-cycles-verification.json python3 scripts/cycles_verify.py'"
 
 [tasks.interop-probe]
 description = "Record Vulkan/CUDA interop prerequisites without claiming a benchmark"

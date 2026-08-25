@@ -1,0 +1,11 @@
+# Two disjoint unit tetrahedra for native volume-stack probes.
+v 10 0 0 0
+v 20 1 0 0
+v 30 0 1 0
+v 40 0 0 1
+v 50 0 0 1.2
+v 60 1 0 1.2
+v 70 0 1 1.2
+v 80 0 0 2.2
+t 10 20 30 40
+t 50 60 70 80

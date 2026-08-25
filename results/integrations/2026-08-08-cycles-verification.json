@@ -1,0 +1,136 @@
+{
+  "checks": {
+    "blender_clean": {
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "detail": "working tree is clean",
+      "passed": true,
+      "status": "passed"
+    },
+    "blender_cycles_library": {
+      "detail": "Blender Cycles integration library is present: /Users/briangyss/src/build_blender_tetcage_debug_make/lib/libbf_intern_cycles.a",
+      "passed": true,
+      "path": "/Users/briangyss/src/build_blender_tetcage_debug_make/lib/libbf_intern_cycles.a",
+      "status": "passed"
+    },
+    "blender_debug_cache": {
+      "detail": "Blender developer/debug cache has UI/Cycles profile",
+      "passed": true,
+      "profile": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_GENERATOR": "Unix Makefiles",
+        "WITH_CYCLES": "ON",
+        "WITH_CYCLES_DEVICE_CUDA": "OFF",
+        "WITH_CYCLES_DEVICE_METAL": "ON",
+        "WITH_CYCLES_DEVICE_OPTIX": "OFF"
+      },
+      "status": "passed"
+    },
+    "blender_dependency_clean": {
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "detail": "working tree is clean",
+      "passed": true,
+      "status": "passed"
+    },
+    "blender_dependency_revision": {
+      "actual": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+      "command": "git rev-parse HEAD",
+      "detail": "Git revision matches the pinned integration revision",
+      "expected": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+      "passed": true,
+      "status": "passed"
+    },
+    "blender_layout": {
+      "detail": "required source layout is present",
+      "passed": true,
+      "status": "passed"
+    },
+    "blender_lfs": {
+      "command": "git lfs ls-files --long",
+      "detail": "all 622 Git LFS paths are hydrated",
+      "hydrated_count": 622,
+      "lfs_file_count": 622,
+      "passed": true,
+      "status": "passed"
+    },
+    "blender_revision": {
+      "actual": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "command": "git rev-parse HEAD",
+      "detail": "Git revision matches the pinned integration revision",
+      "expected": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_clean": {
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "detail": "working tree is clean",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_ctest": {
+      "command": "ctest --test-dir /Users/briangyss/src/cycles/build-tetcage-cpu-clang --output-on-failure",
+      "detail": "Test project /Users/briangyss/src/cycles/build-tetcage-cpu-clang\n    Start 1: cycles_version\n1/1 Test #1: cycles_version ...................   Passed    0.06 sec\n100% tests passed, 0 tests failed out of 1\nTotal Test time (real) =   0.07 sec",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_dependency_clean": {
+      "command": "git status --porcelain=v1 --untracked-files=all",
+      "detail": "working tree is clean",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_dependency_revision": {
+      "actual": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
+      "command": "git rev-parse HEAD",
+      "detail": "Git revision matches the pinned integration revision",
+      "expected": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_layout": {
+      "detail": "required source layout is present",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_lfs": {
+      "command": "git lfs ls-files --long",
+      "detail": "all 622 Git LFS paths are hydrated",
+      "hydrated_count": 622,
+      "lfs_file_count": 622,
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_revision": {
+      "actual": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "command": "git rev-parse HEAD",
+      "detail": "Git revision matches the pinned integration revision",
+      "expected": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "passed": true,
+      "status": "passed"
+    },
+    "cycles_runtime": {
+      "command": "/Users/briangyss/src/cycles/build-tetcage-cpu-clang/bin/cycles --list-devices",
+      "detail": "Devices:\n    CPU       Apple M1 Max",
+      "passed": true,
+      "status": "passed"
+    }
+  },
+  "claim_boundary": "A passed result proves the pinned source/dependency trees, hydrated LFS payloads, standalone Cycles CPU test/runtime, Blender developer/debug cache profile, and the focused bf_intern_cycles library artifact. It does not prove a full Blender build or renderer/device integration.",
+  "kind": "cycles_verification",
+  "roots": {
+    "blender": "/Users/briangyss/src/blender",
+    "blender_build": "/Users/briangyss/src/build_blender_tetcage_debug_make",
+    "cycles": "/Users/briangyss/src/cycles",
+    "cycles_build": "/Users/briangyss/src/cycles/build-tetcage-cpu-clang"
+  },
+  "schema_version": 1,
+  "status": "passed",
+  "toolchain": {
+    "cmake": "cmake version 4.3.4",
+    "ctest": "ctest version 4.3.4",
+    "git": "git version 2.50.1 (Apple Git-155)",
+    "git_lfs": "git-lfs/3.7.1 (3.7.1; darwin arm64; go 1.26.5)",
+    "python": "Python 3.12.8"
+  }
+}

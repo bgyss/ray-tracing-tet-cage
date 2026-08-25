@@ -1,0 +1,372 @@
+"""Blender-side import and debug visualization for a compiled tet-cage asset.
+
+The importer deliberately creates ordinary triangle geometry and a wireframe
+cage. It also records the versioned native Cycles contract as an explicit
+candidate on the mesh/object/scene, so a future Blender sync can promote the
+same immutable topology without changing the fallback. This script does not
+activate tet-cage MetalRT by itself.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import pathlib
+import sys
+from typing import Any
+
+import bpy
+from mathutils import Matrix
+
+from tetcage_asset import (
+    load_asset,
+    micro_triangle_normals,
+    micro_triangle_points,
+    micro_triangle_uvs,
+)
+
+
+_IMPORTED_ASSETS: dict[str, dict[str, Any]] = {}
+
+
+class TETCAGE_OT_validate_pose(bpy.types.Operator):
+    """Validate the selected imported cage pose and refresh its fallback surfaces."""
+
+    bl_idname = "tetcage.validate_pose"
+    bl_label = "Validate Tet Cage Pose"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, _context: bpy.types.Context) -> set[str]:
+        cages = [obj for obj in bpy.context.scene.objects if obj.get("tetcage_debug_view")]
+        if not cages:
+            self.report({"WARNING"}, "No imported tet-cage debug object is present")
+            return {"CANCELLED"}
+        valid = all(update_surface_from_cage(cage) for cage in cages)
+        if valid:
+            self.report({"INFO"}, "Tet-cage pose is valid")
+            return {"FINISHED"}
+        self.report({"WARNING"}, "Tet-cage pose is invalid; fallback transforms were retained")
+        return {"CANCELLED"}
+
+
+class TETCAGE_PT_debug(bpy.types.Panel):
+    """Small debug panel for the imported tet-cage contract."""
+
+    bl_label = "Tet Cage Debug"
+    bl_idname = "TETCAGE_PT_debug"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Tet Cage"
+
+    def draw(self, context: bpy.types.Context) -> None:
+        layout = self.layout
+        scene = context.scene
+        layout.label(text=f"Contract: {scene.get('tetcage_native_contract', 'none')}")
+        layout.label(text=f"Mode: {scene.get('tetcage_fallback_mode', 'unknown')}")
+        layout.label(text=f"Native candidate: {bool(scene.get('tetcage_native_candidate'))}")
+        cage = next(
+            (obj for obj in scene.objects if obj.get("tetcage_debug_view")),
+            None,
+        )
+        if cage is not None:
+            layout.label(text=f"Pose generation: {cage.get('tetcage_pose_generation', 0)}")
+            layout.label(text=f"Reason: {cage.get('tetcage_fallback_reason', 'none')}")
+        surface = next(
+            (obj for obj in scene.objects if obj.get("tetcage_native_candidate")),
+            None,
+        )
+        if surface is not None:
+            layout.label(text=f"Material slots: {len(surface.data.materials)}")
+            layout.label(text=f"UV layer: {bool(surface.data.uv_layers)}")
+            layout.label(
+                text=f"Source normal: {surface.data.attributes.get('tetcage_source_normal') is not None}"
+            )
+        layout.operator(TETCAGE_OT_validate_pose.bl_idname, icon="CHECKMARK")
+
+
+_UI_CLASSES = (TETCAGE_OT_validate_pose, TETCAGE_PT_debug)
+
+
+def register_ui() -> None:
+    for cls in _UI_CLASSES:
+        if getattr(bpy.types, cls.__name__, None) is None:
+            bpy.utils.register_class(cls)
+
+
+def unregister_ui() -> None:
+    for cls in reversed(_UI_CLASSES):
+        if getattr(bpy.types, cls.__name__, None) is not None:
+            bpy.utils.unregister_class(cls)
+
+
+def _tet_matrix(asset: dict[str, Any], cage_vertices: list[dict[str, Any]], tet_id: int) -> Any:
+    tet = asset["cage_tetrahedra"][tet_id]
+    p0, p1, p2, p3 = (cage_vertices[index]["position"] for index in tet)
+    matrix = Matrix(
+        (
+            (p1[0] - p0[0], p2[0] - p0[0], p3[0] - p0[0], p0[0]),
+            (p1[1] - p0[1], p2[1] - p0[1], p3[1] - p0[1], p0[1]),
+            (p1[2] - p0[2], p2[2] - p0[2], p3[2] - p0[2], p0[2]),
+            (0.0, 0.0, 0.0, 1.0),
+        )
+    )
+    determinant = matrix.to_3x3().determinant()
+    if not math.isfinite(determinant) or determinant <= 1.0e-12:
+        raise ValueError(f"tet {tet_id} is mirrored or near singular")
+    return matrix
+
+
+def _surface_objects(
+    asset: dict[str, Any], cage_vertices: list[dict[str, Any]] | None = None
+) -> list[bpy.types.Object]:
+    vertices_by_tet: dict[int, list[tuple[float, float, float]]] = {}
+    indices_by_tet: dict[int, dict[int, int]] = {}
+    faces_by_tet: dict[int, list[tuple[int, int, int]]] = {}
+    source_by_tet: dict[int, list[int]] = {}
+    owner_by_tet: dict[int, list[int]] = {}
+    materials_by_tet: dict[int, list[int]] = {}
+    uvs_by_tet: dict[int, list[tuple[tuple[float, float], ...]]] = {}
+    normals_by_tet: dict[int, list[tuple[tuple[float, float, float], ...]]] = {}
+    for triangle in asset["micro_triangles"]:
+        tet_id = triangle["tet_id"]
+        vertices = vertices_by_tet.setdefault(tet_id, [])
+        indices = indices_by_tet.setdefault(tet_id, {})
+        face: list[int] = []
+        for vertex_index in triangle["vertex_indices"]:
+            mesh_index = indices.get(vertex_index)
+            if mesh_index is None:
+                barycentric = asset["generated_vertices"][vertex_index]["cage_barycentric"]
+                mesh_index = len(vertices)
+                vertices.append((barycentric[1], barycentric[2], barycentric[3]))
+                indices[vertex_index] = mesh_index
+            face.append(mesh_index)
+        faces_by_tet.setdefault(tet_id, []).append(tuple(face))
+        source_by_tet.setdefault(tet_id, []).append(triangle["source_primitive"])
+        owner_by_tet.setdefault(tet_id, []).append(triangle["owner_tet"])
+        materials_by_tet.setdefault(tet_id, []).append(triangle["material"])
+        uvs_by_tet.setdefault(tet_id, []).append(micro_triangle_uvs(asset, triangle))
+        normals_by_tet.setdefault(tet_id, []).append(micro_triangle_normals(asset, triangle))
+
+    surfaces: list[bpy.types.Object] = []
+    pose = cage_vertices if cage_vertices is not None else asset["cage_vertices"]
+    for tet_id in sorted(vertices_by_tet):
+        vertices = vertices_by_tet[tet_id]
+        faces = faces_by_tet[tet_id]
+        mesh = bpy.data.meshes.new(f"TetCage_Tet_{tet_id:04d}")
+        mesh.from_pydata(vertices, [], faces)
+        mesh.update()
+        uv_layer = mesh.uv_layers.new(name="UVMap")
+        for face_index, polygon in enumerate(mesh.polygons):
+            for corner, loop_index in enumerate(polygon.loop_indices):
+                uv_layer.data[loop_index].uv = uvs_by_tet[tet_id][face_index][corner]
+        normal_attribute = mesh.attributes.new("tetcage_source_normal", "FLOAT_VECTOR", "CORNER")
+        for face_index, polygon in enumerate(mesh.polygons):
+            for corner, loop_index in enumerate(polygon.loop_indices):
+                normal_attribute.data[loop_index].vector = normals_by_tet[tet_id][face_index][corner]
+        source_material_ids = sorted(set(materials_by_tet[tet_id]))
+        for material_id in source_material_ids:
+            mesh.materials.append(_ensure_source_material(material_id))
+        for polygon_index, polygon in enumerate(mesh.polygons):
+            polygon.material_index = source_material_ids.index(materials_by_tet[tet_id][polygon_index])
+        mesh["tetcage_native_candidate"] = True
+        mesh["tetcage_native_contract"] = "cycles_tetcage_v1"
+        mesh["tetcage_source_material_ids"] = source_material_ids
+        primitive_attribute = mesh.attributes.new("tetcage_source_primitive", "INT", "FACE")
+        owner_attribute = mesh.attributes.new("tetcage_owner_tet", "INT", "FACE")
+        material_attribute = mesh.attributes.new("tetcage_material", "INT", "FACE")
+        native_candidate_attribute = mesh.attributes.new(
+            "tetcage_native_candidate", "BOOLEAN", "FACE"
+        )
+        for index, polygon in enumerate(mesh.polygons):
+            primitive_attribute.data[index].value = source_by_tet[tet_id][index]
+            owner_attribute.data[index].value = owner_by_tet[tet_id][index]
+            material_attribute.data[index].value = materials_by_tet[tet_id][index]
+            native_candidate_attribute.data[index].value = True
+
+        obj = bpy.data.objects.new(f"TetCage_Tet_{tet_id:04d}", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.matrix_world = _tet_matrix(asset, pose, tet_id)
+        obj["tetcage_fallback_mode"] = "conventional_mesh"
+        obj["tetcage_render_mode"] = "per_tet_triangle_instances"
+        obj["tetcage_native_candidate"] = True
+        obj["tetcage_native_contract"] = "cycles_tetcage_v1"
+        obj["tetcage_tet_id"] = tet_id
+        obj["tetcage_generated_triangles"] = len(faces)
+        obj["tetcage_source_triangles"] = len(asset["source_triangles"])
+        surfaces.append(obj)
+    return surfaces
+
+
+def _cage_object(asset: dict[str, Any]) -> bpy.types.Object:
+    vertices = [vertex["position"] for vertex in asset["cage_vertices"]]
+    edges: set[tuple[int, int]] = set()
+    for tet in asset["cage_tetrahedra"]:
+        for first in range(4):
+            for second in range(first + 1, 4):
+                edges.add(tuple(sorted((tet[first], tet[second]))))
+    mesh = bpy.data.meshes.new("TetCage_Debug_Cage")
+    mesh.from_pydata(vertices, sorted(edges), [])
+    mesh.update()
+    obj = bpy.data.objects.new("TetCage_Debug_Cage", mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.display_type = "WIRE"
+    obj.show_in_front = True
+    obj["tetcage_debug_view"] = True
+    obj["tetcage_tetrahedra"] = len(asset["cage_tetrahedra"])
+    return obj
+
+
+def _ensure_surface_material() -> bpy.types.Material:
+    material = bpy.data.materials.get("TetCage_Fallback_Material")
+    if material is None:
+        material = bpy.data.materials.new("TetCage_Fallback_Material")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled is not None:
+        principled.inputs["Base Color"].default_value = (0.15, 0.45, 0.8, 1.0)
+        principled.inputs["Roughness"].default_value = 0.35
+    return material
+
+
+def _ensure_source_material(material_id: int) -> bpy.types.Material:
+    name = f"TetCage_Source_Material_{material_id}"
+    material = bpy.data.materials.get(name)
+    if material is None:
+        material = bpy.data.materials.new(name)
+    material["tetcage_source_material_id"] = material_id
+    material["tetcage_material_role"] = "source"
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    principled = nodes.get("Principled BSDF")
+    if principled is not None:
+        principled.inputs["Base Color"].default_value = (0.15, 0.45, 0.8, 1.0)
+        principled.inputs["Roughness"].default_value = 0.35
+    return material
+
+
+def update_surface_from_cage(cage: bpy.types.Object) -> bool:
+    """Update fallback surface vertices after a cage edit.
+
+    The handler intentionally updates only the compiled micro-triangle surface
+    representation. It is a debug/fallback path, not the future procedural
+    MetalRT update contract.
+    """
+
+    asset_path = str(cage.get("tetcage_asset_path", ""))
+    asset = _IMPORTED_ASSETS.get(asset_path)
+    if asset is None:
+        return False
+    posed_vertices = [
+        {"position": tuple(vertex.co), "stable_id": 0}
+        for vertex in cage.data.vertices
+    ]
+    surfaces = [
+        obj
+        for obj in bpy.data.objects
+        if obj.get("tetcage_asset_path") == asset_path and obj.get("tetcage_tet_id") is not None
+    ]
+    if not surfaces:
+        return False
+    generation = int(cage.get("tetcage_pose_generation", 0)) + 1
+    try:
+        transforms = {
+            int(surface["tetcage_tet_id"]): _tet_matrix(
+                asset, posed_vertices, int(surface["tetcage_tet_id"])
+            )
+            for surface in surfaces
+        }
+    except ValueError:
+        cage["tetcage_fallback_reason"] = "invalid_pose"
+        return False
+    for surface in surfaces:
+        surface.matrix_world = transforms[int(surface["tetcage_tet_id"])]
+        surface["tetcage_pose_generation"] = generation
+    cage["tetcage_pose_generation"] = generation
+    cage["tetcage_fallback_reason"] = "none"
+    return True
+
+
+def _depsgraph_update(_scene: bpy.types.Scene, depsgraph: bpy.types.Depsgraph) -> None:
+    for update in depsgraph.updates:
+        obj = update.id
+        if isinstance(obj, bpy.types.Object) and obj.get("tetcage_debug_view"):
+            update_surface_from_cage(obj)
+
+
+def register_handlers() -> None:
+    if _depsgraph_update not in bpy.app.handlers.depsgraph_update_post:
+        bpy.app.handlers.depsgraph_update_post.append(_depsgraph_update)
+    register_ui()
+
+
+def import_asset(
+    asset_path: str | pathlib.Path,
+    output_json: str | pathlib.Path | None = None,
+    output_blend: str | pathlib.Path | None = None,
+) -> dict[str, Any]:
+    asset = load_asset(asset_path)
+    scene = bpy.context.scene
+    if not scene.render.engine.startswith("CYCLES"):
+        scene.render.engine = "CYCLES"
+    surfaces = _surface_objects(asset)
+    cage = _cage_object(asset)
+    for surface in surfaces:
+        if not surface.data.materials:
+            surface.data.materials.append(_ensure_surface_material())
+    asset_path = str(pathlib.Path(asset_path).resolve())
+    _IMPORTED_ASSETS[asset_path] = asset
+    cage["tetcage_asset_path"] = asset_path
+    cage["tetcage_fallback_reason"] = "none"
+    for surface in surfaces:
+        surface["tetcage_asset_path"] = asset_path
+    scene["tetcage_fallback_mode"] = "conventional_mesh"
+    scene["tetcage_native_candidate"] = True
+    scene["tetcage_native_contract"] = "cycles_tetcage_v1"
+    scene["tetcage_asset_format_version"] = asset["format_version"]
+    scene["tetcage_source_triangles"] = len(asset["source_triangles"])
+    scene["tetcage_generated_triangles"] = len(asset["micro_triangles"])
+    scene["tetcage_cage_tetrahedra"] = len(asset["cage_tetrahedra"])
+    payload = {
+        "schema_version": 1,
+        "kind": "blender_tetcage_import",
+        "status": "passed",
+        "fallback_mode": "conventional_mesh",
+        "render_engine": scene.render.engine,
+        "surface_triangles": len(asset["micro_triangles"]),
+        "cage_tetrahedra": len(asset["cage_tetrahedra"]),
+        "surface_objects": [surface.name for surface in surfaces],
+        "cage_object": cage.name,
+        "tet_objects": len(surfaces),
+        "render_mode": "per_tet_triangle_instances",
+        "procedural_metalrt": False,
+        "native_candidate": True,
+        "native_contract": "cycles_tetcage_v1",
+        "pose_update_handler": True,
+        "uv_layer": all(bool(surface.data.uv_layers) for surface in surfaces),
+        "normal_attribute": all(
+            surface.data.attributes.get("tetcage_source_normal") is not None for surface in surfaces
+        ),
+        "source_material_ids": sorted(
+            {material_id for triangle in asset["micro_triangles"] for material_id in [triangle["material"]]}
+        ),
+    }
+    register_handlers()
+    if output_json is not None:
+        pathlib.Path(output_json).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    if output_blend is not None:
+        bpy.ops.wm.save_as_mainfile(filepath=str(output_blend))
+    print("TETCAGE_BLENDER_IMPORT_OK " + json.dumps(payload, sort_keys=True), flush=True)
+    return payload
+
+
+def _main() -> int:
+    args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
+    if len(args) < 2 or len(args) > 3:
+        raise RuntimeError("usage: blender --python blender_tetcage_import.py -- asset.tetcage output.json [output.blend]")
+    import_asset(args[0], args[1], args[2] if len(args) == 3 else None)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())

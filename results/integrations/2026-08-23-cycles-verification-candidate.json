@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "cycles_verification",
+  "status": "passed",
+  "sources": {
+    "cycles": {
+      "root": "/Users/briangyss/src/cycles",
+      "revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+      "working_tree": "clean",
+      "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
+      "lfs": "622/622 hydrated"
+    },
+    "blender": {
+      "root": "/Users/briangyss/src/blender",
+      "revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+      "working_tree": "clean",
+      "dependency_revision": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+      "lfs": "622/622 hydrated"
+    },
+    "candidate": {
+      "root": "/Users/briangyss/src/blender-tetcage-native",
+      "revision": "d92d347fdc754094e814e0f10fc314e82dc1d031",
+      "working_tree": "clean",
+      "build": "blender target passed",
+      "install": "app bundle installed"
+    }
+  },
+  "toolchain": {
+    "xcode": "26.6 (17F113)",
+    "macos_sdk": "26.5",
+    "architecture": "arm64",
+    "cmake": "4.1.2",
+    "ctest": "4.1.2",
+    "python": "3.14.2"
+  },
+  "checks": {
+    "cycles_ctest": "passed",
+    "cycles_cpu_runtime": "passed; Apple M1 Max CPU listed",
+    "blender_debug_cache": "passed",
+    "blender_ui_smoke": "passed; Cycles/OSL enabled, tet-cage UI registered, window context true",
+    "blender_import_contract": "passed; import/save/reload/pose/invalid-pose"
+  },
+  "claim_boundary": "This proves the pinned source/dependency trees, hydrated LFS payloads, standalone Cycles CPU test/runtime, and the full candidate Blender build/UI/debug environment. It does not claim production native tet-cage renderer semantics, OptiX, or cross-device performance."
+}

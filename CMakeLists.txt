@@ -29,6 +29,8 @@ endif()
 add_library(tetcage_core
   src/core/math.cpp
   src/compiler/asset_compiler.cpp
+  src/compiler/cycles_xml.cpp
+  src/compiler/cycles_bridge.cpp
   src/compiler/io.cpp
   src/cpu_reference/oracle.cpp
   src/core/metal_evidence.cpp
@@ -48,6 +50,8 @@ endif()
 if(TETCAGE_BUILD_TOOLS)
   add_executable(tetcage_asset_compiler tools/asset_compiler/main.cpp)
   target_link_libraries(tetcage_asset_compiler PRIVATE tetcage_core)
+  add_executable(tetcage_cycles_xml tools/cycles_xml/main.cpp)
+  target_link_libraries(tetcage_cycles_xml PRIVATE tetcage_core)
   add_executable(tetcage_inspect tools/cage_inspector/main.cpp)
   target_link_libraries(tetcage_inspect PRIVATE tetcage_core)
   add_executable(tetcage_oracle_report tools/oracle_report/main.cpp)
@@ -111,6 +115,18 @@ if(TETCAGE_BUILD_TOOLS)
     set_tests_properties(tetcage.asset_compiler_cli PROPERTIES
       FIXTURES_SETUP compiled_asset
       PASS_REGULAR_EXPRESSION "\"generated_triangles\": 1")
+    add_test(NAME tetcage.cycles_xml_fallback
+      COMMAND tetcage_cycles_xml
+        "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage"
+        "${CMAKE_CURRENT_BINARY_DIR}/cycles-fallback.xml")
+    set_tests_properties(tetcage.cycles_xml_fallback PROPERTIES
+      FIXTURES_REQUIRED compiled_asset
+      PASS_REGULAR_EXPRESSION "wrote Cycles fallback scene")
+    add_test(NAME tetcage.asset_parser_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/tetcage_asset_parser.py"
+        "$<TARGET_FILE:tetcage_asset_compiler>")
+    set_tests_properties(tetcage.asset_parser_contract PROPERTIES
+      PASS_REGULAR_EXPRESSION "tetcage asset parser contract: pass")
     add_test(NAME tetcage.asset_cache_smoke
       COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/asset_cache_smoke.sh"
         "$<TARGET_FILE:tetcage_asset_compiler>"
@@ -122,6 +138,38 @@ if(TETCAGE_BUILD_TOOLS)
         "${CMAKE_CURRENT_BINARY_DIR}/asset-cache-reports")
     set_tests_properties(tetcage.asset_cache_smoke PROPERTIES
       PASS_REGULAR_EXPRESSION "\"byte_identical\":true")
+    add_test(NAME tetcage.integration_probe_contract
+      COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_probe_contract.sh")
+    add_test(NAME tetcage.cycles_verify_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_verify_contract.py")
+    add_test(NAME tetcage.cycles_native_kernel_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_native_kernel_contract.py")
+    set_tests_properties(tetcage.cycles_native_kernel_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Cycles native local-kernel contract: (pass|skipped)")
+    add_test(NAME tetcage.blender_native_deformation_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_tetcage_deformation_contract.py")
+    set_tests_properties(tetcage.blender_native_deformation_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Blender native deformation contract: (pass|skipped)")
+    add_test(NAME tetcage.blender_mixed_transparent_motion_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_mixed_transparent_motion_contract.py")
+    set_tests_properties(tetcage.blender_mixed_transparent_motion_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Blender mixed-transparent motion contract: (pass|skipped)")
+    add_test(NAME tetcage.blender_native_differential_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_native_differential_contract.py")
+    set_tests_properties(tetcage.blender_native_differential_contract PROPERTIES
+      PASS_REGULAR_EXPRESSION "Blender native differential contract: pass")
+    add_test(NAME tetcage.blender_area_precision_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/blender_area_precision_contract.py")
+    set_tests_properties(tetcage.blender_area_precision_contract PROPERTIES
+      PASS_REGULAR_EXPRESSION "Blender area-light precision contract: pass")
+    add_test(NAME tetcage.cycles_native_volume_contract
+      COMMAND python3 "${CMAKE_CURRENT_SOURCE_DIR}/tests/cycles_native_volume_contract.py")
+    set_tests_properties(tetcage.cycles_native_volume_contract PROPERTIES
+      SKIP_RETURN_CODE 77
+      PASS_REGULAR_EXPRESSION "Cycles native volume contract: (pass|skipped)")
     add_test(NAME tetcage.asset_inspector_cli
       COMMAND tetcage_inspect "${CMAKE_CURRENT_BINARY_DIR}/one-tet.tetcage")
     set_tests_properties(tetcage.asset_inspector_cli PROPERTIES

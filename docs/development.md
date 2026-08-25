@@ -31,12 +31,181 @@ MISE_DISABLE_VERSION_CHECK=1 mise run report
 ```
 
 Other tasks are `format`, `format-check`, `nix-check`, `report`,
-`renderman-probe`, and `integration-probe`. `check` is the
+`renderman-probe`, `integration-probe`, and `cycles-verify`. `check` is the
 normal local gate: it validates formatting and shell scripts, builds with the
 `nix` CMake preset, runs CTest, and checks the working diff. `nix-check` also
 builds the Metal-disabled portable package in a pure Nix derivation.
 `report` regenerates deterministic JSON/Markdown summaries from `results/` and
 retains partial or synthetic evidence labels.
+
+The pinned external Cycles/Blender lane is verified separately because those
+source trees and their macOS arm64 dependency payloads are host integrations:
+
+```sh
+XDG_CACHE_HOME="$PWD/.cache" mise run cycles-verify
+jq . results/integrations/2026-08-09-cycles-verification.json
+```
+
+The first MetalRT entry proof, the standalone static native tet-cage path, and
+the isolated Blender candidate build are recorded in
+`results/integrations/2026-08-23-cycles-metal-entry.json`. This is a direct
+Metal baseline plus standalone AABB/custom-intersection evidence. Blender's
+embedded candidate recognizes the versioned ID-property contract, activates an
+opt-in native AABB/query path, and exposes the Tet Cage Debug UI; unsupported
+deformation and unqualified shading semantics retain ordinary mesh fallback.
+
+`cycles-verify` is read-only. It checks the pinned source and dependency
+revisions, clean Git/LFS state, hydrated LFS file counts, the standalone Cycles
+CTest/runtime result, the Blender developer/debug CMake cache profile, the
+full installed Blender executable, and an isolated Python/Cycles UI smoke. Use
+the environment variables in `scripts/cycles_verify.py` to point at another
+pinned host setup; a passing result still does not claim a rendered tet-cage
+scene, MetalRT, OptiX, or device performance integration.
+
+CTest writes a `Testing/Temporary` log even for this one-test Cycles build. If
+the external build tree is read-only, the verifier records the permission
+boundary and runs the same generated `cycles_version` test metadata in a
+writable temporary mirror.
+
+Set `BLENDER_BUILD_DIR` to the external Blender build directory, then build and
+install the macOS app bundle with:
+
+```sh
+cmake --build "$BLENDER_BUILD_DIR" \
+  --target blender --parallel 8
+cmake --install "$BLENDER_BUILD_DIR" \
+  --config Debug --prefix "$BLENDER_BUILD_DIR/bin"
+```
+
+For an isolated windowed UI launch, point `BLENDER_USER_CONFIG` and
+`BLENDER_USER_SCRIPTS` at temporary directories and run the installed
+`Blender.app/Contents/MacOS/Blender` with `--factory-startup` and
+`scripts/blender_ui_smoke.py`. The smoke switches a fresh scene to the Cycles
+engine and verifies the Cycles/OSL build options without touching user files.
+
+To exercise the Blender-side asset parser and ordinary mesh/wireframe fallback:
+
+```sh
+BLENDER_BINARY=/path/to/Blender \
+python3 tests/blender_import_contract.py
+```
+
+The importer creates a normal Cycles mesh and a visible wireframe cage, installs
+a dependency-graph update handler for cage edits, and supports save/reload of
+the fallback scene. It also records `tetcage_native_candidate` and the
+`cycles_tetcage_v1` contract on the mesh/object/scene. It remains an
+authoring/debug fallback; it does not claim that the procedural MetalRT
+primitive is active in Blender by default. Set `CYCLES_TETCAGE_NATIVE=1` for the
+isolated static native path. The candidate branch passes the full `blender`
+build, app-bundle install, direct importer probe, Cycles/UI smoke, and tet-only
+plus mixed-scene native-vs-fallback emission differentials; the release-binary
+child-launch harness remains separately host-limited.
+
+For the isolated native probe, use the embedded Cycles source root explicitly:
+
+```sh
+build/dev/tetcage_asset_compiler \
+  tests/assets/one-tet.obj tests/assets/one-tet.cage build/one-tet.tetcage
+CYCLES_KERNEL_PATH="$BLENDER_NATIVE_WORKTREE/intern/cycles" \
+CYCLES_METALRT=1 CYCLES_TETCAGE_NATIVE=1 \
+"$BLENDER_NATIVE_BINARY" --background --factory-startup \
+  --python scripts/blender_native_tetcage_render_probe.py -- \
+  build/one-tet.tetcage build/blender-native.exr build/blender-native.json mixed
+```
+
+The native source contract can be checked without launching Blender:
+
+```sh
+python3 tests/cycles_native_kernel_contract.py
+```
+
+It verifies that both native Cycles lanes use the projected-axis tet predicate
+and the Cycles local hit-record policy; it skips when the isolated source
+worktrees are unavailable.
+
+For a reproducible native-vs-fallback render differential with timing and
+pixel metrics, run the wrapper against the isolated Blender build:
+
+```sh
+python3 scripts/blender_native_differential.py \
+  --blender "$BLENDER_NATIVE_BINARY" \
+  --kernel-root "$BLENDER_NATIVE_WORKTREE/intern/cycles" \
+  --asset build/one-tet.tetcage \
+  --mode texture \
+  --output-dir build/differentials/texture
+```
+
+The wrapper records native/fallback probe JSON, SHA-256 image hashes, elapsed
+times, and an in-Blender EXR pixel/RGB comparison in `differential.json`.
+
+The deformation-specific source contract is checked with:
+
+```sh
+python3 tests/blender_tetcage_deformation_contract.py
+```
+
+It guards the motion AABB descriptor, Blender position-motion upload, and
+time-interpolated native tet narrow phase.
+
+Unset `CYCLES_TETCAGE_NATIVE` (or set it to `0`) to render the same probe
+through ordinary triangle fallback. The checked-in probe uses a fixed emission
+shader and removes unrelated meshes in `tet_only` mode so the differential
+measures intersection rather than lighting noise. Pass `motion` instead of
+`mixed` and set `TETCAGE_MOTION_DELTA=0.15` to exercise object-transform motion;
+pass `mixed_motion` to retain the ordinary cube while exercising the same motion
+handoff;
+deformation-motion candidates use the native motion-AABB/time-interpolated path
+when the opt-in branch is enabled; unsupported topology still falls back. Pass
+`deformation_motion` to verify the native shape-key differential. The `transparent` mode exercises the
+transparent/shadow path; `ao` on `tests/assets/closed-tet.*` exercises the
+zero-hit local-ray path; `deformation_local_motion` exercises the motion-local
+multi-hit callback; `volume` on the same closed fixture records the
+current numeric volume differential rather than treating it as exact, while
+`volume_motion` exercises object-transform motion through the native volume
+table; the two-closed-tets fixture extends this to a moving two-object stack.
+The
+two-closed-tets fixture exercises the same volume mode across two native tet
+objects and records the multi-object stack result in the integration manifest.
+Mixed transparent-closure object motion currently retains ordinary Cycles
+fallback because the native motion closure path is not yet qualified;
+`transparent_motion` probes the Transparent+Emission boundary explicitly and
+`transparent_diffuse_motion` probes the Transparent+Diffuse boundary. Pure transparency uses
+`transparent_pure_motion` and remains native.
+The production adapter gate is contract-tested in
+`tests/blender_mixed_transparent_motion_contract.py`: a motion-blurred material
+with both transparent and non-transparent closures must retain the ordinary
+mesh path, while pure transparency may use the native path.
+The manifest also records a forced-native diagnostic of the motion-vertex fix
+for those mixed closures; it is evidence for follow-up qualification, not a
+production dispatch override.
+Animated subsurface/BSSRDF motion uses the native motion-aware local narrow
+phase; object-transform motion keeps static tet vertices while TLAS motion carries
+the transform. `deformation_local_motion` exercises the motion-local path on the
+closed-tetrahedron fixture and records the float-noise differential against
+ordinary Cycles; area-light sampling remains an explicit gate.
+Set `TETCAGE_SAMPLES` to repeat material/lighting probes at a higher sample
+count; the probe records the effective sample count in its JSON result. The
+checked-in one-sample evidence remains the deterministic fast gate, while
+sample-count sweeps help separate a rare ray miss from a systematic area-light
+seam.
+For area-light sensitivity controls, set `TETCAGE_AREA_SIZE` (the default is
+`2.0`; values near zero provide a point-light-like precision control).
+The `normal`, `normal_transform`, `position`, `uv`, `texture`, `source_normal`, `source_primitive`, `owner_tet`,
+`material_attribute`, and `diffuse` modes expose shading/attribute-parity controls;
+`TETCAGE_LIGHT_MODE` selects `area` (default), `point`, or `sun` for the diffuse
+control. Set `TETCAGE_DISABLE_SHADOWS=1` for the area-light diagnostic that
+separates shadow traversal from primary/light-sampling precision.
+The closed-tet volume contract keeps the default large footprint (`2.0`) open
+until its native/fallback differential is qualified. At the deterministic
+one-sample setting the `0.5` area control is numeric-close, but a 64-sample
+sweep exposes an area residual even at `0.5`; the point-light control remains
+float-noise-only and the size-2 residual is unchanged when the shadow toggle is
+disabled. The status is guarded by `tests/blender_area_precision_contract.py`
+so a future promotion cannot silently widen the native boundary.
+Set `TETCAGE_MIRROR=1` with `normal_transform` to exercise a negative-scale
+mirror in the same normal differential.
+Set `TETCAGE_TET_INDEX` with a multi-tet asset to isolate one imported tet
+object during motion/BLAS diagnostics.
 
 ## Direct Nix workflow
 

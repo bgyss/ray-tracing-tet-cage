@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "kind": "cycles_setup",
+  "status": "cpu_proven_blender_ui_configured",
+  "cycles": {
+    "root": "/Users/briangyss/src/cycles",
+    "revision": "97dbe6f57cdf4ede2d2b75ebdda507c8712edb7a",
+    "source_kind": "standalone_cycles",
+    "dependency_submodule": "lib/macos_arm64",
+    "dependency_revision": "5a140a8ccc8c070221b1b06e2c6f89f136c5758d",
+    "dependency_hydration": "complete"
+  },
+  "toolchain": {
+    "os": "macOS 27.0 (26A5378n)",
+    "architecture": "arm64",
+    "xcode": "26.6 (17F113)",
+    "apple_clang": "21.0.0.21000101",
+    "cmake": "4.1.2",
+    "python": "3.14.2",
+    "git": "2.52.0",
+    "git_lfs": "3.7.1"
+  },
+  "dependency_setup": {
+    "command": "make update; git -C lib/macos_arm64 lfs checkout",
+    "result": "The pinned macOS arm64 submodule was initialized and all 622 current Git LFS objects (approximately 1.1 GB) were materialized."
+  },
+  "cpu_build": {
+    "command": "CC=/usr/bin/clang CXX=/usr/bin/clang++ BUILD_DIR=build-tetcage-cpu-clang BUILD_CMAKE_ARGS='-DWITH_CYCLES_DEVICE_METAL=OFF -DWITH_CYCLES_DEVICE_CUDA=OFF -DWITH_CYCLES_DEVICE_OPTIX=OFF -DWITH_CYCLES_DEVICE_HIP=OFF -DWITH_CYCLES_HYDRA_RENDER_DELEGATE=OFF -DWITH_CYCLES_USD=OFF -DWITH_USD=OFF' make",
+    "configure": "passed",
+    "build": "passed",
+    "tests": "passed_1_of_1_cycles_version",
+    "runtime": "build-tetcage-cpu-clang/bin/cycles --list-devices reports CPU on Apple M1 Max",
+    "note": "The install phase emitted non-fatal install_name_tool duplicate/missing rpath diagnostics; the build-tree executable and upstream CTest are functional."
+  },
+  "blender": {
+    "root": "/Users/briangyss/src/blender",
+    "revision": "4a09c19bea7bd2800d85f018280b2dc62e654e51",
+    "dependency_submodule": "lib/macos_arm64",
+    "dependency_revision": "a76ef917b4849ba2b1b1deb1a643e131a884a63b",
+    "source_tree_present": true,
+    "clean": true,
+    "dirty_root_cause": "The checkout had no Git index, so every tracked path appeared as a staged deletion; all 6755 absent worktree paths were Git LFS objects, and the GitHub mirror does not serve Blender's LFS payloads.",
+    "recovery": "Rebuilt the index from HEAD without overwriting worktree files, restored pointer placeholders, used Blender's official projects.blender.org LFS fallback, initialized the pinned macOS arm64 library submodule, and hydrated the required objects.",
+    "debug_configure": {
+      "build_directory": "/Users/briangyss/src/build_blender_tetcage_debug_make",
+      "generator": "Unix Makefiles",
+      "compiler": "AppleClang 21.0.0.21000101",
+      "configuration": "Debug plus blender_developer.cmake",
+      "cycles": true,
+      "ui": true,
+      "metal_found": true,
+      "result": "passed"
+    },
+    "debug_compile": {
+      "target": "bf_intern_cycles",
+      "library": "/Users/briangyss/src/build_blender_tetcage_debug_make/lib/libbf_intern_cycles.a",
+      "command": "cmake --build /Users/briangyss/src/build_blender_tetcage_debug_make --target bf_intern_cycles --parallel 8",
+      "result": "passed"
+    },
+    "ui_debug_status": "candidate"
+  },
+  "device_integration": {
+    "metalrt": "deferred_until_m9",
+    "optix": "blocked_qualified_nvidia_host_and_m9",
+    "representation_boundary": "docs/cycles-representation-boundary.md"
+  },
+  "claim_boundary": "This proves pinned macOS dependency hydration, a standalone Cycles CPU build and upstream test, a Blender developer/debug UI configure, and the focused bf_intern_cycles library compile. It does not prove a full Blender build, renderer integration, MetalRT, OptiX, or device performance."
+}

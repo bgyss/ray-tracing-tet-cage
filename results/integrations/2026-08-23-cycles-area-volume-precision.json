@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "kind": "cycles_tetcage_area_volume_precision",
+  "status": "measured_open",
+  "recorded_utc": "2026-08-23",
+  "source": {
+    "blender_candidate_revision": "d92d347fdc754094e814e0f10fc314e82dc1d031",
+    "standalone_cycles_revision": "0b4e499570f3acff4f018a0bcf089456ff686bb4"
+  },
+  "build": {
+    "binary": "$BLENDER_NATIVE_BINARY",
+    "kernel_root": "$BLENDER_NATIVE_WORKTREE/intern/cycles",
+    "device": "METAL Apple M1 Max"
+  },
+  "asset": "tests/assets/closed-tet.obj + tests/assets/closed-tet.cage",
+  "probe": {
+    "script": "scripts/blender_native_differential.py",
+    "mode": "volume",
+    "resolution": "16x16",
+    "samples": 64,
+    "numeric_tolerance": 0.0001
+  },
+  "controls": {
+    "area_size_2.0": {
+      "native_sha256": "5b3fbdcf05fdd64629db794876b227cbdc8b2c64396b2ab34fc58e1fbdbe67f4",
+      "fallback_sha256": "49fd7e788e73955b95d5071d8d6759bb9f82818b22a97fe672ee584e78e9ec25",
+      "pixel_differences": 143,
+      "max_abs_rgb_difference": 0.007658421993255615,
+      "sum_abs_rgb_difference": 0.28532987195194437,
+      "shadows_enabled": true,
+      "result": "open_area_sampling_precision"
+    },
+    "area_size_2.0_shadows_disabled": {
+      "native_sha256": "d5d6b68a26c37e4a940cb7e8dd04adcacbd3a4318a78d73ef1a02ac46f38a26f",
+      "fallback_sha256": "e82617b578ad55312e85e4e71aa07ae7078c4471f1ca6c16df879fc4fa8c4bd5",
+      "pixel_differences": 137,
+      "max_abs_rgb_difference": 0.007658381015062332,
+      "sum_abs_rgb_difference": 0.2853297347401167,
+      "shadows_enabled": false,
+      "result": "open_area_sampling_precision"
+    },
+    "area_size_0.5": {
+      "native_sha256": "7c3e9fd653b42436e3381f4add2aa3fc4d4078cf4c30cf9eb11f773b7a1f4e0b",
+      "fallback_sha256": "6110f5f55ef343db7914de00e6a52e42dad6cf745c0114fb4c045d14814be533",
+      "pixel_differences": 140,
+      "max_abs_rgb_difference": 0.00017058849334716797,
+      "sum_abs_rgb_difference": 0.002063368282506417,
+      "shadows_enabled": true,
+      "result": "open_area_sampling_precision"
+    },
+    "point": {
+      "native_sha256": "96fd6738ca257141055ddc471a3afa271daf46c36ea5dfb8b5dfd55d657b33bb",
+      "fallback_sha256": "6eed323a2e3d92603eb94c74322c11a2165ba3dc1dbcf2dc340d9bf027f5a2ec",
+      "pixel_differences": 139,
+      "max_abs_rgb_difference": 1.564621925354004e-07,
+      "sum_abs_rgb_difference": 8.933111530495808e-07,
+      "shadows_enabled": true,
+      "result": "numeric_close"
+    }
+  },
+  "claim_boundary": "The static native volume query is qualified for the point-light control, but the area-light volume seam remains open at 64 samples for size 2.0 and 0.5. Disabling shadows does not remove the residual, so this record does not attribute the mismatch to shadow traversal alone. No native dispatch promotion is made from this diagnostic."
+}
